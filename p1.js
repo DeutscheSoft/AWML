@@ -1,5 +1,4 @@
 "use strict";
-var P1 = {options: {}};
 (function(w) {
   function parse(name, x) {
       var match;
@@ -7,7 +6,7 @@ var P1 = {options: {}};
       if (match = x.match(/^js:(.*)/m)) {
           x = eval(match[1]);
       } else if (match = x.match(/^inherit:(.*)/m)) {
-          x = P1.options[match[1]];
+          x = w.P1.options[match[1]];
       } else if (Number.parseFloat(x).toString() == x) {
           x = Number.parseFloat(x);
       }
@@ -15,7 +14,21 @@ var P1 = {options: {}};
       return x;
 
   }
+  function do_merge_options(o1, o2) {
+    var x;
+
+    if (!o1)
+        return o2;
+    if (!o2)
+        return o1;
+
+    for (x in o2) {
+        o1[x] = o2[x];
+    }
+
+  }
   w.P1 = {
+    options: { defaults: {} },
     registerWidget: function registerWidget(tagName, widget) {
       var proto = Object.create(HTMLElement.prototype);
       proto.rec_find_children = function rec_find_children(node) {
@@ -45,16 +58,12 @@ var P1 = {options: {}};
             var value = attr[i].value;
 
             if (name == "options") {
-                merge_options = P1.options[value];
+                merge_options = w.P1.options[value];
             }
             options[name] = parse(name, value);
         }
-        if (merge_options) {
-            for (var x in options) {
-                merge_options[x] = options[x];
-            }
-            options = merge_options;
-        }
+        options = do_merge_options(merge_options, options);
+        options = do_merge_options(w.P1.options.defaults[tagName], options);
         options.element = this;
         this.widget = new widget(options);
         this.widget.add_children(this.rec_find_children(this));
