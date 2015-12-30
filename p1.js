@@ -23,9 +23,14 @@
         return o1;
 
     for (x in o2) {
-        o1[x] = o2[x];
+        if (typeof o1[x] === object &&
+            typeof o2[x] === object &&
+            Object.getPrototype(o1[x]) == null &&
+            Object.getPrototype(o2[x]) == null)
+            do_merge_options(o1[x], o2[x]);
+        else
+            o1[x] = o2[x];
     }
-
   }
   w.P1 = {
     options: { defaults: {} },
