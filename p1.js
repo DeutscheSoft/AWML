@@ -3,8 +3,15 @@
   function parse(name, x) {
       var match;
 
+      // TODO: rename this to eval?
       if (match = x.match(/^js:(.*)/m)) {
           x = eval(match[1]);
+      } else if (match = x.match(/^sprintf:(.*)/m)) {
+          x = TK.FORMAT(match[1]);
+      } else if (match = x.match(/^javascript:(.*)/m)) {
+          x = new Function("", match[1]);
+      } else if (match = x.match(/^json:(.*)/m)) {
+          x = JSON.parse(match[1]);
       } else if (match = x.match(/^inherit:(.*)/m)) {
           x = w.P1.options[match[1]];
       } else if (Number.parseFloat(x).toString() == x) {
@@ -32,6 +39,7 @@
             o1[x] = o2[x];
     }
   }
+  
   w.P1 = {
     options: { defaults: {} },
     registerWidget: function registerWidget(tagName, widget) {
