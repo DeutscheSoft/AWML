@@ -42,9 +42,8 @@
 
         for (i = 0; i < node.childNodes.length; i++) {
             if (node.childNodes[i].is_toolkit_node) {
-                ret.push(node.childNotes[i].widget);
-            } else if (node.childNodes[i]
-                       != this.widget.element) {
+                ret.push(node.childNodes[i].widget);
+            } else if (node.childNodes[i] != this.widget.element) {
                 ret = ret.concat(this.rec_find_children(node.childNodes[i]));
             }
         }
