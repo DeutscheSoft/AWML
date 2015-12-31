@@ -75,11 +75,11 @@
       };
       proto.appendChild = function(node) {
         Node.prototype.appendChild.call(this, node);
-        this.widget.add_children(this.rec_find_children(node));
+        if (this.widget) this.widget.add_children(this.rec_find_children(node));
       };
       proto.insertBefore = function(n, p) {
         Node.prototype.insertBefore.call(this, n, p);
-        this.widget.add_children(this.rec_find_children(n));
+        if (this.widget) this.widget.add_children(this.rec_find_children(n));
       };
       proto.is_toolkit_node = true;
       return document.registerElement(tagName, { prototype: proto, });
