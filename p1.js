@@ -57,7 +57,7 @@
         }
         return ret;
       };
-      proto.find_parent = function() {
+      function find_parent() {
           var node = this.parentNode;
 
           if (!node)
@@ -91,10 +91,8 @@
         options = do_merge_options(merge_options, options);
         options = do_merge_options(w.P1.options.defaults[tagName], options);
         this.widget = new widget(options);
-        parent_node = this.find_parent();
-        if (parent_node)
-            parent_node.widget.add_child(this.widget);
-        this.widget.show();
+        parent_node = find_parent.call(this);
+        if (parent_node) parent_node.widget.add_child(this.widget);
       };
       proto.appendChild = function(node) {
         Node.prototype.appendChild.call(this, node);
