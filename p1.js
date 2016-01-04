@@ -44,7 +44,7 @@
     options: { defaults: {} },
     registerWidget: function registerWidget(tagName, widget) {
       var proto = Object.create(HTMLElement.prototype);
-      proto.rec_find_children = function rec_find_children(node) {
+      proto.rec_find_children = function(node) {
         var i;
         var ret = [];
 
@@ -57,6 +57,19 @@
         }
         return ret;
       };
+      proto.find_parent = function() {
+          var node = this.parentNode;
+
+          if (!node)
+              return undefined;
+
+          do
+              if (node.is_toolkit_node)
+                  return node;
+          while (node = node.parentNode);
+
+          return undefined;
+      };
       proto.createdCallback = function() {
         var options = {
           container: this,
@@ -64,6 +77,7 @@
         var merge_options;
         var attr = this.attributes;
         var O = widget.prototype._options;
+        var parent_node;
         console.log(O);
         for (var i = 0; i < attr.length; i++) {
             var name = attr[i].name;
@@ -78,7 +92,9 @@
         options = do_merge_options(w.P1.options.defaults[tagName], options);
         options.element = this;
         this.widget = new widget(options);
-        this.widget.add_children(this.rec_find_children(this));
+        parent_node = this.find_parent();
+        if (parent_node)
+            this.widget.add_child(parent_node.widget);
         this.widget.show();
       };
       proto.appendChild = function(node) {
