@@ -93,7 +93,7 @@
         this.widget = new widget(options);
         parent_node = this.find_parent();
         if (parent_node)
-            this.widget.add_child(parent_node.widget);
+            parent_node.widget.add_child(this.widget);
         this.widget.show();
       };
       proto.appendChild = function(node) {
