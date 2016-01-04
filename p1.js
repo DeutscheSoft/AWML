@@ -72,7 +72,7 @@
       };
       proto.createdCallback = function() {
         var options = {
-          container: this,
+          element: this,
         };
         var merge_options;
         var attr = this.attributes;
@@ -90,7 +90,6 @@
         }
         options = do_merge_options(merge_options, options);
         options = do_merge_options(w.P1.options.defaults[tagName], options);
-        options.element = this;
         this.widget = new widget(options);
         parent_node = this.find_parent();
         if (parent_node)
