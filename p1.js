@@ -43,20 +43,8 @@
   w.P1 = {
     options: { defaults: {} },
     registerWidget: function registerWidget(tagName, widget) {
-      var proto = Object.create(HTMLElement.prototype);
-      proto.rec_find_children = function(node) {
-        var i;
-        var ret = [];
-
-        for (i = 0; i < node.childNodes.length; i++) {
-            if (node.childNodes[i].is_toolkit_node) {
-                ret.push(node.childNodes[i].widget);
-            } else if (node.childNodes[i] != this.widget.element) {
-                ret = ret.concat(this.rec_find_children(node.childNodes[i]));
-            }
-        }
-        return ret;
-      };
+      var dom_element = widget.prototype.DOMElement || HTMLElement;
+      var proto = Object.create(dom_element.prototype);
       function find_parent() {
           var node = this.parentNode;
 
@@ -77,7 +65,6 @@
         var merge_options;
         var attr = this.attributes;
         var O = widget.prototype._options;
-        var parent_node;
         console.log(O);
         for (var i = 0; i < attr.length; i++) {
             var name = attr[i].name;
@@ -91,19 +78,17 @@
         options = do_merge_options(merge_options, options);
         options = do_merge_options(w.P1.options.defaults[tagName], options);
         this.widget = new widget(options);
-        parent_node = find_parent.call(this);
+      };
+      proto.attachedCallback = function() {
+        var parent_node = find_parent.call(this);
         if (parent_node) parent_node.widget.add_child(this.widget);
       };
-      proto.appendChild = function(node) {
-        Node.prototype.appendChild.call(this, node);
-        if (this.widget) this.widget.add_children(this.rec_find_children(node));
-      };
-      proto.insertBefore = function(n, p) {
-        Node.prototype.insertBefore.call(this, n, p);
-        if (this.widget) this.widget.add_children(this.rec_find_children(n));
-      };
       proto.is_toolkit_node = true;
-      return document.registerElement(tagName, { prototype: proto, });
+      var O = { prototype: proto };
+      if (dom_element !== HTMLElement) {
+          O.extends = "svg";
+      }
+      return document.registerElement(tagName, O);
     },
   };
 
