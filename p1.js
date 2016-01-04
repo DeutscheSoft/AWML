@@ -73,7 +73,9 @@
             if (name == "options") {
                 merge_options = w.P1.options[value];
             }
-            options[name] = parse(name, value);
+
+            if (widget.prototype._options[name])
+                options[name] = parse(name, value);
         }
         options = do_merge_options(merge_options, options);
         options = do_merge_options(w.P1.options.defaults[tagName], options);
@@ -82,6 +84,11 @@
       proto.attachedCallback = function() {
         var parent_node = find_parent.call(this);
         if (parent_node) parent_node.widget.add_child(this.widget);
+      };
+      proto.attributeChangedCallback = function(name, old_value, value) {
+          if (this.widget && widget.prototype._options[name] && !Widget.prototype._options[name] && typeof value === "string") {
+              this.widget.set(name, parse(name, value));
+          }
       };
       proto.is_toolkit_node = true;
       var O = { prototype: proto };
