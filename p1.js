@@ -23,21 +23,27 @@
   }
   function do_merge_options(o1, o2) {
     var x;
+    var ret = {};
 
     if (!o1)
         return o2;
     if (!o2)
         return o1;
 
+    for (x in o1)
+        ret[x] = o1[x];
+
     for (x in o2) {
-        if (typeof o1[x] === object &&
-            typeof o2[x] === object &&
-            Object.getPrototype(o1[x]) == null &&
-            Object.getPrototype(o2[x]) == null)
-            do_merge_options(o1[x], o2[x]);
+        if (typeof ret[x] === "object" &&
+            typeof o2[x] === "object" &&
+            Object.getPrototypeOf(ret[x]) == null &&
+            Object.getPrototypeOf(o2[x]) == null)
+            ret[x] = do_merge_options(ret[x], o2[x]);
         else
-            o1[x] = o2[x];
+            ret[x] = o2[x];
     }
+
+    return ret;
   }
   
   w.P1 = {
