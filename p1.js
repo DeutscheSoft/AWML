@@ -42,6 +42,11 @@
   
   w.P1 = {
     options: { defaults: {} },
+    set_default: function (tag, name, value) {
+        var d = this.options.defaults;
+        if (!d.hasOwnProperty(tag)) d[tag] = {};
+        d[tag][name] = value;
+    },
     registerWidget: function registerWidget(tagName, widget) {
       var dom_element = widget.prototype.DOMElement || HTMLElement;
       var proto = Object.create(dom_element.prototype);
