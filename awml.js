@@ -13,7 +13,7 @@
       } else if (match = x.match(/^json:(.*)/m)) {
           x = JSON.parse(match[1]);
       } else if (match = x.match(/^inherit:(.*)/m)) {
-          x = w.P1.options[match[1]];
+          x = w.AWML.options[match[1]];
       } else if (Number.parseFloat(x).toString() == x) {
           x = Number.parseFloat(x);
       }
@@ -46,7 +46,7 @@
     return ret;
   }
   
-  w.P1 = {
+  w.AWML = {
     options: { defaults: {} },
     set_default: function (tag, name, value) {
         var d = this.options.defaults;
@@ -82,14 +82,14 @@
             var value = attr[i].value;
 
             if (name == "options") {
-                merge_options = w.P1.options[value];
+                merge_options = w.AWML.options[value];
             }
 
             if (widget.prototype._options[name])
                 options[name] = parse(name, value);
         }
         options = do_merge_options(merge_options, options);
-        options = do_merge_options(w.P1.options.defaults[tagName], options);
+        options = do_merge_options(w.AWML.options.defaults[tagName], options);
         this.widget = new widget(options);
       };
       proto.attachedCallback = function() {
@@ -113,7 +113,7 @@
   for (var key in TK) {
       var f = TK[key];
       if (typeof f === "function" && f.prototype && Widget.prototype.isPrototypeOf(f.prototype)) {
-          w.P1[key] = w.P1.registerWidget("p1-"+key.toLowerCase(), f);
+          w.AWML[key] = w.AWML.registerWidget("awml-"+key.toLowerCase(), f);
       }
   }
 
