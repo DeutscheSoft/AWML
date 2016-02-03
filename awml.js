@@ -14,6 +14,8 @@
           x = JSON.parse(match[1]);
       } else if (match = x.match(/^inherit:(.*)/m)) {
           x = w.AWML.options[match[1]];
+      } else if (match = x.match(/^string:(.*)/m)) {
+          x = match[1];
       } else if (Number.parseFloat(x).toString() == x) {
           x = Number.parseFloat(x);
       }
