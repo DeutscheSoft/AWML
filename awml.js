@@ -205,6 +205,29 @@
       }
     })
   });
+  w.AWML.Filter = document.registerElement("awml-filter", {
+    prototype: Object.assign(Object.create(HTMLElement.prototype), {
+      is_tookit_node: true,
+      createdCallback: function() {
+        this.style.display = "none";
+        this.options = extract_options.call(this, TK.EqBand);
+      },
+      attachedCallback: function() {
+        var node = find_parent.call(this);
+        if (node) {
+          if (this.band) node.widget.remove_band(this.band);
+          this.band = node.widget.add_band(this.options);
+        }
+      },
+      detachedCallback: function() {
+        var node = find_parent.call(this);
+        if (node && this.band) {
+          node.widget.remove_band(this.band);
+          delete this.band;
+        }
+      }
+    })
+  });
   w.AWML.Event = document.registerElement("awml-event", {
     prototype: Object.assign(Object.create(HTMLElement.prototype), {
       createdCallback: function() {
