@@ -1,5 +1,70 @@
 "use strict";
 (function(w) {
+  function Option(name, value, attach, detach) {
+    this.name = name;
+    this.value = value;
+    this._attach = attach;
+    this._detach = detach;
+    this.node = null;
+    this.widget = null;
+  };
+  Option.prototype = {
+    detach: function(node, widget) {
+        if (this._detach) this._detach(node, widget);
+        this.node = null;
+        this.widget = null;
+    },
+    attach: function(node, widget) {
+        this.node = node;
+        this.widget = widget;
+        if (this._attach) this._attach(node, widget);
+    },
+  };
+  function attach_option(node, widget, name, value) {
+      if (value instanceof Option) {
+          value.attach(node, widget);
+      } else if (value !== undefined) {
+          widget.set(name, value);
+      }
+  }
+  function attach_options(node, widget, options) {
+      for (var key in options) {
+          attach_option(node, widget, key, options[key]);
+      }
+  }
+  function detach_option(node, widget, name, value) {
+      if (value instanceof Option) {
+          value.detach(node, widget);
+      } else if (value !== undefined) {
+          // we set it back to the default
+          widget.set(name, undefined);
+      }
+  }
+  function update_option(node, widget, name, value_old, value_new) {
+      detach_option(node, widget, name, value_old);
+      attach_option(node, widget, name, value_new);
+  }
+  function option_value(value) {
+      if (value instanceof Option) return value.value;
+      return value;
+  }
+  function has_attribute(widget, name) {
+      if (widget._options[name] || name.charCodeAt(0) === 95) {
+          // If the widget does not internally use the awml element itself, we have to 
+          // actually use id/class. This is buggy because the 'wrong' element ends
+          // up with the same class/id. We need to fix this somehow, but its not really
+          // possible without renaming the option. FIXME
+          return name !== "id" && name !== "class" || !widget._options.element;
+      }
+      return false;
+  }
+  function evaluate_options(options) {
+      var ret = {};
+      for (var key in options) {
+          ret[key] = option_value(options[key]);
+      }
+      return ret;
+  }
   function parse_type(type, x) {
       switch (type) {
       case "js":
@@ -33,17 +98,45 @@
         return undefined;
       }
   }
-  function parse(name, x) {
+  function parse_option(name, type, value) {
+      if (type === "media") {
+        if (!window.matchMedia) {
+            TK.error("media type AWML options are not supported in this browser:", x);
+        }
+        var m = window.matchMedia(value);
+        var o = new Option(name, m.matches,
+          function () {
+            this.mql.addListener(this.handler);
+            this.handler();
+          },
+          function () {
+            this.mql.removeListener(this.handler);
+          });
+         o.handler = function() {
+            this.widget.set(this.name, this.mql.matches);
+        }.bind(o);
+         o.mql = m;
+         return o;
+      } else {
+         return parse_type(type, value);
+      }
+  }
+  function parse_attribute(name, x) {
       var match;
 
+      if (typeof x !== "string") return undefined;
+
       if (match = x.match(/^([^:]*):(.*)/m)) {
-          x = parse_type(match[1], match[2]);
-      } else if (Number.parseFloat(x).toString() == x) {
+          x = parse_option(name, match[1], match[2]);
+      } else if (Number.parseFloat(x).toString() === x) {
           x = Number.parseFloat(x);
+      } else if (x === "true") {
+          x = true;
+      } else if (x === "false") {
+          x = false;
       }
 
       return x;
-
   }
   function do_merge_options(o1, o2) {
     var x;
@@ -93,12 +186,26 @@
         var name = attr[i].name;
         var value = attr[i].value;
 
+        if (name === "fixed") {
+            options._fixed = true;
+        }
+
         if (name == "options") {
             merge_options = w.AWML.options[value];
         }
 
-        if (widget.prototype._options[name])
-            options[name] = parse(name, value);
+        if (widget.prototype._options[name] || name.charCodeAt(0) === 95) {
+            if (!widget.prototype._options.element) {
+                // TODO: we should really remove the id, to avoid collisions, but
+                // this does not currently work
+                /*
+                    if (name === "id")
+                        this.removeAttribute("id");
+                */
+                options[name] = parse_attribute(name, value);
+            } else if (name !== "id" && name !== "class")
+                options[name] = parse_attribute(name, value);
+        }
     }
     options = do_merge_options(merge_options, options);
     options = do_merge_options(w.AWML.options.defaults[tagName], options);
@@ -115,25 +222,28 @@
     registerWidget: function registerWidget(tagName, widget) {
       var proto = Object.create(HTMLElement.prototype);
       proto.createdCallback = function() {
-        var options = extract_options.call(this, widget);
-        options.element = this;
-        this.widget = new widget(options);
+        var options = this.options = extract_options.call(this, widget);
+        if (widget.prototype._options.element)
+            options.element = this;
+        this.widget = new widget(evaluate_options(options));
+        attach_options(this, this.widget, options);
       };
       proto.attachedCallback = function() {
         var parent_node = find_parent.call(this);
         if (parent_node) parent_node.widget.add_child(this.widget);
+        else if (!(this.widget instanceof TK.Root)) TK.error("could not find parent for", this);
       };
       proto.detachedCallback = function() {
           if (this.widget.parent)
-              this.widget.parent.remove_child(this.widget.parent);
+              this.widget.parent.remove_child(this.widget);
       };
       proto.attributeChangedCallback = function(name, old_value, value) {
-          if (this.widget && widget.prototype._options[name] && !Widget.prototype._options[name]) {
-              if (typeof value === "string") {
-                  this.widget.set(name, parse(name, value));
-              } else {
-                  this.widget.set(name, undefined);
-              }
+          if (this.widget && has_attribute(this.widget, name)) {
+              value = parse_attribute(name, value);
+
+              update_option(this, this.widget, name, this.options[name], value);
+
+              this.options[name] = value;
           }
       };
       proto.is_toolkit_node = true;
@@ -157,7 +267,7 @@
             var name = this.getAttribute("name");
             var type = this.getAttribute("type") || "string";
 
-            data = parse_type(type, data);
+            data = parse_option(name, type, data);
             this.name = name;
             this.data = data;
             this.type = type;
