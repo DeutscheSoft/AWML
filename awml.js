@@ -186,12 +186,19 @@
         var name = attr[i].name;
         var value = attr[i].value;
 
-        if (name === "fixed") {
-            options._fixed = true;
-        }
-
-        if (name == "options") {
+        if (name === "expanded") {
+            options._expanded = parse_attribute("_expanded", value);
+            if (typeof options._expanded === "string")
+                options._expanded = true;
+            continue;
+        } else if (name === "collapsed") {
+            options._collapsed = parse_attribute("_collapsed", value);
+            if (typeof options._collapsed === "string")
+                options._collapsed = true;
+            continue;
+        } else if (name == "options") {
             merge_options = w.AWML.options[value];
+            continue;
         }
 
         if (widget.prototype._options[name] || name.charCodeAt(0) === 95) {
