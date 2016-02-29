@@ -86,7 +86,7 @@
       case "string":
         return x;
       case "number":
-        return Number.parseFloat(x);
+        return parseFloat(x);
       case "int":
         return parseInt(x);
       case "sprintf":
@@ -128,8 +128,8 @@
 
       if (match = x.match(/^([^:]*):(.*)/m)) {
           x = parse_option(name, match[1], match[2]);
-      } else if (Number.parseFloat(x).toString() === x) {
-          x = Number.parseFloat(x);
+      } else if (parseFloat(x).toString() === x) {
+          x = parseFloat(x);
       } else if (x === "true") {
           x = true;
       } else if (x === "false") {
