@@ -1,3 +1,4 @@
+// vim:sw=2
 "use strict";
 (function(w) {
   function Option(name, value, attach, detach) {
@@ -8,6 +9,7 @@
     this.node = null;
     this.widget = null;
   };
+  // FIXME: do proper inheritance
   Option.prototype = {
     detach: function(node, widget) {
         if (this._detach) this._detach(node, widget);
@@ -20,6 +22,40 @@
         if (this._attach) this._attach(node, widget);
     },
   };
+  function MediaOption(name, value) {
+      this.mql = window.matchMedia(value);
+      this.handler = function() {
+          this.widget.set(this.name, this.mql.matches);
+        }.bind(this);
+
+      Option.call(this, name, this.mql.matches,
+          function () {
+            this.mql.addListener(this.handler);
+            this.handler();
+          },
+          function () {
+            this.mql.removeListener(this.handler);
+          });
+  };
+  MediaOption.prototype = Object.create(Option.prototype);
+  function ParentOption(name, option_name) {
+      this.option_name = option_name;
+      this.handler = function(value) {
+                        this.widget.set(this.name, value);
+                    }.bind(this);
+      Option.call(this, name, other.get(other_options),
+                  function(node, widget) {
+                    var o = this.widget.parent;
+                    o.add_event("set_"+other_option, this.handler);
+                    this.handler(o.get(this.option_name));
+                  },
+                  function(node, widget) {
+                    var o = this.widget.parent;
+                    if (o)
+                      o.remove_event("set_"+other_option, this.handler);
+                  });
+  }
+  ParentOption.prototype = Object.create(Option.prototype);
   function attach_option(node, widget, name, value) {
       if (value instanceof Option) {
           value.attach(node, widget);
@@ -103,22 +139,11 @@
         if (!window.matchMedia) {
             TK.error("media type AWML options are not supported in this browser:", x);
         }
-        var m = window.matchMedia(value);
-        var o = new Option(name, m.matches,
-          function () {
-            this.mql.addListener(this.handler);
-            this.handler();
-          },
-          function () {
-            this.mql.removeListener(this.handler);
-          });
-         o.handler = function() {
-            this.widget.set(this.name, this.mql.matches);
-        }.bind(o);
-         o.mql = m;
-         return o;
+        return new MediaOption(name, value);
+      } else if (type === "parent-option") {
+        return new ParentOption(name, value);
       } else {
-         return parse_type(type, value);
+        return parse_type(type, value);
       }
   }
   function parse_attribute(name, x) {
