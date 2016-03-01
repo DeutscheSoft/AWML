@@ -43,16 +43,17 @@
       this.handler = function(value) {
                         this.widget.set(this.name, value);
                     }.bind(this);
-      Option.call(this, name, other.get(other_options),
+      Option.call(this, name, undefined,
                   function(node, widget) {
-                    var o = this.widget.parent;
-                    o.add_event("set_"+other_option, this.handler);
+                    var parent = find_parent.call(node);
+                    var o = parent.widget;
+                    o.add_event("set_"+this.option_name, this.handler);
                     this.handler(o.get(this.option_name));
                   },
                   function(node, widget) {
                     var o = this.widget.parent;
                     if (o)
-                      o.remove_event("set_"+other_option, this.handler);
+                      o.remove_event("set_"+this.option_name, this.handler);
                   });
   }
   ParentOption.prototype = Object.create(Option.prototype);
