@@ -57,11 +57,28 @@
                   });
   }
   ParentOption.prototype = Object.create(Option.prototype);
+  function check_option(widget, key, value) {
+      var type = widget._options[key];
+      if (type) {
+        if (typeof value !== type) {
+          if (type === "int" && typeof value === "number" ||
+              type === "array" && typeof value === "object" && value instanceof Array) {
+            return;
+          }
+          AWML.warn("Type mismatch for option %o. Expected type %o. Got %o.",
+                    key, widget._options[key], value);
+        }
+      }
+  }
+  function check_options(widget, options) {
+    for (var key in options) {
+      check_option(widget, key, options[key]);
+    }
+    return options;
+  }
   function attach_option(node, widget, name, value) {
       if (value instanceof Option) {
           value.attach(node, widget);
-      } else if (value !== undefined) {
-          widget.set(name, value);
       }
   }
   function attach_options(node, widget, options) {
@@ -244,8 +261,21 @@
     options = do_merge_options(w.AWML.options.defaults[tagName], options);
     return options;
   }
+
+  var _warn_stack = [ TK.warn ];
   
   w.AWML = {
+    warn: function() {
+      _warn_stack[_warn_stack.length-1].apply(this, arguments);
+    },
+    push_warn: function(f) {
+        _warn_stack.push(f);
+    },
+    pop_warn: function() {
+        if (_warn_stack.length > 1) {
+          _warn_stack.length--;
+        }
+    },
     options: { defaults: {} },
     set_default: function (tag, name, value) {
         var d = this.options.defaults;
@@ -258,7 +288,7 @@
         var options = this.options = extract_options.call(this, widget);
         if (widget.prototype._options.element)
             options.element = this;
-        this.widget = new widget(evaluate_options(options));
+        this.widget = new widget(check_options(widget.prototype, evaluate_options(options)));
         attach_options(this, this.widget, options);
       };
       proto.attachedCallback = function() {
