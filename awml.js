@@ -79,6 +79,9 @@
   function attach_option(node, widget, name, value) {
       if (value instanceof Option) {
           value.attach(node, widget);
+      } else if (typeof value !== "undefined") {
+          check_option(widget, name, value);
+          widget.set(name, value);
       }
   }
   function attach_options(node, widget, options) {
