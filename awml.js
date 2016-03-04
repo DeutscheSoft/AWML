@@ -118,7 +118,8 @@
   function evaluate_options(options) {
       var ret = {};
       for (var key in options) {
-          ret[key] = option_value(options[key]);
+          var v = option_value(options[key]);
+          if (v !== undefined) ret[key] = v;
       }
       return ret;
   }
@@ -130,14 +131,14 @@
         try {
             return new Function([], "return ("+x+");")();
         } catch (e) {
-            TK.error("Syntax error", e, "in", x);
+            AWML.error("Syntax error", e, "in", x);
             return undefined;
         }
       case "json":
         try {
             return JSON.parse(x);
         } catch (e) {
-            TK.error("Syntax error", e, "in JSON", x);
+            AWML.error("Syntax error", e, "in JSON", x);
             return undefined;
         }
       case "string":
@@ -151,14 +152,14 @@
       case "inherit":
         return w.AWML.options[x];
       default:
-        TK.error("unsupported type", type);
+        AWML.error("unsupported type", type);
         return undefined;
       }
   }
   function parse_option(name, type, value) {
       if (type === "media") {
         if (!window.matchMedia) {
-            TK.error("media type AWML options are not supported in this browser:", x);
+            AWML.error("media type AWML options are not supported in this browser:", x);
         }
         return new MediaOption(name, value);
       } else if (type === "parent-option") {
@@ -271,6 +272,11 @@
     warn: function() {
       _warn_stack[_warn_stack.length-1].apply(this, arguments);
     },
+    error: function() {
+      if (_warn_stack.length != 1)
+        AWML.warn.apply(this, arguments);
+      TK.error.apply(TK, arguments);
+    },
     push_warn: function(f) {
         _warn_stack.push(f);
     },
@@ -297,7 +303,7 @@
       proto.attachedCallback = function() {
         var parent_node = find_parent.call(this);
         if (parent_node) parent_node.widget.add_child(this.widget);
-        else if (!(this.widget instanceof TK.Root)) TK.error("could not find parent for", this);
+        else if (!(this.widget instanceof TK.Root)) AWML.error("could not find parent for", this);
       };
       proto.detachedCallback = function() {
           if (this.widget.parent)
