@@ -2,12 +2,12 @@ object port;
 
 mapping connections = ([]);
 
-void incoming(object frame) {
+void incoming(object frame, object from) {
     if (frame->opcode != Protocols.WebSocket.FRAME_TEXT) return;
 
     string data = frame->text;
 
-    foreach (connections; object con;)
+    foreach (connections; object con;) if (con != from)
         con->send_text(data);
 }
 
@@ -30,7 +30,11 @@ void accept_cb(array(string) protocols, object request) {
 
 int main(int argc, array(string) argv) {
 
-    port = Protocols.WebSocket.Port(dummy, accept_cb, 8080);
+    int portno = (argc > 1) ? (int)argv[1] : 8080;
+
+    port = Protocols.WebSocket.Port(dummy, accept_cb, portno);
+
+    write("Listening on ws://*:%d\n", portno);
 
     return -1;
 }
