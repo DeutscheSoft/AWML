@@ -324,14 +324,16 @@
     return document.registerElement(tagName, O);
   };
 
+  AWML.Tags = {};
+
   for (var key in TK) {
       var f = TK[key];
       if (typeof f === "function" && f.prototype && Widget.prototype.isPrototypeOf(f.prototype)) {
-          AWML[key] = AWML.registerWidget("awml-"+key.toLowerCase(), f);
+          AWML.Tags[key] = AWML.registerWidget("awml-"+key.toLowerCase(), f);
       }
   }
 
-  AWML.Option = document.registerElement("awml-option", {
+  AWML.Tags.Option = document.registerElement("awml-option", {
     prototype: Object.assign(Object.create(HTMLElement.prototype), {
        is_toolkit_node: true,
        createdCallback: function() {
@@ -355,7 +357,7 @@
     })
   });
 
-  AWML.Page = document.registerElement("awml-page", {
+  AWML.Tags.Page = document.registerElement("awml-page", {
     prototype: Object.assign(Object.create(HTMLElement.prototype), {
        is_toolkit_node: true,
        createdCallback: function() {
@@ -387,7 +389,7 @@
       }
     })
   });
-  AWML.Filter = document.registerElement("awml-filter", {
+  AWML.Tags.Filter = document.registerElement("awml-filter", {
     prototype: Object.assign(Object.create(HTMLElement.prototype), {
       is_toolkit_node: true,
       createdCallback: function() {
@@ -410,7 +412,7 @@
       }
     })
   });
-  AWML.Event = document.registerElement("awml-event", {
+  AWML.Tags.Event = document.registerElement("awml-event", {
     prototype: Object.assign(Object.create(HTMLElement.prototype), {
       createdCallback: function() {
           this.type = this.getAttribute("type");
