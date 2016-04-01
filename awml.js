@@ -150,7 +150,7 @@
       case "sprintf":
         return TK.FORMAT(x);
       case "inherit":
-        return w.AWML.options[x];
+        return AWML.options[x];
       default:
         AWML.error("unsupported type", type);
         return undefined;
@@ -223,6 +223,8 @@
       return undefined;
   };
 
+  AWML.find_parent_widget = find_parent;
+
   function extract_options(widget) {
     var O = widget.prototype._options;
     var tagName = this.tagName;
@@ -244,7 +246,7 @@
                 options._collapsed = true;
             continue;
         } else if (name == "options") {
-            merge_options = w.AWML.options[value];
+            merge_options = AWML.options[value];
             continue;
         }
 
@@ -262,76 +264,74 @@
         }
     }
     options = do_merge_options(merge_options, options);
-    options = do_merge_options(w.AWML.options.defaults[tagName], options);
+    options = do_merge_options(AWML.options.defaults[tagName], options);
     return options;
   }
 
   var _warn_stack = [ TK.warn ];
   
-  w.AWML = {
-    warn: function() {
-      _warn_stack[_warn_stack.length-1].apply(this, arguments);
-    },
-    error: function() {
-      if (_warn_stack.length != 1)
-        AWML.warn.apply(this, arguments);
-      TK.error.apply(TK, arguments);
-    },
-    push_warn: function(f) {
-        _warn_stack.push(f);
-    },
-    pop_warn: function() {
-        if (_warn_stack.length > 1) {
-          _warn_stack.length--;
+  AWML.warn = function() {
+    _warn_stack[_warn_stack.length-1].apply(this, arguments);
+  };
+  AWML.error = function() {
+    if (_warn_stack.length != 1)
+      AWML.warn.apply(this, arguments);
+    TK.error.apply(TK, arguments);
+  };
+  AWML.push_warn = function(f) {
+    _warn_stack.push(f);
+  };
+  AWML.pop_warn = function() {
+    if (_warn_stack.length > 1) {
+      _warn_stack.length--;
+    }
+  };
+  AWML.options = { defaults: {} };
+  AWML.set_default = function (tag, name, value) {
+    var d = this.options.defaults;
+    if (!d.hasOwnProperty(tag)) d[tag] = {};
+    d[tag][name] = value;
+  };
+  AWML.registerWidget = function registerWidget(tagName, widget) {
+    var proto = Object.create(HTMLElement.prototype);
+    proto.createdCallback = function() {
+      var options = this.options = extract_options.call(this, widget);
+      if (widget.prototype._options.element)
+          options.element = this;
+      this.widget = new widget(check_options(widget.prototype, evaluate_options(options)));
+      attach_options(this, this.widget, options);
+    };
+    proto.attachedCallback = function() {
+      var parent_node = find_parent.call(this);
+      if (parent_node) parent_node.widget.add_child(this.widget);
+      else if (!(this.widget instanceof TK.Root)) AWML.error("could not find parent for", this);
+    };
+    proto.detachedCallback = function() {
+        if (this.widget.parent)
+            this.widget.parent.remove_child(this.widget);
+    };
+    proto.attributeChangedCallback = function(name, old_value, value) {
+        if (this.widget && has_attribute(this.widget, name)) {
+            value = parse_attribute(name, value);
+
+            update_option(this, this.widget, name, this.options[name], value);
+
+            this.options[name] = value;
         }
-    },
-    options: { defaults: {} },
-    set_default: function (tag, name, value) {
-        var d = this.options.defaults;
-        if (!d.hasOwnProperty(tag)) d[tag] = {};
-        d[tag][name] = value;
-    },
-    registerWidget: function registerWidget(tagName, widget) {
-      var proto = Object.create(HTMLElement.prototype);
-      proto.createdCallback = function() {
-        var options = this.options = extract_options.call(this, widget);
-        if (widget.prototype._options.element)
-            options.element = this;
-        this.widget = new widget(check_options(widget.prototype, evaluate_options(options)));
-        attach_options(this, this.widget, options);
-      };
-      proto.attachedCallback = function() {
-        var parent_node = find_parent.call(this);
-        if (parent_node) parent_node.widget.add_child(this.widget);
-        else if (!(this.widget instanceof TK.Root)) AWML.error("could not find parent for", this);
-      };
-      proto.detachedCallback = function() {
-          if (this.widget.parent)
-              this.widget.parent.remove_child(this.widget);
-      };
-      proto.attributeChangedCallback = function(name, old_value, value) {
-          if (this.widget && has_attribute(this.widget, name)) {
-              value = parse_attribute(name, value);
-
-              update_option(this, this.widget, name, this.options[name], value);
-
-              this.options[name] = value;
-          }
-      };
-      proto.is_toolkit_node = true;
-      var O = { prototype: proto };
-      return document.registerElement(tagName, O);
-    },
+    };
+    proto.is_toolkit_node = true;
+    var O = { prototype: proto };
+    return document.registerElement(tagName, O);
   };
 
   for (var key in TK) {
       var f = TK[key];
       if (typeof f === "function" && f.prototype && Widget.prototype.isPrototypeOf(f.prototype)) {
-          w.AWML[key] = w.AWML.registerWidget("awml-"+key.toLowerCase(), f);
+          AWML[key] = AWML.registerWidget("awml-"+key.toLowerCase(), f);
       }
   }
 
-  w.AWML.Option = document.registerElement("awml-option", {
+  AWML.Option = document.registerElement("awml-option", {
     prototype: Object.assign(Object.create(HTMLElement.prototype), {
        is_toolkit_node: true,
        createdCallback: function() {
@@ -355,7 +355,7 @@
     })
   });
 
-  w.AWML.Page = document.registerElement("awml-page", {
+  AWML.Page = document.registerElement("awml-page", {
     prototype: Object.assign(Object.create(HTMLElement.prototype), {
        is_toolkit_node: true,
        createdCallback: function() {
@@ -387,7 +387,7 @@
       }
     })
   });
-  w.AWML.Filter = document.registerElement("awml-filter", {
+  AWML.Filter = document.registerElement("awml-filter", {
     prototype: Object.assign(Object.create(HTMLElement.prototype), {
       is_toolkit_node: true,
       createdCallback: function() {
@@ -410,7 +410,7 @@
       }
     })
   });
-  w.AWML.Event = document.registerElement("awml-event", {
+  AWML.Event = document.registerElement("awml-event", {
     prototype: Object.assign(Object.create(HTMLElement.prototype), {
       createdCallback: function() {
           this.type = this.getAttribute("type");
@@ -434,5 +434,4 @@
       }
     })
   });
-
-})(this);
+})(this.AWML || (this.AWML = {}));
