@@ -4,12 +4,14 @@
   var handlers = {},
       bindings = {};
   AWML.register_protocol_handler = function(proto, handler) {
+    var b;
     handlers[proto] = handler;
-    if (!bindings[proto]) bindings[proto] = {};
-    handler.register_bindings(bindings[proto]);
+    if (!(b = bindings[proto])) bindings[proto] = b = {};
+    handler.register_bindings(b);
+    for (var uri in b) b[uri].set_handler(handler);
   };
-  AWML.unregister_protocol_handler = function(protocol, handler) {
-    delete handlers[protocol];
+  AWML.unregister_protocol_handler = function(proto, handler) {
+    delete handlers[proto];
     handler.unregister_bindings(bindings[proto]);
   };
   function Binding(uri) {
