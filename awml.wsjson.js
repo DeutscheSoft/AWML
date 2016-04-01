@@ -47,5 +47,8 @@
  Simple.prototype.unregister_bindings = function() {
     this.bindings = {};
  };
+ Simple.prototype.close = function() {
+   this.ws.close();
+ };
  AWML.WebSocketJSON = Simple;
 })(this.AWML || (this.AWML = {}));
