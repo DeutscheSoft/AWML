@@ -70,41 +70,59 @@
     if (handlers[proto]) bind.set_handler(handlers[proto]);
     return bind;
   };
+  var WidgetBinding = function(uri, widget, option) {
+    this.uri = uri;
+    this.widget = widget;
+    this.option = option;
+    this.binding = AWML.get_binding(uri);
+    this._useraction_cb = function(key, value) {
+      if (key === option)
+        this.binding.set(value); 
+    }.bind(this);
+    this._set_cb = function(value) {
+      this.widget.set(option, value);
+    }.bind(this);
+  };
+  WidgetBinding.prototype = {};
+  WidgetBinding.prototype.activate = function() {
+      this.binding.addListener(this._set_cb);
+      this.widget.add_event("useraction", this._useraction_cb);
+  };
+  WidgetBinding.prototype.deactivate = function() {
+      this.binding.removeListener(this._set_cb);
+      this.widget.remove_event("useraction", this._useraction_cb);
+  };
+  AWML.WidgetBinding = WidgetBinding;
   AWML.Tags.Binding = document.registerElement("awml-binding", {
     prototype: Object.assign(Object.create(HTMLElement.prototype), {
       createdCallback: function() {
-          var bind, option;
           this.style.display = "none";
-          this.option = option = this.getAttribute("option");
-          this.source = this.getAttribute("source");
-          this.binding = bind = AWML.get_binding(this.source);
-          this.target = null;
-          this._useraction_cb = function(key, value) {
-            if (key === option)
-              bind.set(value); 
-          };
-          this._set_cb = function(value) {
-            this.target.set(option, value);
-          }.bind(this);
+          this.bind = null;
       },
       attributeChangedCallback: function(name, old_value, value) {
+          if (name === "option") {
+          } else if (name === "source") {
+            
+          }
           TK.warn("not implemented");
       },
       detachedCallback: function() {
         var parent_node = AWML.find_parent_widget.call(this);
         if (parent_node) {
-          this.target = null;
-          this.binding.removeListener(this._set_cb);
-          parent_node.remove_event("useraction", this._useraction_cb);
+          if (this.bind) this.bind.deactivate();
         }
       },
       attachedCallback: function() {
         var bind = this.binding;
         var parent_node = AWML.find_parent_widget.call(this);
+
+        if (this.bind) this.bind.deactivate();
+
         if (parent_node) {
-          this.target = parent_node.widget;
-          this.binding.addListener(this._set_cb);
-          parent_node.widget.add_event("useraction", this._useraction_cb);
+          this.bind = new WidgetBinding(this.getAttribute("source"),
+                                        parent_node.widget,
+                                        this.getAttribute("option"));
+          this.bind.activate();
         }
       }
     })
