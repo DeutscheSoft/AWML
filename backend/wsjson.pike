@@ -2,10 +2,14 @@ object port;
 
 mapping connections = ([]);
 
+mapping values = ([]);
+
 void incoming(object frame, object from) {
     if (frame->opcode != Protocols.WebSocket.FRAME_TEXT) return;
 
     string data = frame->text;
+
+    values += Standards.JSON.decode(data);
 
     foreach (connections; object con;) if (con != from)
         con->send_text(data);
@@ -79,6 +83,8 @@ void accept_cb(array(string) protocols, object request) {
 
     con->onmessage = incoming;
     con->onclose = close_cb;
+
+    con->send_text(Standards.JSON.encode(values));
 }
 
 int main(int argc, array(string) argv) {
