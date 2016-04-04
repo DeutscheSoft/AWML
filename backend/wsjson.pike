@@ -4,6 +4,8 @@ mapping connections = ([]);
 
 mapping values = ([]);
 
+mapping(string:int) files = ([]);
+
 void incoming(object frame, object from) {
     if (frame->opcode != Protocols.WebSocket.FRAME_TEXT) return;
 
@@ -59,6 +61,7 @@ void http_cb(object r) {
         }
 
         if (Stdio.is_file(fname)) {
+            files[r->not_query] = 1;
 
             r->response_and_finish(([
                 "error" : 200,
@@ -87,6 +90,16 @@ void accept_cb(array(string) protocols, object request) {
     con->send_text(Standards.JSON.encode(values));
 }
 
+void terminate() {
+    write("Served the following list of file:\n");
+
+    foreach (sort(indices(files));; string file) {
+        write("%s\n", file);
+    }
+
+    exit(0);
+}
+
 int main(int argc, array(string) argv) {
 
     int portno = (argc > 1) ? (int)argv[1] : 8080;
@@ -94,6 +107,8 @@ int main(int argc, array(string) argv) {
     port = Protocols.WebSocket.Port(http_cb, accept_cb, portno);
 
     write("Go to http://localhost:%d/\n", portno);
+
+    signal(signum("SIGINT"), terminate);
 
     return -1;
 }
