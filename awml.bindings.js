@@ -70,7 +70,7 @@
     if (handlers[proto]) bind.set_handler(handlers[proto]);
     return bind;
   };
-  var WidgetBinding = function(uri, widget, option) {
+  var UserBinding = function(uri, widget, option) {
     this.uri = uri;
     this.widget = widget;
     this.option = option;
@@ -83,16 +83,47 @@
       this.widget.set(option, value);
     }.bind(this);
   };
-  WidgetBinding.prototype = {};
-  WidgetBinding.prototype.activate = function() {
+  UserBinding.prototype = {};
+  UserBinding.prototype.activate = function() {
       this.binding.addListener(this._set_cb);
       this.widget.add_event("useraction", this._useraction_cb);
   };
-  WidgetBinding.prototype.deactivate = function() {
+  UserBinding.prototype.deactivate = function() {
       this.binding.removeListener(this._set_cb);
       this.widget.remove_event("useraction", this._useraction_cb);
   };
-  AWML.WidgetBinding = WidgetBinding;
+  AWML.UserBinding = UserBinding;
+  var SyncBinding = function(uri, widget, option) {
+    this.uri = uri;
+    this.widget = widget;
+    this.option = option;
+    this.recurse = false;
+    this.binding = AWML.get_binding(uri);
+    this._widget_cb = function(key, value) {
+      if (key === option && !this.recurse) {
+        this.recurse = true;
+        this.binding.set(value); 
+        this.recurse = false;
+      }
+    }.bind(this);
+    this._set_cb = function(value) {
+      if (!this.recurse) {
+        this.recurse = true;
+        this.widget.set(option, value);
+        this.recurse = false;
+      }
+    }.bind(this);
+  };
+  SyncBinding.prototype = {};
+  SyncBinding.prototype.activate = function() {
+      this.binding.addListener(this._set_cb);
+      this.widget.add_event("set", this._widget_cb);
+  };
+  SyncBinding.prototype.deactivate = function() {
+      this.binding.removeListener(this._set_cb);
+      this.widget.remove_event("set", this._widget_cb);
+  };
+  AWML.SyncBinding = SyncBinding;
   AWML.Tags.Binding = document.registerElement("awml-binding", {
     prototype: Object.assign(Object.create(HTMLElement.prototype), {
       createdCallback: function() {
@@ -115,13 +146,24 @@
       attachedCallback: function() {
         var bind = this.binding;
         var parent_node = AWML.find_parent_widget.call(this);
+        var type = this.getAttribute("type");
+        var cl;
 
         if (this.bind) this.bind.deactivate();
 
         if (parent_node) {
-          this.bind = new WidgetBinding(this.getAttribute("source"),
-                                        parent_node.widget,
-                                        this.getAttribute("option"));
+          switch (type) {
+          case "sync":
+            cl = AWML.SyncBinding;
+            break;
+          case "user":
+          default:
+            cl = AWML.UserBinding;
+            break;
+          }
+          this.bind = new cl(this.getAttribute("source"),
+                             parent_node.widget,
+                             this.getAttribute("option"));
           this.bind.activate();
         }
       }
