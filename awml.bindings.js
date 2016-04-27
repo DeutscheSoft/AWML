@@ -124,6 +124,23 @@
       this.widget.remove_event("set", this._widget_cb);
   };
   AWML.SyncBinding = SyncBinding;
+  var PropertyBinding = function(uri, target, property) {
+    this.uri = uri;
+    this.binding = AWML.get_binding(uri);
+    this.target = target;
+    this.property = property;
+    this._set_cb = function(value) {
+      this.target[this.property] = value;
+    }.bind(this);
+  };
+  PropertyBinding.prototype = {};
+  PropertyBinding.prototype.activate = function() {
+      this.binding.addListener(this._set_cb);
+  };
+  PropertyBinding.prototype.deactivate = function() {
+      this.binding.removeListener(this._set_cb);
+  };
+  AWML.PropertyBinding = PropertyBinding;
   AWML.Tags.Binding = document.registerElement("awml-binding", {
     prototype: Object.assign(Object.create(HTMLElement.prototype), {
       createdCallback: function() {
