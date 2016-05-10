@@ -53,6 +53,7 @@
   Binding.prototype.update = function(value) {
     var i;
     this.value = value;
+    this.has_value = true;
     for (i = 0; i < this.listeners.length; i++) {
       this.listeners[i].call(this, value);
     }
@@ -136,6 +137,8 @@
   PropertyBinding.prototype = {};
   PropertyBinding.prototype.activate = function() {
       this.binding.addListener(this._set_cb);
+      if (!this.binding.has_value)
+        this.binding.set(this.target[this.property]);
   };
   PropertyBinding.prototype.deactivate = function() {
       this.binding.removeListener(this._set_cb);
