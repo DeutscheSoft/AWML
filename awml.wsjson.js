@@ -38,7 +38,7 @@
      this.ws.send(JSON.stringify(d));
  };
  Simple.prototype.update = function(uri, value) {
-    var bind = this.bindings[uri];
+    var bind = this.bindings[uri] || AWML.get_binding(uri);
     if (bind) bind.update(value);
  };
  Simple.prototype.register_bindings = function(bind) {
