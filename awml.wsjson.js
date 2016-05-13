@@ -36,6 +36,7 @@
      var d = {};
      d[uri] = value;
      this.ws.send(JSON.stringify(d));
+     this.update(uri, value);
  };
  Simple.prototype.update = function(uri, value) {
     var bind = this.bindings[uri] || AWML.get_binding(uri);
