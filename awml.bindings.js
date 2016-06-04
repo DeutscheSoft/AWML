@@ -144,6 +144,22 @@
       this.binding.removeListener(this._set_cb);
   };
   AWML.PropertyBinding = PropertyBinding;
+  var MethodBinding = function(uri, method) {
+    this.uri = uri;
+    this.binding = AWML.get_binding(uri);
+    this.method = method;
+    this._set_cb = function(value) {
+      this.method(value);
+    }.bind(this);
+  };
+  MethodBinding.prototype = {};
+  MethodBinding.prototype.activate = function() {
+      this.binding.addListener(this._set_cb);
+  };
+  MethodBinding.prototype.deactivate = function() {
+      this.binding.removeListener(this._set_cb);
+  };
+  AWML.MethodBinding = MethodBinding;
   AWML.Tags.Binding = document.registerElement("awml-binding", {
     prototype: Object.assign(Object.create(HTMLElement.prototype), {
       createdCallback: function() {
