@@ -125,20 +125,28 @@
       this.widget.remove_event("set", this._widget_cb);
   };
   AWML.SyncBinding = SyncBinding;
-  var PropertyBinding = function(uri, target, property) {
+  var PropertyBinding = function(uri, target, property, transform, transform_back) {
     this.uri = uri;
     this.binding = AWML.get_binding(uri);
     this.target = target;
     this.property = property;
+    this.transform = transform;
+    this.transform_back = transform_back;
     this._set_cb = function(value) {
+      if (transform) value = transform(value);
       this.target[this.property] = value;
     }.bind(this);
   };
   PropertyBinding.prototype = {};
   PropertyBinding.prototype.activate = function() {
+      var value;
       this.binding.addListener(this._set_cb);
-      if (!this.binding.has_value)
-        this.binding.set(this.target[this.property]);
+      if (!this.binding.has_value) {
+        value = this.target[this.property];
+        if (this.transform_back)
+            value = this.transform_back(value);
+        this.binding.set(value);
+      }
   };
   PropertyBinding.prototype.deactivate = function() {
       this.binding.removeListener(this._set_cb);
