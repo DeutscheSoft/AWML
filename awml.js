@@ -226,7 +226,7 @@
   AWML.find_parent_widget = find_parent;
 
   function extract_options(widget) {
-    var O = widget.prototype._options;
+    var O = widget ? widget.prototype._options : null;
     var tagName = this.tagName;
     var attr = this.attributes;
     var merge_options;
@@ -245,13 +245,14 @@
             if (typeof options._collapsed === "string")
                 options._collapsed = true;
             continue;
-        } else if (name == "options") {
+        } else if (name === "options") {
             merge_options = AWML.options[value];
+            if (!merge_options) TK.warn("No such default options: %o", value);
             continue;
         }
 
-        if (widget.prototype._options[name] || name.charCodeAt(0) === 95) {
-            if (!widget.prototype._options.element) {
+        if (!O || O[name] || name.charCodeAt(0) === 95) {
+            if (O && !O.element) {
                 // TODO: we should really remove the id, to avoid collisions, but
                 // this does not currently work
                 /*
@@ -307,6 +308,7 @@
       else if (!(this.widget instanceof TK.Root)) AWML.error("could not find parent for", this);
     };
     proto.detachedCallback = function() {
+        AWML.options[this.name] = null;
         if (this.widget.parent)
             this.widget.parent.remove_child(this.widget);
     };
@@ -354,6 +356,31 @@
         }
         if (parent_node) parent_node.widget.set(this.name, this.data);
       }
+    })
+  });
+
+  AWML.Tags.Options = document.registerElement("awml-options", {
+    prototype: Object.assign(Object.create(HTMLElement.prototype), {
+       is_toolkit_node: true,
+       createdCallback: function() {
+            var name = this.getAttribute("name");
+
+            this.name = name;
+            this.data = extract_options.call(this);
+            delete this.data.name;
+            this.style.display = "none";
+      },
+      attachedCallback: function() {
+        AWML.options[this.name] = this.data;
+      },
+      detachedCallback: function() {
+        if (AWML.options[this.name] === this.data) {
+          AWML.options[this.name] = null;
+        }
+      },
+      attributeChangedCallback: function(name, old_value, value) {
+        TK.warn("Attribute changes in awml-options tags are ineffective.");
+      },
     })
   });
 
