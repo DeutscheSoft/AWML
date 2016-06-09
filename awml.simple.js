@@ -16,11 +16,11 @@
     var bind = this.bindings[uri];
     if (bind) bind.update(value);
  };
- Simple.prototype.register_bindings = function(bind) {
-    this.bindings = bind || {};
+ Simple.prototype.register = function(binding) {
+   this.bindings[binding.uri] binding;
  };
- Simple.prototype.unregister_bindings = function() {
-    this.bindings = {};
+ Simple.prototype.unregister = function(binding) {
+   delete this.bindings[binding.uri];
  };
  AWML.SimpleHandler = Simple;
 })(this.AWML || (this.AWML = {}));

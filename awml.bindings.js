@@ -7,12 +7,14 @@
     var b;
     handlers[proto] = handler;
     if (!(b = bindings[proto])) bindings[proto] = b = {};
-    handler.register_bindings(b);
     for (var uri in b) b[uri].set_handler(handler);
   };
   AWML.unregister_protocol_handler = function(proto, handler) {
+    var b = bindings[proto];
+
     delete handlers[proto];
-    handler.unregister_bindings(bindings[proto]);
+    
+    for (var uri in b) b[uri].remove_handler(handler);
   };
   function Binding(uri) {
     this.uri = uri;
@@ -26,11 +28,13 @@
   Binding.prototype = {};
   Binding.prototype.set_handler = function(handler) {
     this.handler = handler;
+    handler.register(this);
     if (this.requested_value !== this.value) {
       handler.set(this.uri, this.requested_value);
     }
   };
   Binding.prototype.remove_handler = function(handler) {
+    handler.unregister(this);
     this.handler = null;
   };
   Binding.prototype.addListener = function(callback) {

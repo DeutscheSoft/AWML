@@ -2,19 +2,82 @@ object port;
 
 mapping connections = ([]);
 
-mapping values = ([]);
+mapping(int:mixed) values = ([]);
+mapping(string:int) path2id = ([]);
+mapping(int:string) id2path = ([]);
 
-mapping(string:int) files = ([]);
+int get_id(string name) {
+    int id;
+
+    while (has_index(id2path, id = random(sizeof(id2path)*2+1)));
+
+    id2path[id] = name;
+    path2id[name] = id;
+
+    return id;
+}
 
 void incoming(object frame, object from) {
-    if (frame->opcode != Protocols.WebSocket.FRAME_TEXT) return;
+    if (frame->opcode != Protocols.WebSocket.FRAME_TEXT) {
+        werror("Received non text frame: %O\n", frame);
+        return;
+    }
 
-    string data = frame->text;
+    mixed data = Standards.JSON.decode(frame->text);
 
-    values += Standards.JSON.decode(data);
+    if (mappingp(data)) {
+        mapping(int:int) subscriptions = connections[from];
+        mapping(string:int) ret = ([]);
+        array updates = ({});
 
-    foreach (connections; object con;) if (con != from)
-        con->send_text(data);
+        foreach (data; string name;) {
+            int id;
+            if (!has_index(path2id, name)) {
+                id = get_id(name);
+            } else {
+                id = path2id[name];
+            }
+
+            if (has_index(values, id)) {
+                updates += ({ id, values[id] });
+            }
+
+            subscriptions[id] = 1;
+            ret[name] = id;
+        }
+
+        from->send_text(Standards.JSON.encode(ret));
+        if (sizeof(updates))
+            from->send_text(Standards.JSON.encode(updates));
+
+    } else if (arrayp(data)) {
+        if (sizeof(data) & 1) {
+            werror("Bad value change: %O\n", data);
+            return;
+        }
+
+        array(string) changes = allocate(sizeof(data)/2);
+
+        for (int i = 0; i < sizeof(data); i += 2) {
+            int id = data[i];
+            mixed value = data[i+1];
+
+            values[id] = value;
+            changes[i/2] = id;
+        }
+        
+        foreach (connections; object con; mapping subscriptions) if (con != from) {
+            array tmp = filter(changes, subscriptions);
+            if (sizeof(tmp)) {
+                array d = allocate(sizeof(tmp)*2);
+                for (int i = 0; i < sizeof(tmp); i++) {
+                    d[i*2] = tmp[i];
+                    d[i*2+1] = values[tmp[i]];
+                }
+                con->send_text(Standards.JSON.encode(d));
+            }
+        }
+    }
 }
 
 string file_to_mime(string name) {
@@ -36,6 +99,8 @@ string file_to_mime(string name) {
         return "application/octet-stream";
     }
 }
+
+mapping(string:int) files = ([]);
 
 void http_cb(object r) {
     string type = r->request_type;
@@ -82,12 +147,10 @@ void close_cb(mixed status, object con) {
 void accept_cb(array(string) protocols, object request) {
     object con = request->websocket_accept("json");
 
-    connections[con] = 1;
+    connections[con] = ([]);
 
     con->onmessage = incoming;
     con->onclose = close_cb;
-
-    con->send_text(Standards.JSON.encode(values));
 }
 
 void terminate() {

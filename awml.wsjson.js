@@ -12,10 +12,25 @@
  };
  function message_cb(ev) {
     var d = JSON.parse(ev.data);
-    var uri;
+    var uri, i, id, value;
 
-    for (uri in d) {
-        this.update(uri, d[uri]);
+    if (typeof(d) === "object") {
+      if (d instanceof Array) {
+        for (i = 0; i < d.length; i+=2) {
+          id = d[i];
+          value = d[i+1];
+
+          uri = this.id2path.get(id);
+
+          this.update(uri, value);
+        }
+      } else {
+        for (uri in d) {
+          id = d[uri];
+          this.path2id.set(uri, id);
+          this.id2path.set(id, uri);
+        }
+      }
     }
  };
  function connect() {
@@ -29,24 +44,35 @@
     this.proto = proto;
     this.url = url;
     this.bindings = {};
+    this.path2id = new Map();
+    this.id2path = new Map();
+    this.modifications = new Map();
     connect.call(this);
  }
  Simple.prototype = {};
  Simple.prototype.set = function(uri, value) {
-     var d = {};
-     d[uri] = value;
-     this.ws.send(JSON.stringify(d));
-     this.update(uri, value);
+    if (this.path2id.has(uri)) {
+      var id = this.path2id.get(uri);
+      this.ws.send(JSON.stringify([ id, value ]));
+      this.update(uri, value);
+    }
  };
  Simple.prototype.update = function(uri, value) {
     var bind = this.bindings[uri] || AWML.get_binding(uri);
     if (bind) bind.update(value);
  };
- Simple.prototype.register_bindings = function(bind) {
-    this.bindings = bind || {};
+ Simple.prototype.register = function(binding) {
+   var uri = binding.uri;
+   this.bindings[uri] = binding;
+
+   if (!this.path2id.has(uri)) {
+     var d = {};
+     d[uri] = 1;
+     this.ws.send(JSON.stringify(d));
+   }
  };
- Simple.prototype.unregister_bindings = function() {
-    this.bindings = {};
+ Simple.prototype.unregister = function(binding) {
+   delete this.bindings[binding.uri];
  };
  Simple.prototype.close = function() {
    this.ws.close();
