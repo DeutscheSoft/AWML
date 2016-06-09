@@ -17,7 +17,7 @@
     if (bind) bind.update(value);
  };
  Simple.prototype.register = function(binding) {
-   this.bindings[binding.uri] binding;
+   this.bindings[binding.uri] = binding;
  };
  Simple.prototype.unregister = function(binding) {
    delete this.bindings[binding.uri];
