@@ -31,7 +31,7 @@
           this.id2path.set(id, uri);
           if (this.modifications.has(uri)) {
             var value = this.modifications.get(uri);
-            this.modifications.remove(uri);
+            this.modifications.delete(uri);
             this.set(uri, value);
           }
         }
