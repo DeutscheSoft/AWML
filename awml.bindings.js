@@ -75,16 +75,21 @@
     if (handlers[proto]) bind.set_handler(handlers[proto]);
     return bind;
   };
-  var UserBinding = function(uri, widget, option) {
+  var UserBinding = function(uri, widget, option, transform, transform_back) {
     this.uri = uri;
     this.widget = widget;
     this.option = option;
+    this.transform = transform;
+    this.transform_back = transform_back;
     this.binding = AWML.get_binding(uri);
     this._useraction_cb = function(key, value) {
-      if (key === option)
+      if (key === option) {
+        if (transform_back) value = transform_back(value);
         this.binding.set(value); 
+      }
     }.bind(this);
     this._set_cb = function(value) {
+      if (transform) value = transform(value);
       this.widget.set(option, value);
     }.bind(this);
   };
@@ -98,15 +103,18 @@
       this.widget.remove_event("useraction", this._useraction_cb);
   };
   AWML.UserBinding = UserBinding;
-  var SyncBinding = function(uri, widget, option) {
+  var SyncBinding = function(uri, widget, option, transform, transform_back) {
     this.uri = uri;
     this.widget = widget;
     this.option = option;
     this.recurse = false;
+    this.transform = transform;
+    this.transform_back = transform_back;
     this.binding = AWML.get_binding(uri);
     this._widget_cb = function(key, value) {
       if (key === option && !this.recurse) {
         this.recurse = true;
+        if (transform_back) value = transform_back(value);
         this.binding.set(value); 
         this.recurse = false;
       }
@@ -114,6 +122,7 @@
     this._set_cb = function(value) {
       if (!this.recurse) {
         this.recurse = true;
+        if (transform) value = transform(value);
         this.widget.set(option, value);
         this.recurse = false;
       }
