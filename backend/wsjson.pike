@@ -137,6 +137,7 @@ void http_cb(object r) {
         }
     }
 
+    werror("NOT FOUND: %O\n", r);
     r->response_and_finish(([ "error" : 404, "data" : "No such file.", "type" : "text/plain" ]));
 }
 
