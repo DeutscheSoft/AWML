@@ -97,10 +97,12 @@
   UserBinding.prototype.activate = function() {
       this.binding.addListener(this._set_cb);
       this.widget.add_event("useraction", this._useraction_cb);
+      return this;
   };
   UserBinding.prototype.deactivate = function() {
       this.binding.removeListener(this._set_cb);
       this.widget.remove_event("useraction", this._useraction_cb);
+      return this;
   };
   AWML.UserBinding = UserBinding;
   var SyncBinding = function(uri, widget, option, transform, transform_back) {
@@ -132,10 +134,12 @@
   SyncBinding.prototype.activate = function() {
       this.binding.addListener(this._set_cb);
       this.widget.add_event("set", this._widget_cb);
+      return this;
   };
   SyncBinding.prototype.deactivate = function() {
       this.binding.removeListener(this._set_cb);
       this.widget.remove_event("set", this._widget_cb);
+      return this;
   };
   AWML.SyncBinding = SyncBinding;
   var PropertyBinding = function(uri, target, property, transform, transform_back) {
@@ -160,9 +164,11 @@
             value = this.transform_back(value);
         this.binding.set(value);
       }
+      return this;
   };
   PropertyBinding.prototype.deactivate = function() {
       this.binding.removeListener(this._set_cb);
+      return this;
   };
   AWML.PropertyBinding = PropertyBinding;
   var MethodBinding = function(uri, method) {
@@ -176,9 +182,11 @@
   MethodBinding.prototype = {};
   MethodBinding.prototype.activate = function() {
       this.binding.addListener(this._set_cb);
+      return this;
   };
   MethodBinding.prototype.deactivate = function() {
       this.binding.removeListener(this._set_cb);
+      return this;
   };
   AWML.MethodBinding = MethodBinding;
   AWML.Tags.Binding = document.registerElement("awml-binding", {
