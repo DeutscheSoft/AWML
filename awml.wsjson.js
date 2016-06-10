@@ -29,6 +29,11 @@
           id = d[uri];
           this.path2id.set(uri, id);
           this.id2path.set(id, uri);
+          if (this.modifications.has(uri)) {
+            var value = this.modifications.get(uri);
+            this.modifications.remove(uri);
+            this.set(uri, value);
+          }
         }
       }
     }
@@ -55,6 +60,8 @@
       var id = this.path2id.get(uri);
       this.ws.send(JSON.stringify([ id, value ]));
       this.update(uri, value);
+    } else {
+      this.modifications.set(uri, value);
     }
  };
  Simple.prototype.update = function(uri, value) {
