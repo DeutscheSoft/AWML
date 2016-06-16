@@ -95,6 +95,10 @@ string file_to_mime(string name) {
         return "image/svg+xml";
     case "js":
         return "application/x-javascript";
+    case "mp3":
+        return "audio/mpeg";
+    case "wav":
+        return "audio/wav";
     default:
         return "application/octet-stream";
     }
@@ -105,7 +109,7 @@ mapping(string:int) files = ([]);
 void http_cb(object r) {
     string type = r->request_type;
 
-    if (type == "GET") {
+    if (type == "GET" || type == "HEAD") {
         string fname = r->not_query;
 
         fname = Stdio.simplify_path("./" + fname);
@@ -126,13 +130,14 @@ void http_cb(object r) {
         }
 
         if (Stdio.is_file(fname)) {
-            files[r->not_query] = 1;
+            object file = Stdio.File(fname, "r");
 
-            r->response_and_finish(([
-                "error" : 200,
-                "file" : Stdio.File(fname, "r"),
-                "type" : file_to_mime(fname)
-            ]));
+            mapping response = ([
+                "file" : file,
+                "type" : file_to_mime(fname),
+            ]);
+
+            r->response_and_finish(response);
             return;
         }
     }
