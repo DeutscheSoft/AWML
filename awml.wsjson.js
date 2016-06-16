@@ -45,7 +45,7 @@
     this.ws.onerror = error_cb.bind(this);
     this.ws.onmessage = message_cb.bind(this);
  };
- function Simple(proto, url) {
+ function WebSocketJSON(proto, url) {
     this.proto = proto;
     this.url = url;
     this.bindings = {};
@@ -54,8 +54,8 @@
     this.modifications = new Map();
     connect.call(this);
  }
- Simple.prototype = {};
- Simple.prototype.set = function(uri, value) {
+ WebSocketJSON.prototype = {};
+ WebSocketJSON.prototype.set = function(uri, value) {
     if (this.path2id.has(uri)) {
       var id = this.path2id.get(uri);
       this.ws.send(JSON.stringify([ id, value ]));
@@ -64,11 +64,11 @@
       this.modifications.set(uri, value);
     }
  };
- Simple.prototype.update = function(uri, value) {
+ WebSocketJSON.prototype.update = function(uri, value) {
     var bind = this.bindings[uri] || AWML.get_binding(uri);
     if (bind) bind.update(value);
  };
- Simple.prototype.register = function(binding) {
+ WebSocketJSON.prototype.register = function(binding) {
    var uri = binding.uri;
    this.bindings[uri] = binding;
 
@@ -78,11 +78,11 @@
      this.ws.send(JSON.stringify(d));
    }
  };
- Simple.prototype.unregister = function(binding) {
+ WebSocketJSON.prototype.unregister = function(binding) {
    delete this.bindings[binding.uri];
  };
- Simple.prototype.close = function() {
+ WebSocketJSON.prototype.close = function() {
    this.ws.close();
  };
- AWML.WebSocketJSON = Simple;
+ AWML.WebSocketJSON = WebSocketJSON;
 })(this.AWML || (this.AWML = {}));
