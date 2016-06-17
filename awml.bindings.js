@@ -267,37 +267,44 @@
 
   function SimpleHandler(proto) {
     this.proto = proto;
-    this.bindings = {};
+    this.bindings = new Map();
     AWML.register_protocol_handler(proto, this);
   }
+  SimpleHandler.prototype = {
+    set: function(uri, value) {
+      this.update(uri, value);
+    },
+    update: function(uri, value) {
+      var bind = this.bindings.get(uri);
+      if (bind) bind.update(value);
+    },
+    register: function(binding) {
+      this.bindings.set(binding.uri, binding);
+    },
+    unregister: function(binding) {
+      this.bindings.delete(binding.uri);
+    },
+  };
 
-  SimpleHandler.prototype = {};
-  SimpleHandler.prototype.set = function(uri, value) {
-    this.update(uri, value);
-  };
-  SimpleHandler.prototype.update = function(uri, value) {
-    var bind = this.bindings[uri];
-    if (bind) bind.update(value);
-  };
-  SimpleHandler.prototype.register = function(binding) {
-    this.bindings[binding.uri] = binding;
-  };
-  SimpleHandler.prototype.unregister = function(binding) {
-    delete this.bindings[binding.uri];
-  };
-  AWML.SimpleHandler = SimpleHandler;
+  function WebSocketJSON(proto, url) {
+    this.proto = proto;
+    this.url = url;
+    this.bindings = new Map();
+    this.path2id = new Map();
+    this.id2path = new Map();
+    this.modifications = new Map();
+    this.ws = new WebSocket(this.url, "json");
 
-  (function(AWML) {
-    function open_cb() {
+    this.ws.onopen = function() {
       AWML.register_protocol_handler(this.proto, this);
-    };
-    function close_cb() {
+    }.bind(this);
+    this.ws.onclose = function() {
       AWML.unregister_protocol_handler(this.proto, this);
-    };
-    function error_cb() {
+    }.bind(this);
+    this.ws.onerror = function() {
       AWML.unregister_protocol_handler(this.proto, this);
-    };
-    function message_cb(ev) {
+    }.bind(this);
+    this.ws.onmessage = function(ev) {
       var d = JSON.parse(ev.data);
       var uri, i, id, value;
 
@@ -324,25 +331,10 @@
           }
         }
       }
-    };
-    function connect() {
-      this.ws = new WebSocket(this.url, "json");
-      this.ws.onopen = open_cb.bind(this);
-      this.ws.onclose = close_cb.bind(this);
-      this.ws.onerror = error_cb.bind(this);
-      this.ws.onmessage = message_cb.bind(this);
-    };
-    function WebSocketJSON(proto, url) {
-      this.proto = proto;
-      this.url = url;
-      this.bindings = {};
-      this.path2id = new Map();
-      this.id2path = new Map();
-      this.modifications = new Map();
-      connect.call(this);
-    }
-    WebSocketJSON.prototype = {};
-    WebSocketJSON.prototype.set = function(uri, value) {
+    }.bind(this);
+  }
+  WebSocketJSON.prototype = {
+    set: function(uri, value) {
       if (this.path2id.has(uri)) {
         var id = this.path2id.get(uri);
         this.ws.send(JSON.stringify([ id, value ]));
@@ -350,29 +342,29 @@
       } else {
         this.modifications.set(uri, value);
       }
-    };
-    WebSocketJSON.prototype.update = function(uri, value) {
-      var bind = this.bindings[uri] || AWML.get_binding(uri);
+    },
+    update: function(uri, value) {
+      var bind = this.bindings.get(uri);
       if (bind) bind.update(value);
-    };
-    WebSocketJSON.prototype.register = function(binding) {
+      else AWML.warn('received update for unknown uri', uri);
+    },
+    register: function(binding) {
       var uri = binding.uri;
-      this.bindings[uri] = binding;
+      this.bindings.set(uri, binding);
 
       if (!this.path2id.has(uri)) {
         var d = {};
         d[uri] = 1;
         this.ws.send(JSON.stringify(d));
       }
-    };
-    WebSocketJSON.prototype.unregister = function(binding) {
-      delete this.bindings[binding.uri];
-    };
-    WebSocketJSON.prototype.close = function() {
+    },
+    unregister: function(binding) {
+      this.bindings.delete(binding.uri);
+    },
+    close: function() {
       this.ws.close();
-    };
-    AWML.WebSocketJSON = WebSocketJSON;
-  })(AWML);
+    },
+  };
 
   Object.assign(AWML, {
     Binding: Binding,
@@ -393,8 +385,11 @@
     },
 
     // Handlers
+    WebSocketJSON: WebSocketJSON,
+    SimpleHandler: SimpleHandler,
     Handlers: {
-      Simple: SimpleHandler,
+      Local: SimpleHandler,
+      WebSocket: WebSocketJSON,
     },
   });
 
