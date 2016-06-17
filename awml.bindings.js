@@ -16,6 +16,7 @@
     
     for (var uri in b) b[uri].remove_handler(handler);
   };
+
   function Binding(uri) {
     this.uri = uri;
     this.handler = null;
@@ -232,20 +233,17 @@
           this.bind = null;
       },
       attributeChangedCallback: function(name, old_value, value) {
-          if (name === "option") {
-          } else if (name === "source") {
-            
+          if (name === "option" || name === "source") {
+            this.attachedCallback();
           }
-          TK.warn("not implemented");
       },
       detachedCallback: function() {
-        var parent_node = AWML.find_parent_widget.call(this);
-        if (parent_node) {
-          if (this.bind) this.bind.deactivate();
+        if (this.bind) {
+          this.bind.deactivate();
+          this.bind = null
         }
       },
       attachedCallback: function() {
-        var bind = this.binding;
         var parent_node = AWML.find_parent_widget.call(this);
         var type = this.getAttribute("type");
         var cl;
