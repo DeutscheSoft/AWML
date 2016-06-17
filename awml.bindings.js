@@ -1,22 +1,6 @@
 // vim:sw=2
 "use strict";
 (function(AWML) {
-  var handlers = {},
-      bindings = {};
-  AWML.register_protocol_handler = function(proto, handler) {
-    var b;
-    handlers[proto] = handler;
-    if (!(b = bindings[proto])) bindings[proto] = b = {};
-    for (var uri in b) b[uri].set_handler(handler);
-  };
-  AWML.unregister_protocol_handler = function(proto, handler) {
-    var b = bindings[proto];
-
-    delete handlers[proto];
-    
-    for (var uri in b) b[uri].remove_handler(handler);
-  };
-
   function Binding(uri) {
     this.uri = uri;
     this.handler = null;
@@ -63,21 +47,6 @@
       }
     },
   };
-  AWML.Binding = Binding;
-
-  AWML.get_binding = function(uri) {
-    var i = uri.search(':');
-    var bind;
-    if (i === -1) throw new Error("bad URI: "+uri);
-    var proto = uri.substr(0, i);
-
-    if (!bindings[proto]) bindings[proto] = {};
-    if (bind = bindings[proto][uri])
-        return bind;
-    bindings[proto][uri] = bind = new Binding(uri);
-    if (handlers[proto]) bind.set_handler(handlers[proto]);
-    return bind;
-  };
 
   /**
    * Abstract Connector base class.
@@ -121,7 +90,7 @@
       if (key === option) this._send(value);
     }.bind(this, option);
 
-    Connector.call(this, AWML.get_binding(uri), transform_in, transform_out);
+    Connector.call(this, get_binding(uri), transform_in, transform_out);
   };
   UserBinding.prototype = Object.assign(Object.create(Connector.prototype), {
     activate: function() {
@@ -137,7 +106,6 @@
       this.widget.set(this.option, v);
     }
   });
-  AWML.UserBinding = UserBinding;
 
   /**
    * SyncBinding
@@ -147,7 +115,7 @@
     this.option = option;
     this.recurse = false;
 
-    Connector.call(this, AWML.get_binding(uri), transform_in, transform_out);
+    Connector.call(this, get_binding(uri), transform_in, transform_out);
   };
   SyncBinding.prototype = Object.assign(Object.create(Connector.prototype), {
     activate: function() {
@@ -172,7 +140,6 @@
       this.recurse = false;
     },
   });
-  AWML.SyncBinding = SyncBinding;
 
   /**
    * Property Binding, essentially only receives values.
@@ -181,7 +148,7 @@
     this.target = target;
     this.property = property;
 
-    Connector.call(this, AWML.get_binding(uri), transform_in, transform_out);
+    Connector.call(this, get_binding(uri), transform_in, transform_out);
   };
   PropertyBinding.prototype = Object.assign(Object.create(Connector.prototype), {
     activate: function() {
@@ -199,16 +166,15 @@
       this.target[this.property] = v;
     },
   });
-  AWML.PropertyBinding = PropertyBinding;
 
   /**
    * MethodBinding calls a setter on receiving a value.
    */
   function MethodBinding(uri, method, transform_in, transform_out) {
     this.uri = uri;
-    this.binding = AWML.get_binding(uri);
+    this.binding = get_binding(uri);
     this.method = method;
-    Connector.call(this, AWML.get_binding(uri), transform_in, transform_out);
+    Connector.call(this, get_binding(uri), transform_in, transform_out);
   };
   MethodBinding.prototype = Object.assign(Object.create(Connector.prototype), {
     receive: function(transform, v) {
@@ -216,15 +182,6 @@
       this.method(v);
     },
   });
-  AWML.MethodBinding = MethodBinding;
-
-  AWML.Connectors = {
-    Base: Connector,
-    Method: MethodBinding,
-    Property: PropertyBinding,
-    TKUser: UserBinding,
-    TKSync: SyncBinding,
-  };
 
   AWML.Tags.Binding = document.registerElement("awml-binding", {
     prototype: Object.assign(Object.create(HTMLElement.prototype), {
@@ -253,11 +210,11 @@
         if (parent_node) {
           switch (type) {
           case "sync":
-            cl = AWML.SyncBinding;
+            cl = SyncBinding;
             break;
           case "user":
           default:
-            cl = AWML.UserBinding;
+            cl = UserBinding;
             break;
           }
           this.bind = new cl(this.getAttribute("source"),
@@ -268,4 +225,62 @@
       }
     })
   });
+
+  var handlers = new Map(),
+      bindings = new Map();
+
+  function register_protocol_handler(proto, handler) {
+    handlers.set(proto, handler);
+
+    if (!bindings.has(proto)) return;
+
+    bindings.get(proto).forEach(function (bind, uri, m) {
+      bind.set_handler(handler);
+    });
+  };
+  function unregister_protocol_handler(proto, handler) {
+    handlers.delete(proto);
+
+    if (!bindings.has(proto)) return;
+
+    bindings.get(proto).forEach(function (bind, uri, m) {
+      bind.remove_handler(handler);
+    });
+  };
+  function get_binding (uri) {
+    var i = uri.search(':');
+    var bind;
+    if (i === -1) throw new Error("bad URI: "+uri);
+    var proto = uri.substr(0, i);
+
+    if (!bindings.has(proto)) bindings.set(proto, bind = new Map());
+    else bind = bindings.get(proto)
+
+    if (bind.has(uri)) return bind.get(uri);
+
+    bind.set(uri, bind = new Binding(uri));
+
+    if (handlers.has(proto)) bind.set_handler(handlers.get(proto));
+
+    return bind;
+  };
+
+  Object.assign(AWML, {
+    SyncBinding: SyncBinding,
+    UserBinding: UserBinding,
+    Binding: Binding,
+    PropertyBinding: PropertyBinding,
+    MethodBinding: MethodBinding,
+    get_binding: get_binding,
+    register_protocol_handler: register_protocol_handler,
+    unregister_protocol_handler: unregister_protocol_handler,
+    Connectors: {
+      Base: Connector,
+      Method: MethodBinding,
+      Property: PropertyBinding,
+      TKUser: UserBinding,
+      TKSync: SyncBinding,
+    },
+  });
+
 })(this.AWML || (this.AWML = {}));
