@@ -59,7 +59,7 @@
   ParentOption.prototype = Object.create(Option.prototype);
   function check_option(widget, key, value) {
       var type = widget._options[key];
-      if (type) {
+      if (type && type !== "mixed") {
         if (typeof value !== type) {
           if (type === "int" && typeof value === "number" ||
               type === "array" && typeof value === "object" && value instanceof Array) {
