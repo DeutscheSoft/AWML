@@ -340,9 +340,62 @@
       this.ws.send(JSON.stringify(d));
     },
     set: function(id, value) {
+      // the websocket backend will not respond
+      receive.call(this, id, value);
       this.ws.send(JSON.stringify([ id, value ]));
     },
   });
+
+  if (self.SharedWorker) {
+    var url = document.currentScript.getAttribute("src");
+    url = url.replace(/awml\.backends\.js/, "awml.backends.sharedworker.js");
+
+    function Shared(type) {
+      Base.call(this);
+      var args = Array.prototype.slice.call(arguments, 1);
+      this.worker = new SharedWorker(url, JSON.stringify([ type, args ]));
+      this.worker.onerror = function(e) {
+        AWML.error("Shared Worker generated an error:", e);
+      };
+      this.worker.port.addEventListener('message', function (ev) {
+          var d = ev.data;
+
+          if (typeof(d) === "object") {
+            if (d instanceof Array) {
+              var i;
+              for (i = 0; i < d.length; i+=2) {
+                receive.call(this, d[i], d[i+1]);
+              }
+              return;
+            } else {
+              var uri;
+              for (uri in d) {
+                subscribe_success.call(this, uri, d[uri]);
+              }
+              return;
+            }
+          }
+        }.bind(this));
+      this.worker.port.start();
+      to_open.call(this);
+    }
+    Shared.prototype = Object.assign(Object.create(Base.prototype), {
+      low_subscribe: function(uri) {
+        var d = {};
+        d[uri] = 1;
+        this.worker.port.postMessage(d);
+      },
+      low_unsubscribe: function(uri) {
+        var d = {};
+        d[uri] = 0;
+        this.worker.port.postMessage(d);
+      },
+      set: function(id, value) {
+        this.worker.port.postMessage([ id, value ]);
+      },
+    });
+    AWML.Backends.shared = Shared;
+  }
 
   Object.assign(AWML.Backends, {
     local: Local,
