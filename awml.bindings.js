@@ -3,23 +3,27 @@
 (function(AWML) {
   function Binding(uri) {
     this.uri = uri;
-    this.handler = null;
+    this.id = false;
+    this.backend = null;
     this.value = null;
     this.requested_value = null;
     this.has_value = false;
     this.listeners = [];
   };
   Binding.prototype = {
-    set_handler: function(handler) {
-      this.handler = handler;
-      handler.register(this);
-      if (this.requested_value !== this.value) {
-        handler.set(this.uri, this.requested_value);
-      }
+    set_backend: function(backend) {
+      this.backend = backend;
+      backend.subscribe(this.uri, this.update.bind(this))
+        .then(function(a) {
+            this.id = a[1];
+            if (this.value !== this.requested_value) {
+              this.backend.set(id, this.requested_value);
+            }
+          }.bind(this));
     },
-    remove_handler: function(handler) {
-      handler.unregister(this);
-      this.handler = null;
+    delete_backend: function(backend) {
+      this.id = false;
+      this.backend = null;
     },
     addListener: function(callback) {
       this.listeners.push(callback);
@@ -32,13 +36,11 @@
     },
     set: function(value) {
       this.requested_value = value;
-      if (this.handler) {
-        if (this.requested_value !== this.value) {
-          this.handler.set(this.uri, value);
-        }
+      if (this.id !== false) {
+        this.backend.set(this.id, value);
       }
     },
-    update: function(value) {
+    update: function(id, value) {
       var i;
       this.value = value;
       this.has_value = true;
@@ -154,11 +156,11 @@
     activate: function() {
       // TODO: might be more reasonable to require calling this explicitly
       if (!this.binding.has_value)
-        this.sync();
+        this.publish();
 
       return Connector.prototype.activate.call(this);
     },
-    sync: function() {
+    publish: function() {
       this._send(this.target[this.property]);
     },
     receive: function(transform, v) {
@@ -226,27 +228,47 @@
     })
   });
 
-  var handlers = new Map(),
-      bindings = new Map();
+  var bindings = new Map(),
+      backends = new Map();
 
-  function register_protocol_handler(proto, handler) {
-    handlers.set(proto, handler);
-
+  function backend_deactivate(proto, backend) {
     if (!bindings.has(proto)) return;
 
     bindings.get(proto).forEach(function (bind, uri, m) {
-      bind.set_handler(handler);
+      bind.delete_backend(backend);
     });
-  };
-  function unregister_protocol_handler(proto, handler) {
-    handlers.delete(proto);
-
+  }
+  function backend_activate(proto, backend) {
     if (!bindings.has(proto)) return;
 
     bindings.get(proto).forEach(function (bind, uri, m) {
-      bind.remove_handler(handler);
+      bind.set_backend(backend);
     });
+  }
+  function register_backend(proto, backend) {
+    var cb;
+
+    if (backends.has(proto)) {
+      backend_deactivate(proto, backend.get(proto));
+      backends.delete(proto);
+    }
+
+    if (backend) {
+      backends.set(proto, backend);
+      cb = backend_deactivate.bind(this, proto, backend);
+      backend.addEventListener('close', cb);
+      backend.addEventListener('error', cb);
+      backend_activate(proto, backend);
+    }
   };
+  function init_backend(proto, type) {
+    if (!AWML.Backends || !AWML.Backends[type]) throw new Error("No such backend.");
+
+    var constructor = AWML.Backends[type];
+    var args = Array.prototype.slice.call(arguments, 1);
+
+    register_backend(proto, new (constructor.bind.apply(constructor, args)));
+  }
   function get_binding (uri) {
     var i = uri.search(':');
     var bind;
@@ -260,117 +282,17 @@
 
     bind.set(uri, bind = new Binding(uri));
 
-    if (handlers.has(proto)) bind.set_handler(handlers.get(proto));
+    if (backends.has(proto)) bind.set_backend(backends.get(proto));
 
     return bind;
   };
 
-  function SimpleHandler(proto) {
-    this.proto = proto;
-    this.bindings = new Map();
-    AWML.register_protocol_handler(proto, this);
-  }
-  SimpleHandler.prototype = {
-    set: function(uri, value) {
-      this.update(uri, value);
-    },
-    update: function(uri, value) {
-      var bind = this.bindings.get(uri);
-      if (bind) bind.update(value);
-    },
-    register: function(binding) {
-      this.bindings.set(binding.uri, binding);
-    },
-    unregister: function(binding) {
-      this.bindings.delete(binding.uri);
-    },
-  };
-
-  function WebSocketJSON(proto, url) {
-    this.proto = proto;
-    this.url = url;
-    this.bindings = new Map();
-    this.path2id = new Map();
-    this.id2path = new Map();
-    this.modifications = new Map();
-    this.ws = new WebSocket(this.url, "json");
-
-    this.ws.onopen = function() {
-      AWML.register_protocol_handler(this.proto, this);
-    }.bind(this);
-    this.ws.onclose = function() {
-      AWML.unregister_protocol_handler(this.proto, this);
-    }.bind(this);
-    this.ws.onerror = function() {
-      AWML.unregister_protocol_handler(this.proto, this);
-    }.bind(this);
-    this.ws.onmessage = function(ev) {
-      var d = JSON.parse(ev.data);
-      var uri, i, id, value;
-
-      if (typeof(d) === "object") {
-        if (d instanceof Array) {
-          for (i = 0; i < d.length; i+=2) {
-            id = d[i];
-            value = d[i+1];
-
-            uri = this.id2path.get(id);
-
-            this.update(uri, value);
-          }
-        } else {
-          for (uri in d) {
-            id = d[uri];
-            this.path2id.set(uri, id);
-            this.id2path.set(id, uri);
-            if (this.modifications.has(uri)) {
-              var value = this.modifications.get(uri);
-              this.modifications.delete(uri);
-              this.set(uri, value);
-            }
-          }
-        }
-      }
-    }.bind(this);
-  }
-  WebSocketJSON.prototype = {
-    set: function(uri, value) {
-      if (this.path2id.has(uri)) {
-        var id = this.path2id.get(uri);
-        this.ws.send(JSON.stringify([ id, value ]));
-        this.update(uri, value);
-      } else {
-        this.modifications.set(uri, value);
-      }
-    },
-    update: function(uri, value) {
-      var bind = this.bindings.get(uri);
-      if (bind) bind.update(value);
-      else AWML.warn('received update for unknown uri', uri);
-    },
-    register: function(binding) {
-      var uri = binding.uri;
-      this.bindings.set(uri, binding);
-
-      if (!this.path2id.has(uri)) {
-        var d = {};
-        d[uri] = 1;
-        this.ws.send(JSON.stringify(d));
-      }
-    },
-    unregister: function(binding) {
-      this.bindings.delete(binding.uri);
-    },
-    close: function() {
-      this.ws.close();
-    },
-  };
 
   Object.assign(AWML, {
     Binding: Binding,
     get_binding: get_binding,
-    register_protocol_handler: register_protocol_handler,
-    unregister_protocol_handler: unregister_protocol_handler,
+    register_backend: register_backend,
+    init_backend: init_backend,
     // Connectors
     SyncBinding: SyncBinding,
     UserBinding: UserBinding,
@@ -382,14 +304,6 @@
       Property: PropertyBinding,
       TKUser: UserBinding,
       TKSync: SyncBinding,
-    },
-
-    // Handlers
-    WebSocketJSON: WebSocketJSON,
-    SimpleHandler: SimpleHandler,
-    Handlers: {
-      Local: SimpleHandler,
-      WebSocket: WebSocketJSON,
     },
   });
 
