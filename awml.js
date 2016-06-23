@@ -151,6 +151,15 @@
         return TK.FORMAT(x);
       case "inherit":
         return AWML.options[x];
+      case "bool":
+        if (x === "true") {
+          return true;
+        } else if (x === "false") {
+          return false;
+        } else {
+          AWML.error("Malformed 'bool': ", x);
+          return undefined;
+        }
       default:
         AWML.error("unsupported type", type);
         return undefined;
