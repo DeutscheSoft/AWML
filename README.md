@@ -62,10 +62,24 @@ Available formats are:
 * `inherit` - inherits values
 * `bool` - `true` or `false`
 
-If no format is specified, the parser will try `bool`, `number` and then fall back to `string`.
+If no format is specified, the parser will try `json` and then fall back to `string`.
 
-### Dynamic options
+### Option types
 
+
+
+### static
+
+`static` options are just that, static.
+Once set they do not change their value, unless the corresponding DOM node attributes are changed.
+They are intended to be used for options which do not usually change.
+All inline options are static and `static` is the default value for the `awml-option` tag `type` attribute.
+
+Additional attributes are
+
+* `name` - option name
+* `format` - option format (defaults to `json` or `string`)
+* `value` - option value (optionally as container content)
 
 ### media
 
@@ -75,35 +89,65 @@ The value of media type options depends on the result of the media query and the
 The media query is given in the `media` attribute and follows the usual syntax.
 The two possible values of the option are given in the value in an array with two entries.
 The first entry is used when the media-query is false, the second entry when it is true.
-The default value is `json:[false, true]`.
 
-The `type=media` attribute can be omitted, the type is auto-detected from the presence of the `media` attribute, however for clarity is can be preferable to specifiy the type explicitly.
+Additional attributes are:
+
+* `name` - option name
+* `format` - option format
+* `value` - an array of values, defaults to `[false, true]`
 
 Example:
 
     <awml-knob>
-      <awml-option type='media' name='active' media='min-width: 400px'></awml-option>
+      <awml-option type=media name=active media='min-width: 400px'></awml-option>
     </awml-knob>
     <awml-fader>
-      <awml-option media='max-width:600 px' name='min'>[0,2]</awml-option>
-      <awml-option media='max-width:500 px' name='show_scale'></awml-option>
+      <awml-option type=media media='max-width:600 px' name=min>[0,2]</awml-option>
+      <awml-option type=media media='max-width:500 px' name=show_scale></awml-option>
     </awml-fader>
 
 In the above example, the `min` option of the fader will have the value `0` if the window is smaller than 600 pixels and `2` otherwise.
 
-### 
+The media type options are supposed to be used in conjunction with corresponding CSS definitions.
 
-## Data Bindings
+### bind
 
-AWML has the notion of data bindings, which allows connecting user interface widgets to actual hardware.
-Inside of AWML they can be understood as dynamic options.
-These dynamic options can either be changed by the user (e.g. by moving a fader) or be
-controlled by some backend application (e.g. the audio level represented in a level meter).
-Each data binding is represented by an unique URI of the form `<backend-name>:<path>`.
-This addressing scheme allows using several different protocol backends in one interface.
-The format of the path component is protocol specific and handled transparently by the data binding infrastructure.
+The `bind` type option allows connecting widget options to values in a backend.
+Backends are essentially shared value stores using publish/subscribe semantics.
+In a given application all data in a backend are uniquely identified by their address.
+Addresses take the form of URIs, where the protocol part uniquely identifies a backend.
 
-    TODO: examples here
+Unlike in most applications of URI schemes, the protocol part is used here only to identify the backend and can be chosen freely by the developer.
+It has no meaning inside of AWML itself.
+The same applies to the rest of the URI.
+
+However, in most cases it makes sense to follow reasonable conventions and use the protocol name which the backend actually uses.
+
+Additional attributes are:
+
+* `name` - option name
+* `format` - option format
+* `value` - the default value, if none is set in the corresponding backend (optional)
+* `src` - the address of the backend value, of the form `<protocol>:<path>`
+* `sync` - sync flag (optional)
+* `transform-send` - transform function for sending values (optional)
+* `transform-receive` - transform function when receiving values (optional)
+
+By default, bindings will only react to user interaction in the widget, as opposed to any modification.
+This behavior can be controlled using the `sync` flag.
+If `sync` is set, the binding will trigger on any modification of the widget option and send the new value to the backend.
+This is useful when relaying values from one remote backend to another local one.
+
+Example:
+
+      <awml-knob min=0 max=10>
+        <awml-option name=value type=bind src='remote:foo'></awml-option>
+        <awml-option sync name=value type=bind src='local:foo'></awml-option>
+      </awml-knob>
+      <awml-knob min=0 max=10>
+        <awml-option name=value type=bind src='local:foo'></awml-option>
+      </awml-knob>
+
 
 ## Protocol Backends
 
@@ -186,7 +230,10 @@ Example:
       </head>
       <body>
         <awml-root>
-          <awml-backend type='websocket' name='local'>
+          <awml-backend
+                type='websocket' name='local'
+                src='ws://localhost:8080/data'
+            >
           </awml-backend>
 
           <h1>All connected clients will keep this in sync</h1>
