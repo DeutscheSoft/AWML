@@ -114,7 +114,7 @@ The media type options are supposed to be used in conjunction with corresponding
 
 The `bind` type option allows connecting widget options to values in a backend.
 Backends are essentially shared value stores using publish/subscribe semantics.
-In a given application all data in a backend are uniquely identified by their address.
+In a given application all data values in a backend are uniquely identified by their address.
 Addresses take the form of URIs, where the protocol part uniquely identifies a backend.
 
 Unlike in most applications of URI schemes, the protocol part is used here only to identify the backend and can be chosen freely by the developer.
