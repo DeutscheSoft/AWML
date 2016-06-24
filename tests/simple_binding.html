@@ -3,26 +3,23 @@
     <script src='../../toolkit/toolkit/toolkit.all.js'></script>
     <script src='../awml.js'></script>
     <script src='../awml.bindings.js'></script>
-    <script src='../awml.simple.js'></script>
-    <script src='../awml.wsjson.js'></script>
+    <script src='../awml.backends.js'></script>
     <link rel="stylesheet" type="text/css" href="../../toolkit/toolkit/styles/css/toolkit.all.css">
-    <script>
-        var simple_handler = new AWML.SimpleHandler("foobar");
-    </script>
     </head>
     <body>
         <awml-root>
+            <awml-backend name='local' type='local'></awml-backend>
             <awml-fader min=0 max=100 layout=right>
-                <awml-binding source='foobar:test' option='value'></awml-binding>
+                <awml-option type=bind src='local:test' name='value'></awml-option>
             </awml-fader>
             <awml-fader min=0 max=100 layout=right>
-                <awml-binding source='foobar:test' option='max'></awml-binding>
+                <awml-option type=bind src='local:test' name='max'></awml-option>
             </awml-fader>
             <awml-fader min=0 max=100 layout=right>
-                <awml-binding source='foobar:test' option='min'></awml-binding>
+                <awml-option type=bind src='local:test' name='min'></awml-option>
             </awml-fader>
             <awml-fader min=0 max=100 layout=right>
-                <awml-binding source='foobar:test' option='base'></awml-binding>
+                <awml-option type=bind src='local:test' name='base'></awml-option>
             </awml-fader>
         </awml-root>
     </body>
