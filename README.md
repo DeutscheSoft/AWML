@@ -193,6 +193,40 @@ Example:
             });
         </script>
 
+### Default options
+
+There are several possibilities to define default options for AWML widgets.
+
+There are currently two limitations.
+Currently, only `static` options are allowed as defaults.
+Furthermore, changing the value of a set of default options does not change the options in existing widgets.
+Both of these might change in the future.
+
+The first and most generic one is to specify a set of default options for one widget.
+This is done using the `awml-options` tag with the `widget` attribute set to the widget name (e.g. `knob`, `fader`, etc).
+
+The second possibility is to specify a set of default options with some name by setting the `name` attribute on the `awml-options` tag.
+These named options can then be applied to a widget by adding the name as a `options` attribute to that widget.
+
+Both types of default options can be combined, named option defaults take preference over tag based ones.
+
+Example:
+
+        <awml-root>
+          <awml-options name='knob1'
+              min=0 max=10
+            >
+            <awml-option></awml-option>
+          </awml-options>
+
+          <awml-options widget='fader'
+              min=-96 max=6
+            >
+          </awml-options>
+
+          <awml-knob options='knob1'></awml-knob>
+          <awml-fader></awml-fader>
+        </awml-root>
 
 ## Protocol Backends
 
