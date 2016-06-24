@@ -1,62 +1,69 @@
 // vim:sw=2
 "use strict";
 (function(w) {
-  function Option(name, value, attach, detach) {
-    this.name = name;
-    this.value = value;
-    this._attach = attach;
-    this._detach = detach;
+  function Option(node) {
+    this.name = node.getAttribute("name");
     this.node = null;
     this.widget = null;
   };
-  // FIXME: do proper inheritance
   Option.prototype = {
     detach: function(node, widget) {
-        if (this._detach) this._detach(node, widget);
         this.node = null;
         this.widget = null;
     },
     attach: function(node, widget) {
         this.node = node;
         this.widget = widget;
-        if (this._attach) this._attach(node, widget);
     },
   };
-  function MediaOption(name, value) {
-      this.mql = window.matchMedia(value);
-      this.handler = function() {
-          this.widget.set(this.name, this.mql.matches);
-        }.bind(this);
 
-      Option.call(this, name, this.mql.matches,
-          function () {
-            this.mql.addListener(this.handler);
-            this.handler();
-          },
-          function () {
-            this.mql.removeListener(this.handler);
-          });
+  function StaticOption(node) {
+    Option.call(this, node);
+    var value = node.getAttribute("value") || node.textContent;
+    this.value = parse_option(node.getAttribute("format"), value); 
   };
-  MediaOption.prototype = Object.create(Option.prototype);
-  function ParentOption(name, option_name) {
-      this.option_name = option_name;
-      this.handler = function(value) {
-                        this.widget.set(this.name, value);
-                    }.bind(this);
-      Option.call(this, name, undefined,
-                  function(node, widget) {
-                    var parent = find_parent.call(node);
-                    var o = parent.widget;
-                    o.add_event("set_"+this.option_name, this.handler);
-                    this.handler(o.get(this.option_name));
-                  },
-                  function(node, widget) {
-                    var o = this.widget.parent;
-                    if (o)
-                      o.remove_event("set_"+this.option_name, this.handler);
-                  });
-  }
-  ParentOption.prototype = Object.create(Option.prototype);
+  StaticOption.prototype = Object.assign(Object.create(Option.prototype), {
+    attach: function(node, widget) {
+      Option.prototype.attach.call(this, node, widget); 
+      widget.set(this.name, this.value);
+    },
+    detach: function(node, widget) {
+      widget.set(this.name, undefined);
+      Option.prototype.detach.call(this, node, widget); 
+    },
+  });
+
+  function MediaOption(node) {
+    Option.call(this, node);
+    this.query = node.getAttribute("media");
+    var values = node.getAttribute("value");
+    if (values) {
+      var format = node.getAttribute("format")||"json";
+      this.values = parse_format(format, values);
+    } else {
+      this.values = [ false, true ];
+    }
+    this.mql = window.matchMedia(this.query);
+    if (this.mql.media !== this.query) {
+      AWML.warn("Possibly malformed media query %o (is parsed to %o)", this.query, this.mql.media);
+    }
+    this.handler = function() {
+        var value = this.values[this.mql.matches ? 1 : 0];
+        this.widget.set(this.name, value);
+      }.bind(this);
+  };
+  MediaOption.prototype = Object.assign(Object.create(Option.prototype), {
+    attach: function(node, widget) {
+      Option.prototype.attach.call(this, node, widget);
+      this.mql.addListener(this.handler);
+      this.handler();
+    },
+    detach: function(node, widget) {
+      this.mql.removeListener(this.handler);
+      Option.prototype.detach.call(this, node, widget);
+    },
+  });
+
   function check_option(widget, key, value) {
       var type = widget._options[key];
       if (type && type !== "mixed") {
@@ -65,8 +72,8 @@
               type === "array" && typeof value === "object" && value instanceof Array) {
             return;
           }
-          AWML.warn("Type mismatch for option %o. Expected type %o. Got %o.",
-                    key, widget._options[key], value);
+          AWML.warn("Type mismatch for option %o. Expected type %o. Got %o (%o)",
+                    key, widget._options[key], value, typeof value);
         }
       }
   }
@@ -123,7 +130,7 @@
       }
       return ret;
   }
-  function parse_type(type, x) {
+  function parse_format(type, x) {
       switch (type) {
       case "js":
         x = x.replace(/^\s*/g, "");
@@ -165,34 +172,29 @@
         return undefined;
       }
   }
-  function parse_option(name, type, value) {
-      if (type === "media") {
-        if (!window.matchMedia) {
-            AWML.error("media type AWML options are not supported in this browser:", x);
-        }
-        return new MediaOption(name, value);
-      } else if (type === "parent-option") {
-        return new ParentOption(name, value);
-      } else {
-        return parse_type(type, value);
-      }
+  function parse_option(format, value) {
+    if (format) return parse_format(format, value);
+
+    try {
+      value = JSON.parse(value);
+    } catch(e) {
+      // fall back to string.
+    }
+
+    return value;
   }
-  function parse_attribute(name, x) {
-      var match;
+  function parse_attribute(x) {
+    var match;
 
-      if (typeof x !== "string") return undefined;
+    if (typeof x !== "string") return undefined;
 
-      if (match = x.match(/^([^:]*):(.*)/m)) {
-          x = parse_option(name, match[1], match[2]);
-      } else if (parseFloat(x).toString() === x) {
-          x = parseFloat(x);
-      } else if (x === "true") {
-          x = true;
-      } else if (x === "false") {
-          x = false;
-      }
+    if (match = x.match(/^([^:]*):(.*)/m)) {
+        x = parse_format(match[1], match[2]);
+    } else {
+      x = parse_option(false, x);
+    }
 
-      return x;
+    return x;
   }
   function do_merge_options(o1, o2) {
     var x;
@@ -245,12 +247,12 @@
         var value = attr[i].value;
 
         if (name === "expanded") {
-            options._expanded = parse_attribute("_expanded", value);
+            options._expanded = parse_attribute(value);
             if (typeof options._expanded === "string")
                 options._expanded = true;
             continue;
         } else if (name === "collapsed") {
-            options._collapsed = parse_attribute("_collapsed", value);
+            options._collapsed = parse_attribute(value);
             if (typeof options._collapsed === "string")
                 options._collapsed = true;
             continue;
@@ -268,9 +270,9 @@
                     if (name === "id")
                         this.removeAttribute("id");
                 */
-                options[name] = parse_attribute(name, value);
+                options[name] = parse_attribute(value);
             } else if (name !== "id" && name !== "class")
-                options[name] = parse_attribute(name, value);
+                options[name] = parse_attribute(value);
         }
     }
     options = do_merge_options(merge_options, options);
@@ -323,7 +325,7 @@
     };
     proto.attributeChangedCallback = function(name, old_value, value) {
         if (this.widget && has_attribute(this.widget, name)) {
-            value = parse_attribute(name, value);
+            value = parse_attribute(value);
 
             update_option(this, this.widget, name, this.options[name], value);
 
@@ -346,25 +348,59 @@
 
   AWML.Tags.Option = document.registerElement("awml-option", {
     prototype: Object.assign(Object.create(HTMLElement.prototype), {
-       is_toolkit_node: true,
-       createdCallback: function() {
-            var data = this.textContent;
-            var name = this.getAttribute("name");
-            var type = this.getAttribute("type") || "string";
+      is_toolkit_node: true,
+      createdCallback: function() {
+        this.style.display = "none";
+        this.attached_to = null;
 
-            data = parse_option(name, type, data);
-            this.name = name;
-            this.data = data;
-            this.type = type;
-            this.style.display = "none";
+        var type = this.getAttribute("type") || "static";
+        var factory = AWML.Options[type];
+
+        if (!factory) {
+          AWML.error("Unknown option type '%o'", type);
+        } else {
+          this.option = new factory(this);
+        }
       },
       attachedCallback: function() {
-        var parent_node = find_parent.call(this);
-        if (!this.name) {
-            return;
+        var parent_node = this.parentNode;
+        var o = this.option;
+
+        if (!o) return;
+
+        if (parent_node.widget) {
+          o.attach(parent_node, parent_node.widget); 
+        } else if (parent_node instanceof AWML.Tags.Options) {
+          parent_node.data[o.name] = o;
+        } else {
+          AWML.error("Attached awml-option tag to neither widget nor awml-options parent.");
+          return;
         }
-        if (parent_node) parent_node.widget.set(this.name, this.data);
-      }
+
+        this.attached_to = parent_node;
+      },
+      detachedCallback: function() {
+        var parent_node = this.attached_to;
+
+        if (!parent_node) return;
+
+        var o = this.option;
+
+        if (!o) return;
+
+        if (parent_node.widget) {
+          o.detach(parent_node, parent_node.widget);
+        } else if (parent_node instanceof AWML.Tags.Options) {
+          if (parent_node.data[o.name] === o) {
+            delete parent_node.data[o.name];
+          }
+        }
+
+        this.attached_to = null;
+      },
+      attributeChangedCallback: function(name, old_value, value) {
+        AWML.warn('changing awml-option tags is not supported, yet');
+      },
     })
   });
 
@@ -452,7 +488,7 @@
     prototype: Object.assign(Object.create(HTMLElement.prototype), {
       createdCallback: function() {
           this.type = this.getAttribute("type");
-          this.fun = parse_type("js", this.textContent);
+          this.fun = parse_format("js", this.textContent);
           this.style.display = "none";
       },
       attributeChangedCallback: function(name, old_value, value) {
@@ -472,4 +508,11 @@
       }
     })
   });
+
+  AWML.Option = Option;
+
+  AWML.Options = {
+    static: StaticOption,
+    media: MediaOption,
+  };
 })(this.AWML || (this.AWML = {}));
