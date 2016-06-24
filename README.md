@@ -281,6 +281,11 @@ Example:
 
 ### websocket
 
+The `websocket` connects to a server through a WebSocket.
+The current implementation uses a simple JSON-based protocol.
+This is going to change in the future.
+An example backend can be found in the source code repository.
+
 Example:
 
     <awml-root>
