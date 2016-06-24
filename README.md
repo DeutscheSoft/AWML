@@ -242,27 +242,18 @@ In addition, it can also be used as a building block for more complex setups.
 
 Example:
 
-    <html>
-      <head>
-        <script src='awml.js'></script>
-        <script src='awml.bindings.js'></script>
-        <script src='awml.backends.js'></script>
-      </head>
-      <body>
-        <awml-root>
-          <awml-backend type='local' name='local'></awml-backend>
+    <awml-root>
+      <awml-backend type='local' name='local'></awml-backend>
 
-          <h1>These two knobs stay in sync</h1>
+      <h1>These two knobs stay in sync</h1>
 
-          <awml-knob min='0' max='10'>
-            <awml-binding option='value' source='local:foo'></awml-binding>
-          </awml-knob>
-          <awml-knob min='0' max='10'>
-            <awml-binding option='value' source='local:foo'></awml-binding>
-          </awml-knob>
-        </awml-root>
-      </body>
-    </html>
+      <awml-knob min='0' max='10'>
+        <awml-binding option='value' source='local:foo'></awml-binding>
+      </awml-knob>
+      <awml-knob min='0' max='10'>
+        <awml-binding option='value' source='local:foo'></awml-binding>
+      </awml-knob>
+    </awml-root>
 
 
 ### shared
@@ -278,51 +269,33 @@ The following example uses a `local` backend inside of the Shared Worker, which 
 
 Example:
 
-    <html>
-      <head>
-        <script src='awml.js'></script>
-        <script src='awml.bindings.js'></script>
-        <script src='awml.backends.js'></script>
-      </head>
-      <body>
-        <awml-root>
-          <awml-backend shared type='local' name='local'></awml-backend>
+    <awml-root>
+      <awml-backend shared type='local' name='local'></awml-backend>
 
-          <h1>All tabs will keep this knob in sync</h1>
+      <h1>All tabs will keep this knob in sync</h1>
 
-          <awml-knob min='0' max='10'>
-            <awml-binding option='value' source='local:foo'></awml-binding>
-          </awml-knob>
-        </awml-root>
-      </body>
-    </html>
+      <awml-knob min='0' max='10'>
+        <awml-binding option='value' source='local:foo'></awml-binding>
+      </awml-knob>
+    </awml-root>
 
 ### websocket
 
 Example:
 
-    <html>
-      <head>
-        <script src='awml.js'></script>
-        <script src='awml.bindings.js'></script>
-        <script src='awml.backends.js'></script>
-      </head>
-      <body>
-        <awml-root>
-          <awml-backend
-                type='websocket' name='local'
-                src='ws://localhost:8080/data'
-            >
-          </awml-backend>
+    <awml-root>
+      <awml-backend
+            type='websocket' name='local'
+            src='ws://localhost:8080/data'
+        >
+      </awml-backend>
 
-          <h1>All connected clients will keep this in sync</h1>
+      <h1>All connected clients will keep this in sync</h1>
 
-          <awml-knob min='0' max='10'>
-            <awml-binding option='value' source='local:foo'></awml-binding>
-          </awml-knob>
-        </awml-root>
-      </body>
-    </html>
+      <awml-knob min='0' max='10'>
+        <awml-binding option='value' source='local:foo'></awml-binding>
+      </awml-knob>
+    </awml-root>
 
 ## License
 
