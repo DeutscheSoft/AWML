@@ -282,6 +282,46 @@
     },
   });
 
+  AWML.Tags.Backend = document.registerElement("awml-backend", {
+    prototype: Object.assign(Object.create(HTMLElement.prototype), {
+      createdCallback: function() {
+        this.style.display = "none";
+        this.name = this.getAttribute("name");
+        this.shared = typeof(this.getAttribute("shared")) === "string";
+
+        var type = this.getAttribute("type");
+
+        if (!AWML.Backends[type]) {
+          AWML.error("No such backend: ", type);
+          return;
+        }
+
+        var constructor = AWML.Backends[type];
+        var args = constructor.prototype.arguments_from_node(this);
+
+        if (this.shared) {
+          if (AWML.Backends.shared) {
+            args = [ type ].concat(args);
+            constructor = AWML.Backends.shared;
+          } else {
+            AWML.error("shared backend not supported.");
+          }
+        }
+
+        this.backend = new (constructor.bind.apply(constructor, args));
+      },
+      attributeChangedCallback: function(name, old_value, value) {
+        AWML.warn('Changing backend attributes not implemented.');
+      },
+      detachedCallback: function() {
+        AWML.register_backend(this.name, null);
+      },
+      attachedCallback: function() {
+        AWML.register_backend(this.name, this.backend);
+      }
+    })
+  });
+
   AWML.Tags.Binding = document.registerElement("awml-binding", {
     prototype: Object.assign(Object.create(HTMLElement.prototype), {
       createdCallback: function() {
@@ -358,6 +398,8 @@
       backend.addEventListener('error', cb);
       backend_activate(proto, backend);
     }
+
+    return backend;
   };
   function init_backend(proto, type) {
     if (!AWML.Backends || !AWML.Backends[type]) throw new Error("No such backend.");
@@ -365,7 +407,7 @@
     var constructor = AWML.Backends[type];
     var args = Array.prototype.slice.call(arguments, 1);
 
-    register_backend(proto, new (constructor.bind.apply(constructor, args)));
+    return register_backend(proto, new (constructor.bind.apply(constructor, args)));
   }
   function get_binding (uri) {
     var i = uri.search(':');

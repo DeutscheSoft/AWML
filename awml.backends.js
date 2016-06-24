@@ -1,3 +1,4 @@
+// vim:sw=2
 (function(AWML) {
   "use strict";
   if (!AWML.Backends) AWML.Backends = {};
@@ -254,6 +255,9 @@
 
       this.dispatchEvent(new CustomEvent(type, { detail: data }));
     },
+    arguments_from_node: function(node) {
+        throw new Error("Backend needs implementation of arguments_from_node()");
+    },
   };
 
   function Local() {
@@ -272,6 +276,9 @@
     },
     low_unsubscribe: function(id) { },
     set: receive,
+    arguments_from_node: function(node) {
+        return [];
+    },
   });
 
   function Cache(backend) {
@@ -343,6 +350,9 @@
       // the websocket backend will not respond
       receive.call(this, id, value);
       this.ws.send(JSON.stringify([ id, value ]));
+    },
+    arguments_from_node: function(node) {
+      return [ node.getAttribute("src") ];
     },
   });
 
