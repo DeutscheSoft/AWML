@@ -126,12 +126,13 @@ However, in most cases it makes sense to follow reasonable conventions and use t
 Additional attributes are:
 
 * `name` - option name
-* `format` - option format
-* `value` - the default value, if none is set in the corresponding backend (optional)
 * `src` - the address of the backend value, of the form `<protocol>:<path>`
-* `sync` - sync flag (optional)
 * `transform-send` - transform function for sending values (optional)
 * `transform-receive` - transform function when receiving values (optional)
+* `prefix` - source address base handle (optional)
+* `sync` - sync flag (optional)
+* `value` - the default value, if none is set in the corresponding backend (optional)
+* `format` - option format for default value (optional)
 
 By default, bindings will only react to user interaction in the widget, as opposed to any modification.
 This behavior can be controlled using the `sync` flag.
@@ -147,6 +148,50 @@ Example:
       <awml-knob min=0 max=10>
         <awml-option name=value type=bind src='local:foo'></awml-option>
       </awml-knob>
+
+The purpose of the `prefix` handle is to simplify binding a tree of widgets to a tree of values in the backend.
+This is useful when building interfaces using templates or similar mechanisms where copies of the same AWML structure are connected to different sources.
+Another application is where the binding of parts of a user interface is changed dynamically.
+The basic idea is that the `src` attribute is a relative address which is to be prefixed later by calling `AWML.set_src_prefix` on the widget tree.
+The value of the `prefix` attribute is a handle.
+When setting the prefix of option bindings with a given handle, the handle is passed as the second argument to `AWML.set_src_prefix`.
+If the prefix attributes are without a value (i.e. the value is `prefix`), the second argument is optional.
+
+Example:
+
+        <template id='foo'>
+          <awml-knob>
+            <awml-option name=value type=bind src='knob1/value' prefix></awml-option>
+            <awml-option sync name=min type=bind src='knob1/min' prefix></awml-option>
+            <awml-option sync name=max type=bind src='knob1/max' prefix></awml-option>
+          </awml-knob>
+          <awml-knob>
+            <awml-option name=value type=bind src='knob2/value' prefix></awml-option>
+            <awml-option sync name=min type=bind src='knob2/min' prefix></awml-option>
+            <awml-option sync name=max type=bind src='knob2/max' prefix></awml-option>
+          </awml-knob>
+          <awml-knob min=-96 max=6>
+            <awml-option name=value type=bind src='knob/gain' prefix=bar></awml-option>
+          </awml-knob>
+        </template>
+        <script>
+            window.addEventListener('load', function() {
+                var template = document.getElementById('foo');
+                var clone;
+
+                for (var i = 0; i < 10; i++) {
+                    clone = document.importNode(template, true);
+
+                    // set the prefix for the first two knobs
+                    AWML.set_src_prefix(clone, "remote:device"+i+"/");
+
+                    // set the prefix for the third knob
+                    AWML.set_src_prefix(clone, "local:device"+i+"/", 'bar');
+
+                    document.body.appendChild(clone);
+                }
+            });
+        </script>
 
 
 ## Protocol Backends
