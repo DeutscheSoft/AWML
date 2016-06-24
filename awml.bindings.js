@@ -50,6 +50,103 @@
     },
   };
 
+  function BindingOption(node) {
+    AWML.Option.call(this, node);
+    this.src = node.getAttribute("src");
+    this.prefix = node.getAttribute("prefix");
+    this.sync = !!node.getAttribute("sync");
+    this.value = node.getAttribute("value");
+    this.format = node.getAttribute("format");
+
+    var transform_send = node.getAttribute("transform-send");
+    var transform_receive = node.getAttribute("transform-receive");
+
+    this.transform_send = transform_send ? AWML.parse_format("js", transform_send) : null;
+    this.transform_receive = transform_receive ? AWML.parse_format("js", transform_receive) : null;
+
+    this.recurse = false;
+    this.attached = false;
+
+    if (this.prefix) {
+      this.binding = null;
+    } else {
+      this.binding = AWML.get_binding(this.src);
+    }
+
+    this.do_receive = function(v) {
+      if (!this.recurse) {
+        this.recurse = true;
+        if (this.transform_receive) v = this.transform_receive(v);
+        this.widget.set(this.name, v);
+        this.recurse = false;
+      }
+    }.bind(this);
+
+    this.set_cb = function(v) {
+      this.send(v);
+    }.bind(this);
+    this.useraction_cb = function(key, value) {
+      this.send(value);
+    }.bind(this);
+  };
+  BindingOption.prototype = Object.assign(Object.create(AWML.Option.prototype), {
+    attach: function(node, widget) {
+      AWML.Option.prototype.attach.call(this, node, widget);
+
+      if (this.binding) this.binding.addListener(this.do_receive);
+
+      if (this.sync) widget.add_event("useraction", this.useraction_cb);
+      else widget.add_event("set_"+this.name, this.set_cb);
+    },
+    detach: function(node, widget) {
+      if (this.binding) this.binding.removeListener(this.do_receive);
+
+      if (this.sync) widget.remove_event("useraction", this.useraction_cb);
+      else widget.remove_event("set_"+this.name, this.set_cb);
+
+      AWML.Option.prototype.detach.call(this, node, widget);
+    },
+    set_prefix: function(prefix, handle) {
+      if (this.prefix !== handle) return;
+
+      var attached = this.widget !== null;
+
+      if (attached) {
+        if (this.binding) this.binding.removeListener(this.do_receive);
+      }
+
+      if (typeof prefix === "string") {
+        this.binding = AWML.get_binding(prefix + this.src);
+        this.binding.addListener(this.do_receive);
+      } else {
+        this.binding = null;
+      }
+    },
+    send: function(v) {
+      if (!this.recurse) {
+        this.recurse = true;
+        if (this.transform_send) v = this.transform_send(v);
+        this.binding.set(v);
+        this.recurse = false;
+      }
+    },
+  });
+
+  function set_prefix(node, prefix, handle) {
+    if (!handle) handle = "prefix";
+    if (node.tagName === "AWML-OPTION") {
+      node.option.set_prefix(prefix, handle);
+    } else if (node instanceof HTMLCollection || node instanceof NodeList) {
+      var i = 0;
+
+      for (i = 0; i < node.length; i++) {
+        set_prefix(node.item(i), prefix, handle);
+      }
+    } else if (node.getElementsByTagName) {
+      set_prefix(node.getElementsByTagName("awml-option"), prefix, handle);
+    } else AWML.error("Cannot set prefix on ", node);
+  }
+
   /**
    * Abstract Connector base class.
    */
@@ -190,6 +287,7 @@
       createdCallback: function() {
           this.style.display = "none";
           this.bind = null;
+          AWML.warn("awml-binding is deprecated");
       },
       attributeChangedCallback: function(name, old_value, value) {
           if (name === "option" || name === "source") {
@@ -287,8 +385,10 @@
     return bind;
   };
 
+  AWML.Options.bind = BindingOption;
 
   Object.assign(AWML, {
+    set_prefix: set_prefix,
     Binding: Binding,
     get_binding: get_binding,
     register_backend: register_backend,
