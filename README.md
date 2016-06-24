@@ -6,15 +6,14 @@ This implementation uses HTML5 Custom Tags and is based on the [toolkit widget l
 
 The aim of AWML is to simplify the creation of professional user interfaces.
 
-
 ## Widgets
 
-Creating a widget using AWML is easy as writing standard HTML.
+Using a toolkit widget in AWML is as easy as writing standard HTML.
 
     <awml-knob class="myKnob"
       min="-24" max="24"
       base="0" value="12" 
-      labels="json:[-24, 0, 24]"
+      labels="[-24, 0, 24]"
       >
       <awml-option name='show_hand' type='media' media='min-width: 800px'></awml-option>
     </awml-knob>
@@ -59,14 +58,11 @@ Available formats are:
 * `number` - a numeric value (including floats)
 * `int` - integers
 * `sprintf` - generates a formatting function from a sprintf-style format definition
-* `inherit` - inherits values
 * `bool` - `true` or `false`
 
 If no format is specified, the parser will try `json` and then fall back to `string`.
 
 ### Option types
-
-
 
 ### static
 
@@ -203,7 +199,7 @@ Furthermore, changing the value of a set of default options does not change the 
 Both of these might change in the future.
 
 The first and most generic one is to specify a set of default options for one widget.
-This is done using the `awml-options` tag with the `widget` attribute set to the widget name (e.g. `knob`, `fader`, etc).
+This is done using the `awml-options` tag with the `widget` attribute set to the tag name (e.g. `awml-knob`, `awml-fader`, etc).
 
 The second possibility is to specify a set of default options with some name by setting the `name` attribute on the `awml-options` tag.
 These named options can then be applied to a widget by adding the name as a `options` attribute to that widget.
@@ -219,7 +215,7 @@ Example:
             <awml-option></awml-option>
           </awml-options>
 
-          <awml-options widget='fader'
+          <awml-options widget='awml-fader'
               min=-96 max=6
             >
           </awml-options>

@@ -156,8 +156,6 @@
         return parseInt(x);
       case "sprintf":
         return TK.FORMAT(x);
-      case "inherit":
-        return AWML.options[x];
       case "bool":
         if (x === "true") {
           return true;
@@ -408,23 +406,37 @@
     prototype: Object.assign(Object.create(HTMLElement.prototype), {
        is_toolkit_node: true,
        createdCallback: function() {
-            var name = this.getAttribute("name");
+          this.style.display = "none";
 
-            this.name = name;
-            this.data = extract_options.call(this);
-            delete this.data.name;
-            this.style.display = "none";
+          this.name = this.getAttribute("name");
+          this.widget = this.getAttribute("widget");
+
+          if (this.widget) this.widget = this.widget.toLowerCase();
+
+          this.data = extract_options.call(this);
+          delete this.data.name;
+          delete this.data.widget;
       },
       attachedCallback: function() {
-        AWML.options[this.name] = this.data;
+        if (this.name) {
+          AWML.options[this.name] = this.data;
+        } else if (this.widget) {
+          AWML.options.defaults[this.widget] = this.data;
+        } else AWML.error("awml-options without name or widget.");
       },
       detachedCallback: function() {
-        if (AWML.options[this.name] === this.data) {
-          AWML.options[this.name] = null;
+        if (this.name) {
+          if (AWML.options[this.name] === this.data) {
+            AWML.options[this.name] = null;
+          }
+        } else if (this.widget) {
+          if (AWML.options.defaults[this.widget] === this.data) {
+            AWML.options.defaults[this.widget] = null;
+          }
         }
       },
       attributeChangedCallback: function(name, old_value, value) {
-        TK.warn("Attribute changes in awml-options tags are ineffective.");
+        AWML.warn("Attribute changes in awml-options tags are not supported, yet.");
       },
     })
   });
