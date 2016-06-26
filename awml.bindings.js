@@ -67,7 +67,7 @@
     this.recurse = false;
     this.attached = false;
 
-    if (this.prefix) {
+    if (this.prefix !== null) {
       this.binding = null;
     } else {
       this.binding = AWML.get_binding(this.src);
@@ -123,7 +123,7 @@
       }
     },
     send: function(v) {
-      if (!this.recurse) {
+      if (!this.recurse && this.binding) {
         this.recurse = true;
         if (this.transform_send) v = this.transform_send(v);
         this.binding.set(v);
@@ -133,7 +133,7 @@
   });
 
   function set_prefix(node, prefix, handle) {
-    if (!handle) handle = "prefix";
+    if (!handle) handle = "";
     if (node.tagName === "AWML-OPTION") {
       node.option.set_prefix(prefix, handle);
     } else if (node instanceof HTMLCollection || node instanceof NodeList) {
@@ -308,7 +308,7 @@
           }
         }
 
-        this.backend = new (constructor.bind.apply(constructor, args));
+        this.backend = new (constructor.bind.apply(constructor, [ window ].concat(args)));
       },
       attributeChangedCallback: function(name, old_value, value) {
         AWML.warn('Changing backend attributes not implemented.');
