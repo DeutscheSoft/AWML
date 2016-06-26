@@ -20,13 +20,13 @@ Using a toolkit widget in AWML is as easy as writing standard HTML.
 
 ## Options
 
-The way a widget behaves and its DOM representation are controlled by its options. In addition CSS can be used to change the way it looks.
+The behavior of AWML widgets is completely controlled by their options.
 
 There are two different ways to specify options for a widget.
-They can either be set inline using attributes or alternatively using the `awml-option` tag.
+They can either be set inline using attributes or using the `awml-option` tag.
 
 The possible options of an AWML Tag are identical to those of the corresponding toolkit widget.
- See the [toolkit documentation](http://deuso.de/toolkit/docs/) for a complete list of widgets and their options.
+See the [toolkit documentation](http://deuso.de/toolkit/docs/) for a complete list of widgets and their options.
 
 Options usually have both a type and a format.
 For inline options using attributes the type is always `static` and the `format` is specified by prepending the attribute value by the format name followed by a `:` (e.g. `min='js:4*12'`).
@@ -44,11 +44,11 @@ Example:
 
 ### Option formats
 
-Since AWML options are mapped onto options for widgets from the 'toolkit' library, they need to represent different JavaScript types.
-The way this is done in AWML by using different formats.
+Since AWML options are mapped onto options for widgets of the 'toolkit' library, they need to represent different JavaScript types.
+This is done in AWML by using different data formats.
 
-When specifying an option as tag attribute, the format is part of the attribute value.
-When setting an option using the `awml-option` tag, the format is given in the type-attribute.
+When specifying an option as a tag attribute, the format is part of the attribute value.
+When setting an option using the `awml-option` tag, the format is specified by the `format`-attribute.
 
 Available formats are:
 
@@ -60,7 +60,7 @@ Available formats are:
 * `sprintf` - generates a formatting function from a sprintf-style format definition
 * `bool` - `true` or `false`
 
-If no format is specified, the parser will try `json` and then fall back to `string`.
+When no format has been specified explicitly, AWML will try to interpret the value as `json` and, if that fails, fall back to `string`.
 
 ### Option types
 
