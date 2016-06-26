@@ -15,7 +15,7 @@ Using a toolkit widget in AWML is as easy as writing standard HTML.
       base="0" value="12" 
       labels="[-24, 0, 24]"
       >
-      <awml-option name='show_hand' type='media' media='min-width: 800px'></awml-option>
+      <awml-option name='show_hand' type='media' media='(min-width: 800px)'></awml-option>
     </awml-knob>
 
 ## Options
@@ -95,11 +95,11 @@ Additional attributes are:
 Example:
 
     <awml-knob>
-      <awml-option type=media name=active media='min-width: 400px'></awml-option>
+      <awml-option type=media name=active media='(min-width: 400px)'></awml-option>
     </awml-knob>
     <awml-fader>
-      <awml-option type=media media='max-width:600 px' name=min>[0,2]</awml-option>
-      <awml-option type=media media='max-width:500 px' name=show_scale></awml-option>
+      <awml-option type=media media='(max-width:600 px)' name=min>[0,2]</awml-option>
+      <awml-option type=media media='(max-width:500 px)' name=show_scale></awml-option>
     </awml-fader>
 
 In the above example, the `min` option of the fader will have the value `0` if the window is smaller than 600 pixels and `2` otherwise.
