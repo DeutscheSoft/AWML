@@ -301,6 +301,6 @@ Example:
 ## License
 
 This implementation of AWML is available under the terms of the GNU General Public License version 2.
-See the `LICENSE` file for details.
+See the `COPYING` file for details.
 
 Copyright (c) 2015-2016 DeusO GmbH
