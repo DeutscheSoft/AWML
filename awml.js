@@ -170,6 +170,7 @@
         return undefined;
       }
   }
+  AWML.parse_format = parse_format;
   function parse_option(format, value) {
     if (format) return parse_format(format, value);
 
@@ -181,6 +182,7 @@
 
     return value;
   }
+  AWML.parse_option = parse_option;
   function parse_attribute(x) {
     var match;
 
