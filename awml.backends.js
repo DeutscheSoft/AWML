@@ -407,10 +407,43 @@
     AWML.Backends.shared = Shared;
   }
 
+  function LocalStorage() {
+    Base.call(this);
+    this.storage = window.localStorage;
+    window.addEventListener('storage', function(ev) {
+      if (ev.storageArea !== this.storage) return;
+      var key = ev.key;
+      var old = ev.oldValue;
+      var val = ev.newValue;
+      if (this.uri2id.has(key)) {
+        receive.call(this, key, JSON.parse(val));
+      }
+    }.bind(this));
+    to_open.call(this);
+  }
+  LocalStorage.prototype = Object.assign(Object.create(Base.prototype), {
+    low_subscribe: function(uri) {
+      subscribe_success.call(this, uri, uri);
+      var val = this.storage.getItem(uri);
+
+      if (val !== null) {
+        receive.call(this, uri, JSON.parse(val));
+      }
+    },
+    low_unsubscribe: function(id) {},
+    set: function(id, value) {
+      this.storage.setItem(id, JSON.stringify(value));
+    },
+    arguments_from_node: function(node) {
+        return [];
+    },
+  });
+
   Object.assign(AWML.Backends, {
     local: Local,
     base: Base,
     cache: Cache,
     websocket: websocket,
+    localstorage: LocalStorage,
   });
 })(this.AWML || (this.AWML = {}));
