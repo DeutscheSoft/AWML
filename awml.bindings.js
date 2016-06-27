@@ -26,12 +26,16 @@
       this.backend = null;
     },
     addListener: function(callback) {
+      if (this.listeners.indexOf(callback) !== -1) {
+        AWML.warn("Trying to add same listener twice.");
+        return;
+      }
       this.listeners.push(callback);
       if (this.has_value) callback(this.value);
     },
     removeListener: function(callback) {
       var i;
-      while ((i = this.listeners.indexOf(callback)) != -1)
+      if ((i = this.listeners.indexOf(callback)) != -1)
         this.listeners.splice(i, 1);
     },
     set: function(value) {
