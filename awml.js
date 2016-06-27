@@ -3,6 +3,7 @@
 (function(w) {
   function Option(node) {
     this.name = node.getAttribute("name");
+    if (typeof this.name !== "string") AWML.error("AWML-OPTION tag without 'name' attribute.");
     this.node = null;
     this.widget = null;
   };
