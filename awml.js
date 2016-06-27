@@ -237,14 +237,25 @@
 
   AWML.find_parent_widget = find_parent;
 
+
   function extract_options(widget) {
     var O = widget ? widget.prototype._options : null;
     var tagName = this.tagName;
     var attr = this.attributes;
     var merge_options;
     var options = {};
+
+    var options_blacklist = {
+      'id' : true,
+      'class' : true,
+      'style' : true,
+    };
+
     for (var i = 0; i < attr.length; i++) {
         var name = attr[i].name;
+
+        if (options_blacklist[name]) continue;
+
         var value = attr[i].value;
 
         if (name === "expanded") {
@@ -272,8 +283,7 @@
                         this.removeAttribute("id");
                 */
                 options[name] = parse_attribute(value);
-            } else if (name !== "id" && name !== "class")
-                options[name] = parse_attribute(value);
+            } else options[name] = parse_attribute(value);
         }
     }
     options = do_merge_options(merge_options, options);
