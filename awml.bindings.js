@@ -121,7 +121,8 @@
 
       if (typeof prefix === "string") {
         this.binding = AWML.get_binding(prefix + this.src);
-        this.binding.addListener(this.do_receive);
+        if (attached)
+          this.binding.addListener(this.do_receive);
       } else {
         this.binding = null;
       }
