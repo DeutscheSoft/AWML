@@ -189,8 +189,8 @@
 
     if (typeof x !== "string") return undefined;
 
-    if (match = x.match(/^([^:]*):(.*)/m)) {
-        x = parse_format(match[1], match[2]);
+    if (-1 !== (match = x.search(':'))) {
+      x = parse_format(x.substr(0, match), x.substr(match+1));
     } else {
       x = parse_option(false, x);
     }
