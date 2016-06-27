@@ -433,6 +433,7 @@
     low_unsubscribe: function(id) {},
     set: function(id, value) {
       this.storage.setItem(id, JSON.stringify(value));
+      receive.call(this, id, value);
     },
     arguments_from_node: function(node) {
         return [];
