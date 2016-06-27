@@ -16,7 +16,7 @@
       backend.subscribe(this.uri, this.update.bind(this))
         .then(function(a) {
             this.id = a[1];
-            if (this.value !== this.requested_value) {
+            if (this.requested_value !== null && this.value !== this.requested_value) {
               this.backend.set(a[1], this.requested_value);
             }
           }.bind(this));
