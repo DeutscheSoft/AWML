@@ -360,7 +360,7 @@
     var url = document.currentScript.getAttribute("src");
     url = url.replace(/awml\.backends\.js/, "awml.backends.sharedworker.js");
 
-    function Shared(type) {
+    var Shared = function(type) {
       Base.call(this);
       var args = Array.prototype.slice.call(arguments, 1);
       this.worker = new SharedWorker(url, JSON.stringify([ type, args ]));
