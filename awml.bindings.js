@@ -138,7 +138,7 @@
 
   function set_prefix(node, prefix, handle) {
     if (!handle) handle = "";
-    if (node.tagName === "AWML-OPTION") {
+    if (node.tagName === "AWML-OPTION" && node.getAttribute("type") === "bind") {
       node.option.set_prefix(prefix, handle);
     } else if (node instanceof HTMLCollection || node instanceof NodeList) {
       var i = 0;
