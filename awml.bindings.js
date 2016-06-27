@@ -431,12 +431,17 @@
     return bind;
   };
 
+  function get_bindings(proto) {
+    return bindings.get(proto) || new Map();
+  };
+
   AWML.Options.bind = BindingOption;
 
   Object.assign(AWML, {
     set_prefix: set_prefix,
     Binding: Binding,
     get_binding: get_binding,
+    get_bindings: get_bindings,
     register_backend: register_backend,
     init_backend: init_backend,
     // Connectors
