@@ -432,8 +432,13 @@
     },
     low_unsubscribe: function(id) {},
     set: function(id, value) {
-      this.storage.setItem(id, JSON.stringify(value));
-      receive.call(this, id, value);
+      var enc = JSON.stringify(value);
+      if (typeof(enc) === "string") {
+        this.storage.setItem(id, enc);
+        receive.call(this, id, value);
+      } else {
+        AWML.warn('Cannot encode %o (key: %o)', value, id);
+      }
     },
     arguments_from_node: function(node) {
         return [];
