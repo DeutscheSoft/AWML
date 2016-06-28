@@ -40,7 +40,7 @@
     var values = node.getAttribute("value");
     if (values) {
       var format = node.getAttribute("format")||"json";
-      this.values = parse_format(format, values);
+      this.values = parse_format.call(this, format, values);
     } else {
       this.values = [ false, true ];
     }
@@ -137,7 +137,7 @@
         x = x.replace(/^\s*/g, "");
         x = x.replace(/\s*$/g, "");
         try {
-            return new Function([], "return ("+x+");")();
+            return new Function([], "return ("+x+");").call(this);
         } catch (e) {
             AWML.error("Syntax error", e, "in", x);
             return undefined;
@@ -190,7 +190,7 @@
     if (typeof x !== "string") return undefined;
 
     if (-1 !== (match = x.search(':'))) {
-      x = parse_format(x.substr(0, match), x.substr(match+1));
+      x = parse_format.call(this, x.substr(0, match), x.substr(match+1));
     } else {
       x = parse_option(false, x);
     }
@@ -513,7 +513,7 @@
     prototype: Object.assign(Object.create(HTMLElement.prototype), {
       createdCallback: function() {
           this.type = this.getAttribute("type");
-          this.fun = parse_format("js", this.textContent);
+          this.fun = parse_format.call(this, "js", this.textContent);
           this.style.display = "none";
       },
       attributeChangedCallback: function(name, old_value, value) {
