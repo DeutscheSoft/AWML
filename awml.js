@@ -496,15 +496,30 @@
       attachedCallback: function() {
         var node = find_parent.call(this);
         if (node) {
-          if (this.widget) node.widget.remove_band(this.widget);
-          this.widget = node.widget.add_band(this.options);
+          if (this.widget) {
+            detach_options(this, this.widget, this.options);
+            node.widget.remove_band(this.widget);
+          }
+          var options = check_options(TK.EqBand.prototype, evaluate_options(this.options));
+          this.widget = node.widget.add_band(options);
+          attach_options(this, this.widget, this.options);
         }
       },
       detachedCallback: function() {
         var node = find_parent.call(this);
         if (node && this.widget) {
+          detach_options(this, this.widget, this.options);
           node.widget.remove_band(this.widget);
           this.widget = false;
+        }
+      },
+      attributeChangedCallback: function(name, old_value, value) {
+        if (this.widget && has_attribute(this.widget, name)) {
+            value = parse_attribute(value);
+
+            update_option(this, this.widget, name, this.options[name], value);
+
+            this.options[name] = value;
         }
       }
     })
