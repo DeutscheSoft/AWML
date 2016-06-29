@@ -410,12 +410,14 @@
   function LocalStorage() {
     Base.call(this);
     this.storage = window.localStorage;
+    this.encoded_values = new Map();
     window.addEventListener('storage', function(ev) {
       if (ev.storageArea !== this.storage) return;
       var key = ev.key;
       var old = ev.oldValue;
       var val = ev.newValue;
       if (this.uri2id.has(key)) {
+        this.encoded_values.set(key, val);
         receive.call(this, key, JSON.parse(val));
       }
     }.bind(this));
@@ -427,6 +429,7 @@
       var val = this.storage.getItem(uri);
 
       if (val !== null) {
+        this.encoded_values.set(uri, val);
         receive.call(this, uri, JSON.parse(val));
       }
     },
@@ -434,7 +437,9 @@
     set: function(id, value) {
       var enc = JSON.stringify(value);
       if (typeof(enc) === "string") {
+        if (enc === this.encoded_values.get(id)) return;
         this.storage.setItem(id, enc);
+        this.encoded_values.set(id, enc);
         receive.call(this, id, value);
       } else {
         AWML.warn('Cannot encode %o (key: %o)', value, id);
