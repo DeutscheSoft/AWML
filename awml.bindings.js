@@ -39,6 +39,7 @@
         this.listeners.splice(i, 1);
     },
     set: function(value) {
+      if (value === this.requested_value) return;
       this.requested_value = value;
       if (this.id !== false) {
         this.backend.set(this.id, value);
@@ -251,6 +252,8 @@
   function PropertyBinding(uri, target, property, transform_in, transform_out) {
     this.target = target;
     this.property = property;
+    this.timer_id = -1;
+    this._publish = this.publish.bind(this);
 
     Connector.call(this, get_binding(uri), transform_in, transform_out);
   };
@@ -268,6 +271,14 @@
     receive: function(transform, v) {
       if (transform) v = transform(v);
       this.target[this.property] = v;
+    },
+    publish_interval: function(v) {
+      if (this.timer_id !== -1) {
+        window.clearInterval(this.timer_id);
+        this.timer_id = -1;
+      }
+      if (v > 0) this.timer_id = window.setInterval(this._publish, v);
+      return this;
     },
   });
 
