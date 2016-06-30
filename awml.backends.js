@@ -195,6 +195,7 @@
       var uri2id = this.uri2id;
       var id2uri = this.id2uri;
       var subscriptions = this.subscriptions;
+      var values = this.values;
       
       if (!id2uri.has(id)) throw new Error("No such subscription.");
 
