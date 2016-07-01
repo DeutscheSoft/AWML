@@ -302,9 +302,28 @@
     prototype: Object.assign(Object.create(HTMLElement.prototype), {
       createdCallback: function() {
         this.style.display = "none";
+        this.name = "";
+        this.backend = null;
+      },
+      attributeChangedCallback: function(name, old_value, value) {
+        if (document.body.contains(this)) {
+          // simply detach and attach if any property has changed.
+          this.detachedCallback();
+          this.attachedCallback();
+        }
+      },
+      detachedCallback: function() {
+        AWML.register_backend(this.name, null);
+      },
+      attachedCallback: function() {
         this.name = this.getAttribute("name");
-        this.shared = typeof(this.getAttribute("shared")) === "string";
 
+        if (typeof(this.name) !== "string") {
+          AWML.error("awml-backend without name.");
+          return;
+        }
+
+        var shared = typeof(this.getAttribute("shared")) === "string";
         var type = this.getAttribute("type");
 
         if (!AWML.Backends[type]) {
@@ -315,24 +334,17 @@
         var constructor = AWML.Backends[type];
         var args = constructor.prototype.arguments_from_node(this);
 
-        if (this.shared) {
+        if (shared) {
           if (AWML.Backends.shared) {
             args = [ type ].concat(args);
             constructor = AWML.Backends.shared;
           } else {
-            AWML.error("shared backend not supported.");
+            AWML.warn("Shared backend not supported.");
           }
         }
 
         this.backend = new (constructor.bind.apply(constructor, [ window ].concat(args)));
-      },
-      attributeChangedCallback: function(name, old_value, value) {
-        AWML.warn('Changing backend attributes not implemented.');
-      },
-      detachedCallback: function() {
-        AWML.register_backend(this.name, null);
-      },
-      attachedCallback: function() {
+
         AWML.register_backend(this.name, this.backend);
       }
     })
