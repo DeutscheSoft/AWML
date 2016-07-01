@@ -103,6 +103,9 @@
       } else if (value !== undefined) {
           // we set it back to the default
           widget.set(name, undefined);
+  function detach_options(node, widget, options) {
+      for (var key in options) {
+          detach_option(node, widget, key, options[key]);
       }
   }
   function update_option(node, widget, name, value_old, value_new) {
