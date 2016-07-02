@@ -132,6 +132,8 @@ void http_cb(object r) {
         if (Stdio.is_file(fname)) {
             object file = Stdio.File(fname, "r");
 
+            files[r->not_query] = 1;
+
             mapping response = ([
                 "file" : file,
                 "type" : file_to_mime(fname),
