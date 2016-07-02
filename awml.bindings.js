@@ -150,6 +150,8 @@
       }
     } else if (node.getElementsByTagName) {
       set_prefix(node.getElementsByTagName("awml-option"), prefix, handle);
+    } else if (node.querySelectorAll) {
+      set_prefix(node.querySelectorAll("awml-option"), prefix, handle);
     } else AWML.error("Cannot set prefix on ", node);
   }
 
