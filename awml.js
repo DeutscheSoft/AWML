@@ -226,18 +226,33 @@
 
     return ret;
   }
+
   function find_parent() {
       var node = this.parentNode;
 
       if (!node)
-          return undefined;
+          return null;
 
       do
-          if (node.is_toolkit_node)
+          if (node.is_awml_node)
               return node;
       while (node = node.parentNode);
 
-      return undefined;
+      return null;
+  };
+
+  function find_root() {
+      var node = this.parentNode;
+
+      if (!node)
+          return null;
+
+      do
+          if (node.tagName === "AWML-ROOT")
+              return node;
+      while (node = node.parentNode);
+
+      return null;
   };
 
   AWML.find_parent_widget = find_parent;
@@ -320,238 +335,274 @@
     if (!d.hasOwnProperty(tag)) d[tag] = {};
     d[tag][name] = value;
   };
+
+  function create_tag(tagName, prototype) {
+    prototype = Object.assign(Object.create(HTMLElement.prototype),
+      {
+        is_awml_node: true,
+        createdCallback: function() {
+          this.awml_root = null;
+          this.awml_parent = null;
+          this.awml_createdCallback();
+        },
+        awml_createdCallback: function() {
+          AWML.error("Not implemented: awml_createdCallback\n");
+        },
+        attachedCallback: function() {
+          var root = find_root.call(this);
+          var parent_node = find_parent.call(this);
+
+          if (root !== this.awml_root || parent_node !== this.awml_parent) {
+            if (this.awml_root && this.awml_parent) {
+              this.awml_detachedCallback(this.awml_root, this.awml_parent);
+            }
+            this.awml_root = root;
+            this.awml_parent = parent_node;
+            if (root && parent_node) {
+              if (!this.awml_created) {
+                this.awml_created = true;
+              }
+              this.awml_attachedCallback(root, parent_node);
+            }
+          }
+        },
+        awml_attachedCallback: function(root, parent_node) {
+          AWML.error("Not implemented: awml_attachedCallback\n");
+        },
+        detachedCallback: function() {
+          var parent_node = find_parent.call(this);
+
+          if (parent_node !== this.awml_parent) {
+            this.awml_detachedCallback(this.awml_root, this.awml_parent);
+            this.awml_parent = null;
+          }
+        },
+        awml_detachedCallback: function(root, parent_node) {
+          AWML.error("Not implemented: awml_detachedCallback\n");
+        },
+        attributeChangedCallback: function(name, old_value, value) {
+        },
+      },
+      prototype
+    );
+
+    return document.registerElement(tagName, { prototype: prototype });
+  };
+
   AWML.registerWidget = function registerWidget(tagName, widget) {
-    var proto = Object.create(HTMLElement.prototype);
-    proto.createdCallback = function() {
-      var options = this.options = extract_options.call(this, widget);
-      if (widget.prototype._options.element)
-          options.element = this;
-      this.widget = new widget(check_options(widget.prototype, evaluate_options(options)));
-      attach_options(this, this.widget, options);
-    };
-    proto.attachedCallback = function() {
-      var parent_node = find_parent.call(this);
-      if (parent_node) parent_node.widget.add_child(this.widget);
-      else if (!(this.widget instanceof TK.Root)) AWML.error("could not find parent for", this);
-    };
-    proto.detachedCallback = function() {
-        AWML.options[this.name] = null;
-        if (this.widget.parent)
-            this.widget.parent.remove_child(this.widget);
-    };
-    proto.attributeChangedCallback = function(name, old_value, value) {
-        if (this.widget && has_attribute(this.widget, name)) {
-            value = parse_attribute(value);
-
-            update_option(this, this.widget, name, this.options[name], value);
-
-            this.options[name] = value;
+    return create_tag(tagName, {
+      awml_createdCallback: function() {
+        this.widget = null;
+      },
+      awml_attachedCallback: function(root, parent_node) {
+        if (!this.widget) {
+          var options = this.options = extract_options.call(this, widget);
+          if (widget.prototype._options.element)
+              options.element = this;
+          this.widget = new widget(check_options(widget.prototype, evaluate_options(options)));
+          attach_options(this, this.widget, options);
         }
-    };
-    proto.is_toolkit_node = true;
-    var O = { prototype: proto };
-    return document.registerElement(tagName, O);
+        parent_node.widget.add_child(this.widget);
+      },
+      awml_detachedCallback: function(root, parent_node) {
+        parent_node.remove_child(this.widget);   
+      },
+      awml_attributeChangedCallback: function(name, old_value, value) {
+          if (this.widget && has_attribute(this.widget, name)) {
+              value = parse_attribute(value);
+
+              update_option(this, this.widget, name, this.options[name], value);
+
+              this.options[name] = value;
+          }
+      },
+    });
   };
 
   AWML.Tags = {};
 
+  // awml-root is somewhat custom, because it has no awml parents
+  AWML.Tags.Root = document.registerElement("awml-root", {
+    prototype: Object.assign(Object.create(HTMLElement.prototype), {
+      is_awml_node: true,
+      createdCallback: function() {
+        this.widget = null;
+      },
+      attachedCallback: function() {
+        this.widget = new TK.Root({ element: this });
+      },
+      detachedCallback: function() {
+        this.widget.destroy();
+        this.widget = null;
+      },
+    })
+  });
+
   for (var key in TK) {
       var f = TK[key];
+      if (AWML.Tags[key]) continue;
       if (typeof f === "function" && f.prototype && Widget.prototype.isPrototypeOf(f.prototype)) {
           AWML.Tags[key] = AWML.registerWidget("awml-"+key.toLowerCase(), f);
       }
   }
 
-  AWML.Tags.Option = document.registerElement("awml-option", {
-    prototype: Object.assign(Object.create(HTMLElement.prototype), {
-      is_toolkit_node: true,
-      createdCallback: function() {
+  AWML.Tags.Option = create_tag("awml-option", {
+    awml_createdCallback: function() {
+      this.style.display = "none";
+
+      var type = this.getAttribute("type") || "static";
+      var factory = AWML.Options[type];
+
+      if (!factory) {
+        AWML.error("Unknown option type '%o'", type);
+        this.option = null;
+      } else {
+        this.option = new factory(this);
+      }
+    },
+    awml_attachedCallback: function(root, parent_node) {
+      var o = this.option;
+
+      if (!o) return;
+
+      if (parent_node.widget) {
+        o.attach(parent_node, parent_node.widget); 
+      } else if (parent_node instanceof AWML.Tags.Options) {
+        parent_node.data[o.name] = o;
+      } else {
+        AWML.error("Attached awml-option tag to neither widget nor awml-options parent.");
+        return;
+      }
+    },
+    awml_detachedCallback: function(root, parent_node) {
+      var o = this.option;
+
+      if (!o) return;
+
+      if (parent_node.widget) {
+        o.detach(parent_node, parent_node.widget);
+      } else if (parent_node instanceof AWML.Tags.Options) {
+        if (parent_node.data[o.name] === o) {
+          delete parent_node.data[o.name];
+        }
+      }
+    },
+    attributeChangedCallback: function(name, old_value, value) {
+      AWML.warn('changing awml-option tags is not supported, yet');
+    },
+  });
+
+  AWML.Tags.Options = create_tag("awml-options", {
+     awml_createdCallback: function() {
         this.style.display = "none";
-        this.attached_to = null;
 
-        var type = this.getAttribute("type") || "static";
-        var factory = AWML.Options[type];
+        this.name = this.getAttribute("name");
+        this.widget = this.getAttribute("widget");
 
-        if (!factory) {
-          AWML.error("Unknown option type '%o'", type);
-        } else {
-          this.option = new factory(this);
+        if (this.widget) this.widget = this.widget.toLowerCase();
+
+        this.data = extract_options.call(this);
+        delete this.data.name;
+        delete this.data.widget;
+    },
+    awml_attachedCallback: function(root, parent_node) {
+      if (parent_node.tagName !== "AWML-ROOT") {
+        AWML.error("awml-options tags must be direct children of awml-root.");
+        return;
+      }
+      if (this.name) {
+        AWML.options[this.name] = this.data;
+      } else if (this.widget) {
+        AWML.options.defaults[this.widget] = this.data;
+      } else AWML.error("awml-options without name or widget.");
+    },
+    awml_detachedCallback: function(root, parent_node) {
+      if (parent_node.tagName !== "AWML-ROOT") {
+        AWML.error("awml-options tags must be direct children of awml-root.");
+        return;
+      }
+      if (this.name) {
+        if (AWML.options[this.name] === this.data) {
+          AWML.options[this.name] = null;
         }
-      },
-      attachedCallback: function() {
-        var parent_node = this.parentNode;
-        var o = this.option;
-
-        if (!o) return;
-
-        if (parent_node.widget) {
-          o.attach(parent_node, parent_node.widget); 
-        } else if (parent_node instanceof AWML.Tags.Options) {
-          parent_node.data[o.name] = o;
-        } else {
-          AWML.error("Attached awml-option tag to neither widget nor awml-options parent.");
-          return;
+      } else if (this.widget) {
+        if (AWML.options.defaults[this.widget] === this.data) {
+          AWML.options.defaults[this.widget] = null;
         }
-
-        this.attached_to = parent_node;
-      },
-      detachedCallback: function() {
-        var parent_node = this.attached_to;
-
-        if (!parent_node) return;
-
-        var o = this.option;
-
-        if (!o) return;
-
-        if (parent_node.widget) {
-          o.detach(parent_node, parent_node.widget);
-        } else if (parent_node instanceof AWML.Tags.Options) {
-          if (parent_node.data[o.name] === o) {
-            delete parent_node.data[o.name];
-          }
-        }
-
-        this.attached_to = null;
-      },
-      attributeChangedCallback: function(name, old_value, value) {
-        AWML.warn('changing awml-option tags is not supported, yet');
-      },
-    })
+      }
+    },
+    attributeChangedCallback: function(name, old_value, value) {
+      AWML.warn("Attribute changes in awml-options tags are not supported, yet.");
+    },
   });
 
-  AWML.Tags.Options = document.registerElement("awml-options", {
-    prototype: Object.assign(Object.create(HTMLElement.prototype), {
-       is_toolkit_node: true,
-       createdCallback: function() {
-          this.style.display = "none";
-
-          this.name = this.getAttribute("name");
-          this.widget = this.getAttribute("widget");
-
-          if (this.widget) this.widget = this.widget.toLowerCase();
-
-          this.data = extract_options.call(this);
-          delete this.data.name;
-          delete this.data.widget;
-      },
-      attachedCallback: function() {
-        if (this.name) {
-          AWML.options[this.name] = this.data;
-        } else if (this.widget) {
-          AWML.options.defaults[this.widget] = this.data;
-        } else AWML.error("awml-options without name or widget.");
-      },
-      detachedCallback: function() {
-        if (this.name) {
-          if (AWML.options[this.name] === this.data) {
-            AWML.options[this.name] = null;
-          }
-        } else if (this.widget) {
-          if (AWML.options.defaults[this.widget] === this.data) {
-            AWML.options.defaults[this.widget] = null;
-          }
-        }
-      },
-      attributeChangedCallback: function(name, old_value, value) {
-        AWML.warn("Attribute changes in awml-options tags are not supported, yet.");
-      },
-    })
-  });
-
-  AWML.Tags.Page = document.registerElement("awml-page", {
-    prototype: Object.assign(Object.create(HTMLElement.prototype), {
-       is_toolkit_node: true,
-       createdCallback: function() {
-            var label = this.getAttribute("label");
-            var options = extract_options.call(this, TK.Container);
-            options.element = this;
-            this.label = label;
-            this.widget = new TK.Container(options);
-      },
-      attributeChangedCallback: function(name, old_value, value) {
-          if (name !== "class" && name !== "id")
-            TK.warn("not implemented");
-      },
-      detachedCallback: function() {
+  AWML.Tags.Page = create_tag("awml-page", {
+     awml_createdCallback: function() {
+          var label = this.getAttribute("label");
+          var options = extract_options.call(this, TK.Container);
+          options.element = this;
+          this.label = label;
+          this.widget = new TK.Container(options);
+    },
+    attributeChangedCallback: function(name, old_value, value) {
+        if (name !== "class" && name !== "id")
           TK.warn("not implemented");
-      },
-      attachedCallback: function() {
-        if (this._is_attached) return;
-        var parent_node = find_parent.call(this);
-        // TODO:
-        //  - error handling, what if parent is not a pager
-        //  - this breaks if you move pages around
-        if (parent_node) {
-            this._is_attached = true;
-            window.setTimeout(function() {
-                parent_node.widget.add_page(this.label, this.widget);
-            }.bind(this), 0);
-        }
+    },
+    awml_detachedCallback: function(root, parent_node) {
+        TK.warn("not implemented");
+    },
+    awml_attachedCallback: function(root, parent_node) {
+      if (!(parent_node.widget instanceof TK.Pager)) {
+        AWML.error("awml-page needs to be inside of a awml-pager.");
+        return;
       }
-    })
+      parent_node.widget.add_page(this.label, this.widget);
+    }
   });
-  AWML.Tags.Filter = document.registerElement("awml-filter", {
-    prototype: Object.assign(Object.create(HTMLElement.prototype), {
-      is_toolkit_node: true,
-      createdCallback: function() {
-        this.style.display = "none";
-        this.options = extract_options.call(this, TK.EqBand);
-      },
-      attachedCallback: function() {
-        var node = find_parent.call(this);
-        if (node) {
-          if (this.widget) {
-            detach_options(this, this.widget, this.options);
-            node.widget.remove_band(this.widget);
-          }
-          var options = check_options(TK.EqBand.prototype, evaluate_options(this.options));
-          this.widget = node.widget.add_band(options);
-          attach_options(this, this.widget, this.options);
-        }
-      },
-      detachedCallback: function() {
-        var node = find_parent.call(this);
-        if (node && this.widget) {
-          detach_options(this, this.widget, this.options);
-          node.widget.remove_band(this.widget);
-          this.widget = false;
-        }
-      },
-      attributeChangedCallback: function(name, old_value, value) {
-        if (this.widget && has_attribute(this.widget, name)) {
-            value = parse_attribute(value);
-
-            update_option(this, this.widget, name, this.options[name], value);
-
-            this.options[name] = value;
-        }
+  AWML.Tags.Filter = create_tag("awml-filter", {
+    awml_createdCallback: function() {
+      this.style.display = "none";
+      this.options = extract_options.call(this, TK.EqBand);
+    },
+    awml_attachedCallback: function(root, parent_node) {
+      if (this.widget) {
+        detach_options(this, this.widget, this.options);
+        parent_node.widget.remove_band(this.widget);
       }
-    })
+      var options = check_options(TK.EqBand.prototype, evaluate_options(this.options));
+      this.widget = parent_node.widget.add_band(options);
+      attach_options(this, this.widget, this.options);
+    },
+    awml_detachedCallback: function(root, parent_node) {
+      detach_options(this, this.widget, this.options);
+      parent_node.widget.remove_band(this.widget);
+      this.widget = null;
+    },
+    attributeChangedCallback: function(name, old_value, value) {
+      if (this.widget && has_attribute(this.widget, name)) {
+          value = parse_attribute(value);
+
+          update_option(this, this.widget, name, this.options[name], value);
+
+          this.options[name] = value;
+      }
+    }
   });
-  AWML.Tags.Event = document.registerElement("awml-event", {
-    prototype: Object.assign(Object.create(HTMLElement.prototype), {
-      createdCallback: function() {
-          this.type = this.getAttribute("type");
-          this.fun = parse_format.call(this, "js", this.textContent);
-          this.style.display = "none";
-      },
-      attributeChangedCallback: function(name, old_value, value) {
-          TK.warn("not implemented");
-      },
-      detachedCallback: function() {
-        var parent_node = find_parent.call(this);
-        if (parent_node) {
-            parent_node.widget.remove_event(this.type, this.fun);
-        }
-      },
-      attachedCallback: function() {
-        var parent_node = find_parent.call(this);
-        if (parent_node) {
-            parent_node.widget.add_event(this.type, this.fun);
-        }
-      }
-    })
+  AWML.Tags.Event = create_tag("awml-event", {
+    awml_createdCallback: function() {
+      this.style.display = "none";
+      this.type = this.getAttribute("type");
+      this.fun = parse_format.call(this, "js", this.textContent);
+    },
+    awml_attributeChangedCallback: function(name, old_value, value) {
+      TK.warn("not implemented");
+    },
+    awml_detachedCallback: function(root, parent_node) {
+      parent_node.widget.remove_event(this.type, this.fun);
+    },
+    awml_attachedCallback: function(root, parent_node) {
+      parent_node.widget.add_event(this.type, this.fun);
+    }
   });
 
   AWML.Option = Option;
