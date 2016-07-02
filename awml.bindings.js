@@ -417,7 +417,7 @@
     var cb;
 
     if (backends.has(proto)) {
-      backend_deactivate(proto, backend.get(proto));
+      backend_deactivate(proto, backends.get(proto));
       backends.delete(proto);
     }
 
