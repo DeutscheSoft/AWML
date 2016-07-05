@@ -256,6 +256,7 @@
   };
 
   AWML.find_parent_widget = find_parent;
+  AWML.find_root_widget = find_root;
 
 
   function extract_options(widget) {
