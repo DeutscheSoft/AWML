@@ -1,0 +1,25 @@
+<html>
+    <head>
+    <script src='../../toolkit/toolkit.all.js'></script>
+    <script src='../awml.js'></script>
+    <script src='../awml.bindings.js'></script>
+    <script src='../awml.simple.js'></script>
+    <script>
+       var local = new AWML.SimpleHandler("local"); 
+    </script>
+    <link rel="stylesheet" type="text/css" href="../../toolkit/toolkit/styles/css/toolkit.all.css">
+    </head>
+    <body>
+        <awml-root>
+            <awml-fader min=-96 max=0 scale='decibel' show_scale='true'>
+                <awml-binding source='local:foo' option='value'></awml-binding>
+            </awml-fader>
+            <awml-fader min=-96 max=0 scale='log2' show_scale='true'>
+                <awml-binding source='local:foo' option='value'></awml-binding>
+            </awml-fader>
+            <awml-fader min=-96 max=0 show_scale='true'>
+                <awml-binding source='local:foo' option='value'></awml-binding>
+            </awml-fader>
+        </awml-root>
+    </body>
+</html>
