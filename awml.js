@@ -406,7 +406,7 @@
         parent_node.widget.add_child(this.widget);
       },
       awml_detachedCallback: function(root, parent_node) {
-        parent_node.remove_child(this.widget);   
+        parent_node.widget.remove_child(this.widget);
       },
       awml_attributeChangedCallback: function(name, old_value, value) {
           if (this.widget && has_attribute(this.widget, name)) {
