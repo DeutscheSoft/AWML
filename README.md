@@ -298,6 +298,24 @@ Example:
       </awml-knob>
     </awml-root>
 
+## Installation
+
+Simply clone this repository and update the submodule to get the right version to the toolkit library.
+
+    git clone http://github.com/DeutscheSoft/AWML.git
+    cd AWML
+    git submodule init
+    git submodule sync
+    git submodule update
+
+To start playing around with AWML, use one of the files in `tests/`.
+Most of the AWML features will work when opening files locally, however some things (e.h. the `shared` or `websocket` backends) will require a webserver.
+This repository contains a simple webserver which can be used for testing, which is written in the [Pike](http://pike.lysator.liu.se) programming language.
+
+    pike backend/wsjson.pike
+
+After starting it, you can access the tests using the url (http://localhost:8080/tests/).
+
 ## License
 
 This implementation of AWML is available under the terms of the GNU General Public License version 2.
