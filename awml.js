@@ -539,11 +539,11 @@
 
   AWML.Tags.Page = create_tag("awml-page", {
      awml_createdCallback: function() {
-          var label = this.getAttribute("label");
-          var options = extract_options.call(this, TK.Container);
-          options.element = this;
-          this.label = label;
-          this.widget = new TK.Container(options);
+        var label = this.getAttribute("label");
+        var options = extract_options.call(this, TK.Container);
+        options.element = this;
+        this.label = label;
+        this.widget = new TK.Container(options);
     },
     attributeChangedCallback: function(name, old_value, value) {
         if (name !== "class" && name !== "id")
@@ -557,7 +557,14 @@
         AWML.error("awml-page needs to be inside of a awml-pager.");
         return;
       }
-      parent_node.widget.add_page(this.label, this.widget);
+      /* FIXME: the custom tags polyfill does not like
+       * if the DOM is modified directly from within the
+       * attached/detached callbacks. We do it on the next
+       * frame.
+       */
+      TK.S.add_next(function() {
+        parent_node.widget.add_page(this.label, this.widget);
+      }.bind(this));
     }
   });
   AWML.Tags.Filter = create_tag("awml-filter", {
