@@ -309,7 +309,7 @@ Simply clone this repository and update the submodule to get the right version t
     git submodule update
 
 To start playing around with AWML, use one of the files in `tests/`.
-Most of the AWML features will work when opening files locally, however some things (e.h. the `shared` or `websocket` backends) will require a webserver.
+Most of the AWML features will work when opening files locally, however some things (e.g. the `shared` or `websocket` backends) will require a webserver.
 This repository contains a simple webserver which can be used for testing, which is written in the [Pike](http://pike.lysator.liu.se) programming language.
 
     pike backend/wsjson.pike
