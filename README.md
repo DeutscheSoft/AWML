@@ -224,6 +224,23 @@ Example:
           <awml-fader></awml-fader>
         </awml-root>
 
+## Events
+
+toolkit widgets have several custom events in addition to the standard DOM events.
+In AWML, event handlers can be registered by using the `awml-event` tag.
+
+Example:
+
+        <awml-root>
+          <awml-button label='Click me!'>
+            <awml-event type='click'>
+                function() {
+                    window.alert('Hello!');
+                }
+            </awml-event>
+          </awml-button>
+        </awml-root>
+
 ## Protocol Backends
 
 In principle, protocol backends can be used without bindings, but usually they are used together with data bindings.
