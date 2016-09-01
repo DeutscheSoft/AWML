@@ -460,6 +460,9 @@
   function get_bindings(proto) {
     return bindings.get(proto) || new Map();
   };
+  function get_backend(proto) {
+    return backends.get(proto);
+  }
 
   AWML.Options.bind = BindingOption;
 
@@ -470,6 +473,7 @@
     get_bindings: get_bindings,
     register_backend: register_backend,
     init_backend: init_backend,
+    get_backend: get_backend,
     // Connectors
     SyncBinding: SyncBinding,
     UserBinding: UserBinding,
