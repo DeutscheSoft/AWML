@@ -298,7 +298,28 @@
     },
   });
 
+  function get_relative_wsurl() {
+    var l = window.location;
+    var r;
+
+    if (l.protocol == "http:") {
+      r = "ws://" + l.hostname;
+      if (l.port != 80) r += ":" + l.port;
+    } else if (l.protocol == "https:") {
+      r = "wss://" + l.hostname;
+      if (l.port != 443) r += ":" + l.port;
+    }
+
+    return r;
+  }
+
   function websocket(url) {
+    if (!url) {
+      url = get_relative_wsurl();
+    } else if (url[0] == "/"[0]) {
+      /* relative url */
+      url = get_relative_wsurl() + url;
+    }
     this.url = url;
     Base.call(this);
     this.connect();
