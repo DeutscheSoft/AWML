@@ -420,7 +420,7 @@
     });
   };
 
-  AWML.Tags = {};
+  if (!AWML.Tags) AWML.Tags = {};
 
   // awml-root is somewhat custom, because it has no awml parents
   AWML.Tags.Root = document.registerElement("awml-root", {
