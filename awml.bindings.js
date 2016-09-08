@@ -138,21 +138,50 @@
     },
   });
 
+  function collect_prefix(from, to, handle) {
+    var attr = handle.length ? "prefix-"+handle : "prefix";
+    var prefix = [];
+    var tmp;
+
+    var node = from.parentNode;
+
+    while (node) {
+      tmp = node.getAttribute(attr);
+      if (tmp) {
+        prefix.push(tmp);
+      }
+      if (node === to) break;
+      node = node.parentNode;
+    }
+
+    return prefix.reverse().join("");
+  }
+
   function set_prefix(node, prefix, handle) {
+    var list, i, c;
+
     if (!handle) handle = "";
+
     if (node.tagName === "AWML-OPTION" && node.getAttribute("type") === "bind") {
       node.option.set_prefix(prefix, handle);
     } else if (node instanceof HTMLCollection || node instanceof NodeList) {
-      var i = 0;
 
       for (i = 0; i < node.length; i++) {
-        set_prefix(node.item(i), prefix, handle);
       }
-    } else if (node.getElementsByTagName) {
-      set_prefix(node.getElementsByTagName("awml-option"), prefix, handle);
-    } else if (node.querySelectorAll) {
-      set_prefix(node.querySelectorAll("awml-option"), prefix, handle);
-    } else AWML.error("Cannot set prefix on ", node);
+    } else {
+      if (node.getElementsByTagName) {
+        list = node.getElementsByTagName("awml-option");
+      } else if (node.querySelectorAll) { 
+        list = node.querySelectorAll("awml-option");
+      } else {
+        AWML.error("Cannot set prefix on ", node);
+        return;
+      }
+      for (i = 0; i < list.length; i++) {
+        c = list.item(i);
+        set_prefix(c, prefix+collect_prefix(c, node, handle), handle);
+      }
+    }
   }
 
   /**
