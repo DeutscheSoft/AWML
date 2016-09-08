@@ -1,0 +1,35 @@
+<html>
+    <head>
+    <link rel="stylesheet" type="text/css" href="../toolkit/toolkit/styles/css/toolkit.all.css">
+    <script src='../toolkit/toolkit.all.js'></script>
+    <script src='../awml.js'></script>
+    <script src='../awml.bindings.js'></script>
+    <script src='../awml.backends.js'></script>
+    <script src='../awml.templates.js'></script>
+    </head>
+    <body>
+        <template id='foo'>
+            <awml-button label='hello'>
+                <awml-option type=bind src='button' name='value' prefix></awml-option>
+                <awml-option type=bind src='button' name='value' prefix='remote'></awml-option>
+            </awml-button>
+
+        </template>
+        <template id='bar'>
+            <awml-clone template='foo' prefix='foo1/'></awml-clone>
+            <awml-clone template='foo' prefix='foo2/'></awml-clone>
+            <awml-clone template='foo' prefix='foo3/'></awml-clone>
+            <br>
+        </template>
+
+        <template id='rec'>
+        </template>
+
+        <awml-root>
+            <awml-clone template='bar' prefix-remote='remote:bar' prefix='local:bar1/'></awml-clone>
+            <awml-clone template='bar' prefix='local:bar1/'></awml-clone>
+            <awml-clone template='bar' prefix='local:bar1/'></awml-clone>
+            <awml-clone template='rec' prefix='local:bar1/'></awml-clone>
+        </awml-root>
+    </body>
+</html>
