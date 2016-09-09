@@ -345,7 +345,7 @@ The basic idea behind the `awml-clone` tag is to allow cloning templates in a AW
 
 The real benefit of the `awml-clone` tag is the built-in support for relative binding addresses.
 To illustrate this, we consider a situation where the value addressing scheme of the backend is in line with the structure of the user interface.
-For example, the URIs of the button values are of the form `remote:block%/row%/column%/value'.
+For example, the URIs of the button values are of the form `remote:block%/row%/column%/value`.
 This could then easily be implemented in the above template examples:
 
     <template id='block'>
@@ -373,6 +373,8 @@ This could then easily be implemented in the above template examples:
     </awml-root>
 
 The `awml-clone` tag will automatically propagate the correct prefix values to all `awml-option` tags.
+
+The `awml-clone` tag is defined in the src file `awml.templates.js`.
 
 ## Installation
 
