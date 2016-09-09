@@ -47,8 +47,8 @@
             this.detachedCallback();
             this.attachedCallback();
         }
+        /* TODO: implement prefix changes */
       },
-        
     })
   });
 })(this.AWML || (this.AWML = {}));
