@@ -189,6 +189,9 @@ Example:
             });
         </script>
 
+Note that, the `awml-clone` tag is a simple alternative to using templates with automatic prefix support.
+See the section about [templates](#Templates) for more information.
+
 ### Default options
 
 There are several possibilities to define default options for AWML widgets.
