@@ -315,6 +315,65 @@ Example:
       </awml-knob>
     </awml-root>
 
+## Templates
+
+[HTML5 Templates](https://developer.mozilla.org/en/docs/Web/HTML/Element/template) are a mechanism for defining reusable parts of document.
+AWML encourages the use of templates and features the special tag `awml-clone` to make them easier to use.
+The basic idea behind the `awml-clone` tag is to allow cloning templates in a AWML document.
+
+    <template id='block'>
+        <awml-clone template='row'></awml-clone>
+        <awml-clone template='row'></awml-clone>
+        <awml-clone template='row'></awml-clone>
+        <awml-clone template='row'></awml-clone>
+    </template>
+    <template id='row'>
+        <awml-clone template='button'></awml-clone>
+        <awml-clone template='button'></awml-clone>
+        <awml-clone template='button'></awml-clone>
+        <awml-clone template='button'></awml-clone>
+        <br>
+    </template>
+    <template id='button'>
+        <awml-button label='hello'></awml-button>
+    </template>
+    
+    <awml-root>
+      4x4 buttons:<br>
+      <awml-clone template='block'></awml-clone>
+    </awml-root>
+
+The real benefit of the `awml-clone` tag is the built-in support for relative binding addresses.
+To illustrate this, we consider a situation where the value addressing scheme of the backend is in line with the structure of the user interface.
+For example, the URIs of the button values are of the form `remote:block%/row%/column%/value'.
+This could then easily be implemented in the above template examples:
+
+    <template id='block'>
+        <awml-clone template='row' prefix='row1/'></awml-clone>
+        <awml-clone template='row' prefix='row2/'></awml-clone>
+        <awml-clone template='row' prefix='row3/'></awml-clone>
+        <awml-clone template='row' prefix='row4/'></awml-clone>
+    </template>
+    <template id='row'>
+        <awml-clone template='button' prefix='column1/'></awml-clone>
+        <awml-clone template='button' prefix='column2/'></awml-clone>
+        <awml-clone template='button' prefix='column3/'></awml-clone>
+        <awml-clone template='button' prefix='column4/'></awml-clone>
+        <br>
+    </template>
+    <template id='button'>
+        <awml-button label='hello'>
+            <awml-option type=bind src='/value' prefix></awml-option>
+        </awml-button>
+    </template>
+    
+    <awml-root>
+      4x4 buttons:<br>
+      <awml-clone template='block' prefix='remote:block1/'></awml-clone>
+    </awml-root>
+
+The `awml-clone` tag will automatically propagate the correct prefix values to all `awml-option` tags.
+
 ## Installation
 
 Simply clone this repository and update the submodule to get the right version to the toolkit library.
