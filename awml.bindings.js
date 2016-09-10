@@ -145,7 +145,7 @@
 
     var node = from.parentNode;
 
-    while (node) {
+    while (node && node.getAttribute) {
       tmp = node.getAttribute(attr);
       if (tmp) {
         prefix.push(tmp);
@@ -178,8 +178,9 @@
         return;
       }
       for (i = 0; i < list.length; i++) {
+        var tmp = (prefix.search(':') === -1) ? prefix + collect_prefix(c, node, handle) : prefix;
         c = list.item(i);
-        set_prefix(c, prefix+collect_prefix(c, node, handle), handle);
+        set_prefix(c, tmp, handle);
       }
     }
   }
