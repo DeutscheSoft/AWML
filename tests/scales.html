@@ -11,13 +11,19 @@
             <awml-backend type=local name=local></awml-backend>
 
             <awml-fader min=-96 max=0 scale='decibel' show_scale='true'>
-                <awml-binding source='local:foo' option='value'></awml-binding>
+                <awml-option type=bind src='local:foo' name='value'></awml-option>
             </awml-fader>
             <awml-fader min=-96 max=0 scale='log2' show_scale='true'>
-                <awml-binding source='local:foo' option='value'></awml-binding>
+                <awml-option type=bind src='local:foo' name='value'></awml-option>
             </awml-fader>
             <awml-fader min=-96 max=0 show_scale='true'>
-                <awml-binding source='local:foo' option='value'></awml-binding>
+                <awml-option type=bind src='local:foo' name='value'></awml-option>
+            </awml-fader>
+            <awml-fader min=-96 max=0 scale='decibel' show_scale='true'>
+                <awml-option type=bind src='local:foo' name='min'></awml-option>
+            </awml-fader>
+            <awml-fader min=-96 max=0 scale='decibel' show_scale='true'>
+                <awml-option type=bind src='local:foo' name='max'></awml-option>
             </awml-fader>
         </awml-root>
     </body>
