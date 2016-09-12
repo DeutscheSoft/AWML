@@ -342,11 +342,40 @@
     return document.registerElement(tagName, { prototype: prototype });
   }
 
-  function register_element_polyfill(tagName, prototype) {
-    AWML.error('no customelements support\n');
+  var custom_elements;
+
+  function upgrade_element(node) {
+    var prototype;
+    var tagName = node.tagName;
+    var i;
+    if (custom_elements.hasOwnProperty(tagName)) {
+      if (!node.is_awml_node) {
+        prototype = custom_elements[tagName];
+        Object.assign(node, prototype);
+        node.createdCallback();
+        node.attachedCallback();
+      }
+    }
+    var children = node.childNodes||node.children;
+    for (i = 0; i < children.length; i++) {
+      upgrade_element(children[i]);
+    }
   }
 
-  AWML.register_element = document.registerElement ?  register_element : register_element_polyfill;
+  function register_element_polyfill(tagName, prototype) {
+    custom_elements[tagName.toUpperCase()] = prototype;
+    return true;
+  }
+
+  if (document.registerElement) {
+    AWML.register_element = register_element;
+    AWML.upgrade_element = function(node) {}
+  } else {
+    custom_elements = {};
+    AWML.register_element = register_element_polyfill;
+    AWML.upgrade_element = upgrade_element;
+    AWML.warn('Running with simple polyfill. Only static AWML is supported.');
+  }
 
   function create_tag(tagName, prototype) {
     prototype = Object.assign({
@@ -397,10 +426,10 @@
       prototype
     );
 
-    return register_element(tagName, prototype);
+    return AWML.register_element(tagName, prototype);
   };
 
-  AWML.registerWidget = function registerWidget(tagName, widget) {
+  function registerWidget(tagName, widget) {
     return create_tag(tagName, {
       awml_createdCallback: function() {
         this.widget = null;
@@ -428,12 +457,14 @@
           }
       },
     });
-  };
+  }
+
+  AWML.registerWidget = registerWidget;
 
   if (!AWML.Tags) AWML.Tags = {};
 
   // awml-root is somewhat custom, because it has no awml parents
-  AWML.Tags.Root = register_element("awml-root", {
+  AWML.Tags.Root = AWML.register_element("awml-root", {
     is_awml_node: true,
     createdCallback: function() {
       this.widget = null;
@@ -451,7 +482,7 @@
       var f = TK[key];
       if (AWML.Tags[key]) continue;
       if (typeof f === "function" && f.prototype && Widget.prototype.isPrototypeOf(f.prototype)) {
-          AWML.Tags[key] = AWML.registerWidget("awml-"+key.toLowerCase(), f);
+          AWML.Tags[key] = registerWidget("awml-"+key.toLowerCase(), f);
       }
   }
 
@@ -627,4 +658,10 @@
     static: StaticOption,
     media: MediaOption,
   };
+
+  if (!document.registerElement) {
+    document.addEventListener('DOMContentLoaded', function() {
+      AWML.upgrade_element(this.body);
+    });
+  }
 })(this.AWML || (this.AWML = {}));

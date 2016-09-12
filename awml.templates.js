@@ -26,7 +26,9 @@
           }
       } while (node = node.parentNode);
 
-      this.appendChild(document.importNode(template.content, true));
+      this.appendChild(node = document.importNode(template.content, true));
+
+      AWML.upgrade_element(node);
 
       var val;
 
