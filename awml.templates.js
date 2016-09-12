@@ -5,6 +5,7 @@
   if (!AWML.Tags) AWML.Tags = {};
 
   AWML.Tags.Clone = AWML.register_element("awml-clone", {
+    is_awml_node: true,
     createdCallback: function() {
     },
     attachedCallback: function() {
