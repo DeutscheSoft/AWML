@@ -234,7 +234,7 @@
           return null;
 
       do
-          if (node.is_awml_node)
+          if (node.is_awml_node && node.widget)
               return node;
       while (node = node.parentNode);
 
