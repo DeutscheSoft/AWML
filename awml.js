@@ -337,9 +337,19 @@
     d[tag][name] = value;
   };
 
+  function register_element(tagName, prototype) {
+    prototype = Object.assign(Object.create(HTMLElement.prototype), prototype);
+    return document.registerElement(tagName, { prototype: prototype });
+  }
+
+  function register_element_polyfill(tagName, prototype) {
+    AWML.error('no customelements support\n');
+  }
+
+  AWML.register_element = document.registerElement ?  register_element : register_element_polyfill;
+
   function create_tag(tagName, prototype) {
-    prototype = Object.assign(Object.create(HTMLElement.prototype),
-      {
+    prototype = Object.assign({
         is_awml_node: true,
         createdCallback: function() {
           this.awml_root = null;
@@ -387,7 +397,7 @@
       prototype
     );
 
-    return document.registerElement(tagName, { prototype: prototype });
+    return register_element(tagName, prototype);
   };
 
   AWML.registerWidget = function registerWidget(tagName, widget) {
@@ -423,20 +433,18 @@
   if (!AWML.Tags) AWML.Tags = {};
 
   // awml-root is somewhat custom, because it has no awml parents
-  AWML.Tags.Root = document.registerElement("awml-root", {
-    prototype: Object.assign(Object.create(HTMLElement.prototype), {
-      is_awml_node: true,
-      createdCallback: function() {
-        this.widget = null;
-      },
-      attachedCallback: function() {
-        this.widget = new TK.Root({ element: this });
-      },
-      detachedCallback: function() {
-        this.widget.destroy();
-        this.widget = null;
-      },
-    })
+  AWML.Tags.Root = register_element("awml-root", {
+    is_awml_node: true,
+    createdCallback: function() {
+      this.widget = null;
+    },
+    attachedCallback: function() {
+      this.widget = new TK.Root({ element: this });
+    },
+    detachedCallback: function() {
+      this.widget.destroy();
+      this.widget = null;
+    },
   });
 
   for (var key in TK) {

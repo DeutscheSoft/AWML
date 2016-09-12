@@ -329,100 +329,96 @@
     },
   });
 
-  AWML.Tags.Backend = document.registerElement("awml-backend", {
-    prototype: Object.assign(Object.create(HTMLElement.prototype), {
-      createdCallback: function() {
-        this.style.display = "none";
-        this.name = "";
-        this.backend = null;
-      },
-      attributeChangedCallback: function(name, old_value, value) {
-        if (document.body.contains(this)) {
-          // simply detach and attach if any property has changed.
-          this.detachedCallback();
-          this.attachedCallback();
-        }
-      },
-      detachedCallback: function() {
-        AWML.register_backend(this.name, null);
-      },
-      attachedCallback: function() {
-        this.name = this.getAttribute("name");
-
-        if (typeof(this.name) !== "string") {
-          AWML.error("awml-backend without name.");
-          return;
-        }
-
-        var shared = typeof(this.getAttribute("shared")) === "string";
-        var type = this.getAttribute("type");
-
-        if (!AWML.Backends[type]) {
-          AWML.error("No such backend: ", type);
-          return;
-        }
-
-        var constructor = AWML.Backends[type];
-        var args = constructor.prototype.arguments_from_node(this);
-
-        if (shared) {
-          if (AWML.Backends.shared) {
-            args = [ type ].concat(args);
-            constructor = AWML.Backends.shared;
-          } else {
-            AWML.warn("Shared backend not supported.");
-          }
-        }
-
-        this.backend = new (constructor.bind.apply(constructor, [ window ].concat(args)));
-
-        AWML.register_backend(this.name, this.backend);
+  AWML.Tags.Backend = AWML.register_element("awml-backend", {
+    createdCallback: function() {
+      this.style.display = "none";
+      this.name = "";
+      this.backend = null;
+    },
+    attributeChangedCallback: function(name, old_value, value) {
+      if (document.body.contains(this)) {
+        // simply detach and attach if any property has changed.
+        this.detachedCallback();
+        this.attachedCallback();
       }
-    })
+    },
+    detachedCallback: function() {
+      AWML.register_backend(this.name, null);
+    },
+    attachedCallback: function() {
+      this.name = this.getAttribute("name");
+
+      if (typeof(this.name) !== "string") {
+        AWML.error("awml-backend without name.");
+        return;
+      }
+
+      var shared = typeof(this.getAttribute("shared")) === "string";
+      var type = this.getAttribute("type");
+
+      if (!AWML.Backends[type]) {
+        AWML.error("No such backend: ", type);
+        return;
+      }
+
+      var constructor = AWML.Backends[type];
+      var args = constructor.prototype.arguments_from_node(this);
+
+      if (shared) {
+        if (AWML.Backends.shared) {
+          args = [ type ].concat(args);
+          constructor = AWML.Backends.shared;
+        } else {
+          AWML.warn("Shared backend not supported.");
+        }
+      }
+
+      this.backend = new (constructor.bind.apply(constructor, [ window ].concat(args)));
+
+      AWML.register_backend(this.name, this.backend);
+    }
   });
 
-  AWML.Tags.Binding = document.registerElement("awml-binding", {
-    prototype: Object.assign(Object.create(HTMLElement.prototype), {
-      createdCallback: function() {
-          this.style.display = "none";
-          this.bind = null;
-          AWML.warn("awml-binding is deprecated");
-      },
-      attributeChangedCallback: function(name, old_value, value) {
-          if (name === "option" || name === "source") {
-            this.attachedCallback();
-          }
-      },
-      detachedCallback: function() {
-        if (this.bind) {
-          this.bind.deactivate();
-          this.bind = null
+  AWML.Tags.Binding = AWML.register_element("awml-binding", {
+    createdCallback: function() {
+        this.style.display = "none";
+        this.bind = null;
+        AWML.warn("awml-binding is deprecated");
+    },
+    attributeChangedCallback: function(name, old_value, value) {
+        if (name === "option" || name === "source") {
+          this.attachedCallback();
         }
-      },
-      attachedCallback: function() {
-        var parent_node = AWML.find_parent_widget.call(this);
-        var type = this.getAttribute("type");
-        var cl;
-
-        if (this.bind) this.bind.deactivate();
-
-        if (parent_node) {
-          switch (type) {
-          case "sync":
-            cl = SyncBinding;
-            break;
-          case "user":
-          default:
-            cl = UserBinding;
-            break;
-          }
-          this.bind = new cl(this.getAttribute("source"),
-                             parent_node.widget,
-                             this.getAttribute("option"));
-          this.bind.activate();
-        }
+    },
+    detachedCallback: function() {
+      if (this.bind) {
+        this.bind.deactivate();
+        this.bind = null
       }
-    })
+    },
+    attachedCallback: function() {
+      var parent_node = AWML.find_parent_widget.call(this);
+      var type = this.getAttribute("type");
+      var cl;
+
+      if (this.bind) this.bind.deactivate();
+
+      if (parent_node) {
+        switch (type) {
+        case "sync":
+          cl = SyncBinding;
+          break;
+        case "user":
+        default:
+          cl = UserBinding;
+          break;
+        }
+        this.bind = new cl(this.getAttribute("source"),
+                           parent_node.widget,
+                           this.getAttribute("option"));
+        this.bind.activate();
+      }
+    }
   });
 
   var bindings = new Map(),
