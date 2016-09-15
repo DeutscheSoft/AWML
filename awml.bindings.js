@@ -164,22 +164,18 @@
 
     if (node.tagName === "AWML-OPTION" && node.getAttribute("type") === "bind") {
       node.option.set_prefix(prefix, handle);
-    } else if (node instanceof HTMLCollection || node instanceof NodeList) {
-
-      for (i = 0; i < node.length; i++) {
-      }
     } else {
       if (node.getElementsByTagName) {
         list = node.getElementsByTagName("awml-option");
       } else if (node.querySelectorAll) { 
         list = node.querySelectorAll("awml-option");
       } else {
-        AWML.error("Cannot set prefix on ", node);
         return;
       }
       for (i = 0; i < list.length; i++) {
-        var tmp = (prefix.search(':') === -1) ? prefix + collect_prefix(c, node, handle) : prefix;
+        var tmp;
         c = list.item(i);
+        tmp = (prefix.search(':') === -1) ? prefix + collect_prefix(c, node, handle) : prefix;
         set_prefix(c, tmp, handle);
       }
     }
