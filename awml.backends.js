@@ -363,9 +363,23 @@
       d[uri] = 1;
       this.ws.send(JSON.stringify(d));
     },
+    low_subscribe_batch: function(uris) {
+      var d = {}, i;
+      for (i = 0; i < uris.length; i++) {
+        d[uris[i]] = 1;
+      }
+      this.ws.send(JSON.stringify(d));
+    },
     low_unsubscribe: function(uri) {
       var d = {};
       d[uri] = 0;
+      this.ws.send(JSON.stringify(d));
+    },
+    low_unsubscribe_batch: function(uris) {
+      var d = {}, i;
+      for (i = 0; i < uris.length; i++) {
+        d[uris[i]] = 0;
+      }
       this.ws.send(JSON.stringify(d));
     },
     set: function(id, value) {
