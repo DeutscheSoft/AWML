@@ -18,13 +18,14 @@
 
       var node = this.parentNode;
 
-      do {
+      while (node) {
           if (node.tagName === this.tagName &&
               node.getAttribute('template') === template_name) {
               AWML.error("Recursive template definition.");
               return;
           }
-      } while (node = node.parentNode);
+          node = node.parentNode;
+      }
 
       this.appendChild(node = document.importNode(template.content, true));
 
