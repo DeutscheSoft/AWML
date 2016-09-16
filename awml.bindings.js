@@ -9,11 +9,12 @@
     this.requested_value = null;
     this.has_value = false;
     this.listeners = [];
+    this._update = this.update.bind(this);
   };
   Binding.prototype = {
     set_backend: function(backend) {
       this.backend = backend;
-      backend.subscribe(this.uri, this.update.bind(this))
+      backend.subscribe(this.uri, this._update)
         .then(function(a) {
             this.id = a[1];
             if (this.requested_value !== null && this.value !== this.requested_value) {
@@ -22,6 +23,9 @@
           }.bind(this));
     },
     delete_backend: function(backend) {
+      if (this.id !== false) {
+        backend.unsubscribe(this.id, this._update);
+      }
       this.id = false;
       this.backend = null;
     },
