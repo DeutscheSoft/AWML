@@ -324,6 +324,21 @@
     Base.call(this);
     this.connect();
   }
+  /* NOTE: due to a bug in the pike websocket implementation
+   * we have to pad all outgoing frames so they are longer than
+   * 125 bytes. */
+  var padding = function() {
+    var a = new Array(125), i;
+    for (i = 0; i < 125; i++) a[i] = " ";
+    return a.join("");
+  }();
+  function pad(s) {
+    var d = 126 - s.length;
+
+    if (d > 0) s += padding.substr(0, d);
+
+    return s;
+  }
   websocket.prototype = Object.assign(Object.create(Base.prototype), {
     connect: function() {
       this.ws = new WebSocket(this.url, 'json');
@@ -361,31 +376,31 @@
     low_subscribe: function(uri) {
       var d = {};
       d[uri] = 1;
-      this.ws.send(JSON.stringify(d));
+      this.ws.send(pad(JSON.stringify(d)));
     },
     low_subscribe_batch: function(uris) {
       var d = {}, i;
       for (i = 0; i < uris.length; i++) {
         d[uris[i]] = 1;
       }
-      this.ws.send(JSON.stringify(d));
+      this.ws.send(pad(JSON.stringify(d)));
     },
     low_unsubscribe: function(uri) {
       var d = {};
       d[uri] = 0;
-      this.ws.send(JSON.stringify(d));
+      this.ws.send(pad(JSON.stringify(d)));
     },
     low_unsubscribe_batch: function(uris) {
       var d = {}, i;
       for (i = 0; i < uris.length; i++) {
         d[uris[i]] = 0;
       }
-      this.ws.send(JSON.stringify(d));
+      this.ws.send(pad(JSON.stringify(d)));
     },
     set: function(id, value) {
       // the websocket backend will not respond
       receive.call(this, id, value);
-      this.ws.send(JSON.stringify([ id, value ]));
+      this.ws.send(pad(JSON.stringify([ id, value ])));
     },
     arguments_from_node: function(node) {
       return [ node.getAttribute("src") ];
