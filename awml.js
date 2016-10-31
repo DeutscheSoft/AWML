@@ -68,7 +68,7 @@
   function check_option(widget, key, value) {
       var type = widget._options[key];
       if (type && type !== "mixed") {
-        if (typeof value !== type) {
+        if (typeof value !== type && type.search(value) === -1) {
           if (type === "int" && typeof value === "number" ||
               type === "array" && typeof value === "object" && value instanceof Array) {
             return;
