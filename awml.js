@@ -363,7 +363,13 @@
   }
 
   function register_element_polyfill(tagName, prototype) {
-    custom_elements[tagName.toUpperCase()] = prototype;
+    custom_elements[tagName.toUpperCase()] =
+      Object.assign({
+        attachedCallback: function() {},
+        createdCallback: function() {},
+        detachedCallback: function() {},
+        attributeChangedCallback: function() {},
+      }, prototype);
     return true;
   }
 
