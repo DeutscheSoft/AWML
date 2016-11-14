@@ -67,12 +67,12 @@
 
   function check_option(widget, key, value) {
       var type = widget._options[key];
+      var val_type = typeof(value);
+      if (val_type === "object" && value instanceof Array) val_type = "array";
       if (type && type !== "mixed") {
-        if (typeof value !== type && type.search(value) === -1) {
-          if (type === "int" && typeof value === "number" ||
-              type === "array" && typeof value === "object" && value instanceof Array) {
-            return;
-          }
+        if (val_type !== type && type.search(val_type) === -1) {
+          if (val_type === "number" && (value % 1 === 0) && type.search("int") !== -1) return;
+          debugger;
           AWML.warn("Type mismatch for option %o. Expected type %o. Got %o (%o)",
                     key, widget._options[key], value, typeof value);
         }
