@@ -487,7 +487,7 @@
   for (var key in TK) {
       var f = TK[key];
       if (AWML.Tags[key]) continue;
-      if (typeof f === "function" && f.prototype && Widget.prototype.isPrototypeOf(f.prototype)) {
+      if (typeof f === "function" && f.prototype && TK.Widget.prototype.isPrototypeOf(f.prototype)) {
           AWML.Tags[key] = registerWidget("awml-"+key.toLowerCase(), f);
       }
   }
