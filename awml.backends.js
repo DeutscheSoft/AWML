@@ -147,6 +147,7 @@
   Base.prototype = {
     close: to_closed,
     error: to_error,
+    open: to_open,
     low_subscribe_batch: function(uris) {
       return Promise.all(uris.map(this.low_subscribe, this));
     },
