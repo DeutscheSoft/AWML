@@ -24,7 +24,7 @@
     this.uri2id.set(uri, id);
     this.id2uri.set(id, uri);
     
-    pending.forEach(function(a) {
+    if (pending) pending.forEach(function(a) {
       s.add(a[0]);
       a[1]([uri, id]);
     });
@@ -145,9 +145,12 @@
     this._event_handlers = new Map();
   }
   Base.prototype = {
+    subscribe_success: subscribe_success,
+    subscribe_fail: subscribe_fail,
     close: to_closed,
     error: to_error,
     open: to_open,
+    receive: receive,
     low_subscribe_batch: function(uris) {
       return Promise.all(uris.map(this.low_subscribe, this));
     },
