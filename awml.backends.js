@@ -21,9 +21,10 @@
 
     this.pending_subscriptions.delete(uri);
 
+    this.uri2id.set(uri, id);
+
     if (id !== false) {
       this.subscriptions.set(id, s = new Set());
-      this.uri2id.set(uri, id);
       this.id2uri.set(id, uri);
     } else {
       this.subscriptions.set(uri, s = new Set());
@@ -174,15 +175,20 @@
       if (uri2id.has(uri)) {
         return new Promise(function(resolve, reject) {
           id = uri2id.get(uri);
-          s = subscriptions.get(id);
+
+          if (id !== false) {
+            s = subscriptions.get(id);
+            if (values.has(id)) self.setTimeout(cb.bind(0, id, values.get(id)), 0);
+          } else {
+            s = subscriptions.get(uri);
+            if (values.has(uri)) self.setTimeout(cb.bind(0, uri, values.get(uri)), 0);
+          }
 
           if (!s) subscriptions.set(id, s = new Set());
 
           s.add(cb);
 
           resolve([uri, id]);
-
-          if (values.has(id)) self.setTimeout(cb.bind(0, id, values.get(id)), 0);
         });
       } else if (pending.has(uri)) {
         return new Promise(function (resolve, reject) {
