@@ -20,10 +20,15 @@
     var s;
 
     this.pending_subscriptions.delete(uri);
-    this.subscriptions.set(id, s = new Set());
-    this.uri2id.set(uri, id);
-    this.id2uri.set(id, uri);
-    
+
+    if (id !== false) {
+      this.subscriptions.set(id, s = new Set());
+      this.uri2id.set(uri, id);
+      this.id2uri.set(id, uri);
+    } else {
+      this.subscriptions.set(uri, s = new Set());
+    }
+
     if (pending) pending.forEach(function(a) {
       s.add(a[0]);
       a[1]([uri, id]);
