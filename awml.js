@@ -669,6 +669,7 @@
 
   if (!document.registerElement) {
     document.addEventListener('DOMContentLoaded', function() {
+      AWML.upgrade_element(this.head);
       AWML.upgrade_element(this.body);
     });
   }
