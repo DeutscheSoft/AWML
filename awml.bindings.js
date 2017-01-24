@@ -111,6 +111,12 @@
       if (!cb) this.send_cb = cb = (this.sync ? binding_set_handler : binding_user_handler).bind(this);
       return cb;
     },
+    bind: function(binding, node, widget) {
+      binding.addListener(this.get_receive_cb());
+    },
+    unbind: function(binding, node, widget) {
+      binding.removeListener(this.receive_cb);
+    },
     attach: function(node, widget) {
       AWML.Option.prototype.attach.call(this, node, widget);
 
@@ -119,16 +125,15 @@
       } else {
         this.binding = AWML.get_binding(this.src);
       }
-      window.foo = this.binding;
 
-      if (this.binding) this.binding.addListener(this.get_receive_cb());
+      if (this.binding) this.bind(this.binding, node, widget);
 
       if (!this.readonly) {
         widget.add_event(this.get_send_event(), this.get_send_cb());
       }
     },
     detach: function(node, widget) {
-      if (this.binding) this.binding.removeListener(this.receive_cb);
+      if (this.binding) this.unbind(this.binding, node, widget);
 
       if (!this.readonly) {
         widget.remove_event(this.get_send_event(), this.get_send_cb());
@@ -139,17 +144,17 @@
     set_prefix: function(prefix, handle) {
       if (this.prefix !== handle) return;
 
-      var attached = this.widget !== null;
+      var node = this.node;
+      var widget = this.widget;
+      var attached = widget !== null;
 
       if (attached) {
-        if (this.binding) this.binding.removeListener(this.do_receive);
+        if (this.binding) this.unbind(this.binding, node, widget);
       }
 
       if (typeof prefix === "string") {
         this.binding = AWML.get_binding(prefix + this.src);
-        if (attached) {
-          this.binding.addListener(this.get_receive_cb());
-        }
+        if (attached) this.bind(this.binding, node, widget);
       } else {
         this.binding = null;
       }
