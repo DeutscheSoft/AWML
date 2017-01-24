@@ -59,13 +59,30 @@
     },
   };
 
+  function binding_receive(v) {
+      if (!this.recurse) {
+        this.recurse = true;
+        if (this.transform_receive) v = this.transform_receive(v);
+        this.widget.set(this.name, v);
+        this.recurse = false;
+      }
+  }
+
+  function binding_set_handler(v) {
+    this.send(v);
+  }
+  function binding_user_handler(k, v) {
+    this.send(v);
+  }
+
   function BindingOption(node) {
     AWML.Option.call(this, node);
     this.src = node.getAttribute("src");
     this.prefix = node.getAttribute("prefix");
-    this.sync = !!node.getAttribute("sync");
+    this.sync = node.getAttribute("sync") !== null;
     this.value = node.getAttribute("value");
     this.format = node.getAttribute("format");
+    this.readonly = node.getAttribute("readonly") !== null;
 
     var transform_send = node.getAttribute("transform-send");
     var transform_receive = node.getAttribute("transform-receive");
@@ -75,43 +92,47 @@
 
     this.recurse = false;
     this.attached = false;
+    this.binding = null;
 
-    if (this.prefix !== null) {
-      this.binding = null;
-    } else {
-      this.binding = AWML.get_binding(this.src);
-    }
-
-    this.do_receive = function(v) {
-      if (!this.recurse) {
-        this.recurse = true;
-        if (this.transform_receive) v = this.transform_receive(v);
-        this.widget.set(this.name, v);
-        this.recurse = false;
-      }
-    }.bind(this);
-
-    this.set_cb = function(v) {
-      this.send(v);
-    }.bind(this);
-    this.useraction_cb = function(key, value) {
-      this.send(value);
-    }.bind(this);
+    this.receive_cb = null;
+    this.send_cb = null;
   };
   BindingOption.prototype = Object.assign(Object.create(AWML.Option.prototype), {
+    get_receive_cb: function() {
+      var cb = this.receive_cb;
+      if (!cb) this.receive_cb = cb = binding_receive.bind(this);
+      return cb;
+    },
+    get_send_event: function() {
+      return this.sync ? "set_"+this.name : "useraction";
+    },
+    get_send_cb: function() {
+      var cb = this.send_cb;
+      if (!cb) this.send_cb = cb = (this.sync ? binding_set_handler : binding_user_handler).bind(this);
+      return cb;
+    },
     attach: function(node, widget) {
       AWML.Option.prototype.attach.call(this, node, widget);
 
-      if (this.binding) this.binding.addListener(this.do_receive);
+      if (this.prefix !== null) {
+        this.binding = null;
+      } else {
+        this.binding = AWML.get_binding(this.src);
+      }
+      window.foo = this.binding;
 
-      if (this.sync) widget.add_event("useraction", this.useraction_cb);
-      else widget.add_event("set_"+this.name, this.set_cb);
+      if (this.binding) this.binding.addListener(this.get_receive_cb());
+
+      if (!this.readonly) {
+        widget.add_event(this.get_send_event(), this.get_send_cb());
+      }
     },
     detach: function(node, widget) {
-      if (this.binding) this.binding.removeListener(this.do_receive);
+      if (this.binding) this.binding.removeListener(this.receive_cb);
 
-      if (this.sync) widget.remove_event("useraction", this.useraction_cb);
-      else widget.remove_event("set_"+this.name, this.set_cb);
+      if (!this.readonly) {
+        widget.remove_event(this.get_send_event(), this.get_send_cb());
+      }
 
       AWML.Option.prototype.detach.call(this, node, widget);
     },
@@ -126,8 +147,9 @@
 
       if (typeof prefix === "string") {
         this.binding = AWML.get_binding(prefix + this.src);
-        if (attached)
-          this.binding.addListener(this.do_receive);
+        if (attached) {
+          this.binding.addListener(this.get_receive_cb());
+        }
       } else {
         this.binding = null;
       }
