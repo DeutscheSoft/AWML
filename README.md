@@ -402,4 +402,4 @@ After starting it, you can access the tests using the url (http://localhost:8080
 This implementation of AWML is available under the terms of the GNU General Public License version 2.
 See the `COPYING` file for details.
 
-Copyright (c) 2015-2016 DeusO GmbH
+Copyright (c) 2015-2017 DeusO GmbH
