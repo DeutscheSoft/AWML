@@ -179,12 +179,12 @@
           if (id !== false) {
             s = subscriptions.get(id);
             if (values.has(id)) self.setTimeout(cb.bind(0, id, values.get(id)), 0);
+            if (!s) subscriptions.set(id, s = new Set());
           } else {
             s = subscriptions.get(uri);
             if (values.has(uri)) self.setTimeout(cb.bind(0, uri, values.get(uri)), 0);
+            if (!s) subscriptions.set(uri, s = new Set());
           }
-
-          if (!s) subscriptions.set(id, s = new Set());
 
           s.add(cb);
 
