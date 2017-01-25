@@ -124,7 +124,7 @@
     this.pending_subscriptions = new Map();
     
     subscriptions.forEach(function(cbs, id) {
-        var uri = id2uri.get(id);
+        var uri = typeof(id) === "string" ? id : id2uri.get(id);
         cbs.forEach(function(cb) {
           cb(false, uri);
         });

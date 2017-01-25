@@ -51,6 +51,13 @@
     },
     update: function(id, value) {
       var i;
+
+      /* we were unsubscribed by the backend */
+      if (id === false) {
+        this.id = false;
+        return;
+      }
+
       this.value = value;
       this.has_value = true;
       for (i = 0; i < this.listeners.length; i++) {
