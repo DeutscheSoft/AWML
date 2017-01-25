@@ -66,15 +66,6 @@
     },
   };
 
-  function binding_receive(v) {
-      if (!this.recurse) {
-        this.recurse = true;
-        if (this.transform_receive) v = this.transform_receive(v);
-        this.widget.set(this.name, v);
-        this.recurse = false;
-      }
-  }
-
   function binding_set_handler(v) {
     this.send(v);
   }
@@ -107,7 +98,7 @@
   BindingOption.prototype = Object.assign(Object.create(AWML.Option.prototype), {
     get_receive_cb: function() {
       var cb = this.receive_cb;
-      if (!cb) this.receive_cb = cb = binding_receive.bind(this);
+      if (!cb) this.receive_cb = cb = this.receive.bind(this);
       return cb;
     },
     get_send_event: function() {
@@ -171,6 +162,14 @@
         this.recurse = true;
         if (this.transform_send) v = this.transform_send(v);
         this.binding.set(v);
+        this.recurse = false;
+      }
+    },
+    receive: function(v) {
+      if (!this.recurse) {
+        this.recurse = true;
+        if (this.transform_receive) v = this.transform_receive(v);
+        this.widget.set(this.name, v);
         this.recurse = false;
       }
     },
