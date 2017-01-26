@@ -80,7 +80,7 @@
 
     this.state = 'closed';
     clear_all_subscriptions.call(this, 'closed');
-    this.fire('closed');
+    this.fire('close');
   }
 
   function to_error(error) {
