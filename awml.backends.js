@@ -475,7 +475,11 @@
 
   function LocalStorage() {
     Base.call(this);
-    this.storage = window.localStorage;
+    try {
+      this.storage = window.localStorage;
+    } catch (e) {
+      AWML.error("Cannot use LocalStorage backend. Probably because this page is accessed through a file:// URL.");
+    }
     this.encoded_values = new Map();
     window.addEventListener('storage', function(ev) {
       if (ev.storageArea !== this.storage) return;
