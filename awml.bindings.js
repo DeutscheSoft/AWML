@@ -1,6 +1,15 @@
 // vim:sw=2
 "use strict";
 (function(AWML) {
+
+  function call_listener(cb, value) {
+    if (typeof(cb) === "function") {
+      cb(value);
+    } else {
+      cb.receive(value);
+    }
+  }
+
   function Binding(uri) {
     this.uri = uri;
     this.id = false;
@@ -8,13 +17,12 @@
     this.value = null;
     this.requested_value = null;
     this.has_value = false;
-    this.listeners = [];
-    this._update = this.update.bind(this);
+    this.listeners = null;
   };
   Binding.prototype = {
     set_backend: function(backend) {
       this.backend = backend;
-      backend.subscribe(this.uri, this._update)
+      backend.subscribe(this.uri, this)
         .then(
           function(a) {
             this.id = a[1];
@@ -28,23 +36,51 @@
     },
     delete_backend: function(backend) {
       if (this.id !== false) {
-        backend.unsubscribe(this.id, this._update);
+        backend.unsubscribe(this.id, this);
       }
       this.id = false;
       this.backend = null;
     },
+    hasListener: function(callback) {
+      var a = this.listeners;
+      if (a === null) return false;
+      if (Array.isArray(a))
+        return a.indexOf(callback) !== -1;
+      return a === callback;
+    },
     addListener: function(callback) {
-      if (this.listeners.indexOf(callback) !== -1) {
+      if (this.hasListener(callback)) {
         AWML.warn("Trying to add same listener twice.");
         return;
       }
-      this.listeners.push(callback);
+      var a = this.listeners;
+      if (a === null) {
+        this.listeners = callback;
+      } else if (Array.isArray(a)) {
+        a.push(callback);
+      } else {
+        this.listeners = [ a, callback ];
+      }
       if (this.has_value) callback(this.value);
     },
     removeListener: function(callback) {
-      var i;
-      if ((i = this.listeners.indexOf(callback)) != -1)
-        this.listeners.splice(i, 1);
+      var a = this.listeners;
+
+      /* TODO: should we warn? */
+
+      if (a === null) return;
+      if (Array.isArray(a)) {
+        var i;
+        if ((i = a.indexOf(callback)) != -1) {
+          a.splice(i, 1);
+          if (a.length === 1) this.listeners = a[0];
+        }
+      } else {
+        if (a === callback) {
+          this.listeners = null;
+        }
+      }
+
     },
     set: function(value) {
       if (value === this.requested_value) return;
@@ -54,7 +90,7 @@
       }
     },
     update: function(id, value) {
-      var i;
+      var cb, a;
 
       /* we were unsubscribed by the backend */
       if (id === false) {
@@ -64,8 +100,17 @@
 
       this.value = value;
       this.has_value = true;
-      for (i = 0; i < this.listeners.length; i++) {
-        this.listeners[i].call(this, value);
+
+      a = this.listeners;
+
+      if (a === null) return;
+
+      if (Array.isArray(a)) {
+        var i;
+        for (i = 0; i < a.length; i++)
+          call_listener(a[i], value);
+      } else {
+        call_listener(a, value);
       }
     },
   };
@@ -96,15 +141,9 @@
     this.attached = false;
     this.binding = null;
 
-    this.receive_cb = null;
     this.send_cb = null;
   };
   BindingOption.prototype = Object.assign(Object.create(AWML.Option.prototype), {
-    get_receive_cb: function() {
-      var cb = this.receive_cb;
-      if (!cb) this.receive_cb = cb = this.receive.bind(this);
-      return cb;
-    },
     get_send_event: function() {
       return this.sync ? "set_"+this.name : "useraction";
     },
@@ -114,10 +153,10 @@
       return cb;
     },
     bind: function(binding, node, widget) {
-      binding.addListener(this.get_receive_cb());
+      binding.addListener(this);
     },
     unbind: function(binding, node, widget) {
-      binding.removeListener(this.receive_cb);
+      binding.removeListener(this);
     },
     attach: function(node, widget) {
       AWML.Option.prototype.attach.call(this, node, widget);
@@ -230,22 +269,21 @@
     this.uri = binding.uri;
     this.transform_in = transform_in;
     this.transform_out = transform_out;
-    this._receive = this.receive.bind(this, transform_in)
-    this._send = this.send.bind(this, transform_out);
   };
   Connector.prototype = {
-    receive: function(transform, v) { },
-    send: function(transform, v) {
+    receive: function(v) { },
+    send: function(v) {
       var binding = this.binding;
+      var transform = this.transform_out;
       if (transform) v = transform(v);
       binding.set(v);
     },
     deactivate: function() {
-      this.binding.removeListener(this._receive);
+      this.binding.removeListener(this);
       return this;
     },
     activate: function() {
-      this.binding.addListener(this._receive);
+      this.binding.addListener(this);
       return this;
     },
   };
@@ -260,22 +298,24 @@
     this.widget = widget;
     this.option = option;
 
-    this._useraction_cb = function(option, key, value) {
-      if (key === option) this._send(value);
-    }.bind(this, option);
+    this._send = function(key, value) {
+      var option = this.option;
+      if (key === option) this.send(value);
+    }.bind(this);
 
     Connector.call(this, get_binding(uri), transform_in, transform_out);
   };
   UserBinding.prototype = Object.assign(Object.create(Connector.prototype), {
     activate: function() {
-      this.widget.add_event("useraction", this._useraction_cb);
+      this.widget.add_event("useraction", this._send);
       return Connector.prototype.activate.call(this);
     },
     deactivate: function() {
-      this.widget.remove_event("useraction", this._useraction_cb);
+      this.widget.remove_event("useraction", this._send);
       return Connector.prototype.deactivate.call(this);
     },
-    receive: function(transform, v) {
+    receive: function(v) {
+      var transform = this.transform_in;
       if (transform) v = transform(v);
       this.widget.set(this.option, v);
     }
@@ -288,6 +328,7 @@
     this.widget = widget;
     this.option = option;
     this.recurse = false;
+    this._send = this.send.bind(this);
 
     Connector.call(this, get_binding(uri), transform_in, transform_out);
   };
@@ -300,17 +341,18 @@
       this.widget.remove_event("set_"+this.option, this._send);
       return Connector.prototype.deactivate.call(this);
     },
-    receive: function(transform, v) {
+    receive: function(v) {
       if (this.recurse) return;
+      var transform = this.transform_in;
       if (transform) v = transform(v);
       this.recurse = true;
       this.widget.set(this.option, v);
       this.recurse = false;
     },
-    send: function(transform, v) {
+    send: function(v) {
       if (this.recurse) return;
       this.recurse = true;
-      Connector.prototype.send.call(this, transform, v);
+      Connector.prototype.send.call(this, v);
       this.recurse = false;
     },
   });
@@ -335,7 +377,7 @@
       return Connector.prototype.activate.call(this);
     },
     publish: function() {
-      this._send(this.target[this.property]);
+      this.send(this.target[this.property]);
     },
     receive: function(transform, v) {
       if (transform) v = transform(v);
@@ -361,7 +403,8 @@
     Connector.call(this, get_binding(uri), transform_in, transform_out);
   };
   MethodBinding.prototype = Object.assign(Object.create(Connector.prototype), {
-    receive: function(transform, v) {
+    receive: function(v) {
+      var transform = this.transform_in;
       if (transform) v = transform(v);
       this.method(v);
     },
