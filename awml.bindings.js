@@ -199,7 +199,7 @@
 
     if (!handle) handle = "";
 
-    if (node.tagName === "AWML-OPTION" && node.getAttribute("type") === "bind") {
+    if (node.tagName === "AWML-OPTION" && node.option && node.option.set_prefix) {
       node.option.set_prefix(prefix, handle);
     } else {
       if (node.getElementsByTagName) {
