@@ -15,12 +15,16 @@
     set_backend: function(backend) {
       this.backend = backend;
       backend.subscribe(this.uri, this._update)
-        .then(function(a) {
+        .then(
+          function(a) {
             this.id = a[1];
             if (this.requested_value !== null && this.value !== this.requested_value) {
               this.backend.set(a[1], this.requested_value);
             }
-          }.bind(this));
+          }.bind(this),
+          function(reason) {
+            AWML.warn("Subscription failed: ", reason);
+          });
     },
     delete_backend: function(backend) {
       if (this.id !== false) {
@@ -368,6 +372,12 @@
       this.style.display = "none";
       this.name = "";
       this.backend = null;
+      this.error_cb = function() {
+        window.setTimeout(function() {
+          this.detachedCallback();
+          this.attachedCallback();
+        }.bind(this), 250);
+      }.bind(this);
     },
     attributeChangedCallback: function(name, old_value, value) {
       if (document.body.contains(this)) {
@@ -410,6 +420,9 @@
       this.backend = new (constructor.bind.apply(constructor, [ window ].concat(args)));
 
       AWML.register_backend(this.name, this.backend);
+
+      this.backend.addEventListener("error", this.error_cb);
+      this.backend.addEventListener("close", this.error_cb);
     }
   });
 
