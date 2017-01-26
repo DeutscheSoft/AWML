@@ -131,7 +131,7 @@
     });
     pending.forEach(function(cbs, uri) {
         cbs.forEach(function(a) {
-          a[1](reason);
+          a[2](reason);
         });
     });
   }
