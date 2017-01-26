@@ -354,39 +354,51 @@
 
     return s;
   }
-  websocket.prototype = Object.assign(Object.create(Base.prototype), {
-    connect: function() {
-      this.ws = new WebSocket(this.url, 'json');
-      this.ws.onopen = to_open.bind(this);
-      this.ws.onclose = to_closed.bind(this);
-      this.ws.onerror = to_error.bind(this);
-      this.ws.onmessage = function(ev) {
-        var d = JSON.parse(ev.data);
-        var uri, id, fun, i;
-
-        if (typeof(d) === "object") {
-          if (d instanceof Array) {
-            fun = this.receive;
-            for (i = 0; i < d.length; i+=2) {
-              receive.call(this, d[i], d[i+1]);
-            }
-          } else {
-            fun = subscribe_success;
-            for (uri in d) {
-              id = d[uri];
-              fun.call(this, uri, id);
-            }
-          }
-        } else AWML.warn('Unexpected message on WebSocket:', d);
-      }.bind(this);
-    },
-    close: function() {
+  function teardown() {
       var ws = this.ws;
-
       if (ws) {
         this.ws = null;
         try { ws.close(); } catch(e) {}
+        ws.onopen = null;
+        ws.onclose = null;
+        ws.onerror = null;
+        ws.onmessage = null;
       }
+  }
+  websocket.prototype = Object.assign(Object.create(Base.prototype), {
+    message: function(ev) {
+      var d = JSON.parse(ev.data);
+      var uri, id, fun, i;
+
+      if (typeof(d) === "object") {
+        if (d instanceof Array) {
+          fun = this.receive;
+          for (i = 0; i < d.length; i+=2) {
+            receive.call(this, d[i], d[i+1]);
+          }
+        } else {
+          fun = subscribe_success;
+          for (uri in d) {
+            id = d[uri];
+            fun.call(this, uri, id);
+          }
+        }
+      } else AWML.warn('Unexpected message on WebSocket:', d);
+    },
+    connect: function() {
+      this.ws = new WebSocket(this.url, 'json');
+      this.ws.onopen = function() { this.open(); }.bind(this);
+      this.ws.onclose = function() { this.close(); }.bind(this);
+      this.ws.onerror = function(ev) { this.error(""); }.bind(this);
+      this.ws.onmessage = this.message.bind(this);
+    },
+    close: function() {
+      teardown.call(this);
+      Base.prototype.close.call(this);
+    },
+    error: function(reason) {
+      teardown.call(this);
+      Base.prototype.close.call(this, reason);
     },
     low_subscribe: function(uri) {
       var d = {};
