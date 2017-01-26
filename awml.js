@@ -72,7 +72,6 @@
       if (type && type !== "mixed") {
         if (val_type !== type && type.search(val_type) === -1) {
           if (val_type === "number" && (value % 1 === 0) && type.search("int") !== -1) return;
-          debugger;
           AWML.warn("Type mismatch for option %o. Expected type %o. Got %o (%o)",
                     key, widget._options[key], value, typeof value);
         }
