@@ -278,7 +278,7 @@
 
   function Local() {
     Base.call(this);
-    to_open.call(this);
+    this.open();
   }
   Local.prototype = Object.assign(Object.create(Base.prototype), {
     low_subscribe: function(uri) {
