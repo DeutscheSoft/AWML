@@ -379,7 +379,8 @@
     publish: function() {
       this.send(this.target[this.property]);
     },
-    receive: function(transform, v) {
+    receive: function(v) {
+      var transform = this.transform_in;
       if (transform) v = transform(v);
       this.target[this.property] = v;
     },
