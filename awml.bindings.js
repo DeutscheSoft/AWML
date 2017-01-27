@@ -368,6 +368,13 @@
     this.writable = true;
     var d = Object.getOwnPropertyDescriptor(this.target, this.property);
     if (d) this.writable = d.writable;
+    else {
+      try {
+        this.target[this.property] = this.target[this.property];
+      } catch (e) {
+        this.writable = false;
+      }
+    }
 
     Connector.call(this, get_binding(uri), transform_in, transform_out);
   };
