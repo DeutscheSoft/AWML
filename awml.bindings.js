@@ -365,6 +365,9 @@
     this.property = property;
     this.timer_id = -1;
     this._publish = this.publish.bind(this);
+    this.writable = true;
+    var d = Object.getOwnPropertyDescriptor(this.target, this.property);
+    if (d) this.writable = d.writable;
 
     Connector.call(this, get_binding(uri), transform_in, transform_out);
   };
@@ -374,7 +377,12 @@
       if (!this.binding.has_value)
         this.publish();
 
+      if (!this.writable) return this;
       return Connector.prototype.activate.call(this);
+    },
+    deactivate: function() {
+      if (!this.writable) return this;
+      return Connector.prototype.deactivate.call(this);
     },
     publish: function() {
       this.send(this.target[this.property]);
