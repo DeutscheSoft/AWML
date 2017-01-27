@@ -61,7 +61,7 @@
       } else {
         this.listeners = [ a, callback ];
       }
-      if (this.has_value) callback(this.value);
+      if (this.has_value) call_listener(callback, this.value);
     },
     removeListener: function(callback) {
       var a = this.listeners;
