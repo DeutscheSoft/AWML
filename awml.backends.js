@@ -16,38 +16,40 @@
   }
 
   function subscribe_success(uri, id) {
-    var pending = this.pending_subscriptions.get(uri);
-    var s;
-
-    this.pending_subscriptions.delete(uri);
-
     this.uri2id.set(uri, id);
 
+    var key;
+
     if (id !== false) {
-      this.subscriptions.set(id, s = new Set());
+      key = id;
       this.id2uri.set(id, uri);
     } else {
-      this.subscriptions.set(uri, s = new Set());
+      key = uri;
     }
 
-    if (pending) pending.forEach(function(a) {
-      s.add(a[0]);
-      a[1]([uri, id]);
-    });
+    var pending = this.pending_subscriptions.get(uri);
+
+    if (pending) {
+      this.pending_subscriptions.delete(uri);
+      this.subscriptions.set(key, new Set(pending));
+      pending.forEach(function(a) {
+        a[1]([uri, id]);
+      }, this);
+    }
 
     this.fire('register_success', [ uri, id ]);
   }
 
   function receive(id, value) {
-    var values = this.values;
+    this.values.set(id, value);
+
     var subscriptions = this.subscriptions.get(id);
 
-    values.set(id, value);
-
-    if (subscriptions)
-      subscriptions.forEach(function(cb) {
-        cb(id, value);
-      });
+    subscriptions.forEach(function(cb) {
+        if (typeof(cb) === "function") {
+          cb(id, value);
+        } else cb.update(id, value);
+    });
   }
 
   function invalid_transition(from, to) {
@@ -113,8 +115,6 @@
 
   function clear_all_subscriptions(reason) {
     var subscriptions = this.subscriptions;
-    var id2uri = this.id2uri;
-    var uri2id = this.uri2id;
     var pending = this.pending_subscriptions;
 
     this.id2uri = new Map();
@@ -165,42 +165,43 @@
     },
     subscribe: function(uri, cb) {
       var uri2id = this.uri2id;
-      var id2uri = this.id2uri;
       var subscriptions = this.subscriptions;
-      var pending = this.pending_subscriptions;
       var values = this.values;
-
-      var id, s;
 
       if (uri2id.has(uri)) {
         return new Promise(function(resolve, reject) {
-          id = uri2id.get(uri);
+          var key;
+          var id = uri2id.get(uri);
 
           if (id !== false) {
-            s = subscriptions.get(id);
-            if (values.has(id)) self.setTimeout(cb.bind(0, id, values.get(id)), 0);
-            if (!s) subscriptions.set(id, s = new Set());
+            key = id;
           } else {
-            s = subscriptions.get(uri);
-            if (values.has(uri)) self.setTimeout(cb.bind(0, uri, values.get(uri)), 0);
-            if (!s) subscriptions.set(uri, s = new Set());
+            key = uri;
           }
+
+          var s = subscriptions.get(key);
+
+          if (!s) subscriptions.set(key, s = new Set());
 
           s.add(cb);
 
+          if (values.has(key)) self.setTimeout(cb.bind(0, key, values.get(key)), 0);
+
           resolve([uri, id]);
         });
-      } else if (pending.has(uri)) {
-        return new Promise(function (resolve, reject) {
-          pending.get(uri).add([ cb, resolve, reject ]);
-        });
       } else {
-        pending.set(uri, new Set());
+        var pending = this.pending_subscriptions;
+        var s = pending.get(uri);
+        var do_subscribe = !s;
+        if (do_subscribe) {
+          s = new Set();
+          pending.set(uri, s);
+        }
         var p = new Promise(function (resolve, reject) {
-          pending.get(uri).add([ cb, resolve, reject ]);
+          s.add([ cb, resolve, reject ]);
         });
 
-        if (this.state === 'open')
+        if (do_subscribe && this.state === 'open')
           this.low_subscribe(uri);
 
         return p;
@@ -218,18 +219,18 @@
 
       var s = subscriptions.get(id);
 
-      if (!s || !s.has(cb)) throw new Error("No such subscription.");
-      
+      if (!s.has(cb)) throw new Error("No such subscription.");
+
       s.delete(cb);
 
-      if (s.size === 0) {
+      if (!s.size) {
         subscriptions.delete(id);
         values.delete(id);
         id2uri.delete(id);
         uri2id.delete(uri);
         this.low_unsubscribe(id);
         this.fire("unregister", [ uri, id ]);
-      }
+      } else subscriptions.set(id, s);
     },
     addEventListener: function(event, cb) {
       var e = this._event_handlers;
