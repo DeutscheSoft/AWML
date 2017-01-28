@@ -185,7 +185,7 @@
 
           s.add(cb);
 
-          if (values.has(key)) self.setTimeout(cb.bind(0, key, values.get(key)), 0);
+          if (values.has(key)) window.setTimeout(cb.bind(0, key, values.get(key)), 0);
 
           resolve([uri, id]);
         });
@@ -255,15 +255,14 @@
       if (!e.has(type)) return;
 
       var s = e.get(type);
-      var self = this;
 
       s.forEach(function(cb) {
         try {
-          cb.call(self, ev);
+          cb.call(this, ev);
         } catch (e) {
           if (console && console.error) console.error(e);
         }
-      });
+      }, this);
     },
     fire: function(type, data) {
       var e = this._event_handlers;
@@ -435,7 +434,7 @@
     },
   });
 
-  if (self.SharedWorker) {
+  if ('SharedWorker' in window) {
     var url = document.currentScript.getAttribute("src");
     url = url.replace(/awml\.backends\.js/, "awml.backends.sharedworker.js");
 
