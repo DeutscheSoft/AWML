@@ -289,8 +289,16 @@
                 options._collapsed = true;
             continue;
         } else if (name === "options") {
-            merge_options = AWML.options[value];
-            if (!merge_options) TK.warn("No such default options: %o", value);
+            merge_options = {};
+            var tmp = value.split(" ");
+            for (var j = 0; j < tmp.length; j++) {
+              if (!tmp[j].length) continue;
+              if (!AWML.options[tmp[j]]) {
+                TK.warn("No such default options: %o", tmp[j]);
+                continue;
+              }
+              Object.assign(merge_options, AWML.options[tmp[j]]);
+            }
             continue;
         }
 
