@@ -374,6 +374,62 @@
 
   AWML.set_prefix = set_prefix;
 
+  AWML.PrefixLogic = {
+    is_awml_node: true,
+    createdCallback: function() {
+      this.binding = null;
+      this.prefix = null;
+      this.attached = false;
+      this.transform_receive = null;
+    },
+    attachedCallback: function() {
+      var src = node.getAttribute("src");
+      var prefix = node.getAttribute("prefix");
+
+      if (!prefix) this.bind(src);
+
+      this.attached = true;
+    },
+    detachedCallback: function() {
+      this.attached = false;
+
+      if (this.binding) this.unbind();
+    },
+    attributeChangedCallback: function(name, old_value, value) {
+      if (name === "src") {
+        this.detachedCallback();
+        this.attachedCallback(); 
+      }
+      if (name === "prefix") {
+        AWML.error("Dynamic prefix is not supported!");
+      }
+    },
+    awml_set_prefix: function(prefix, handle) {
+      if (handle !== node.getAttribute("prefix")) return;
+
+      if (this.binding) this.unbind();
+
+      this.prefix = prefix;
+
+      if (!this.attached) return;
+
+      this.bind(prefix + node.getAttribute("src");;
+    },
+    bind: function(src) {
+      if (!this.transform_receive) {
+        var tmp = this.getAttribute("transform-receive");
+        if (tmp) this.transform_receive = AWML.parse_format("js", tmp);
+      }
+      this.binding = AWML.get_binding(src);
+      this.binding.addListener(this);
+    },
+    unbind: function() {
+      this.binding.removeListener(this);
+      this.binding = null;
+    },
+    receive: function(v) { },
+  };
+
   function register_element(tagName, prototype) {
     if (prototype.awml_set_prefix)
       register_prefix_tag(tagName);
