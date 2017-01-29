@@ -237,30 +237,6 @@
     return prefix.reverse().join("");
   }
 
-  function set_prefix(node, prefix, handle) {
-    var list, i, c;
-
-    if (!handle) handle = "";
-
-    if (node.tagName === "AWML-OPTION" && node.option && node.option.set_prefix) {
-      node.option.set_prefix(prefix, handle);
-    } else {
-      if (node.getElementsByTagName) {
-        list = node.getElementsByTagName("awml-option");
-      } else if (node.querySelectorAll) { 
-        list = node.querySelectorAll("awml-option");
-      } else {
-        return;
-      }
-      for (i = 0; i < list.length; i++) {
-        var tmp;
-        c = list.item(i);
-        tmp = (prefix.search(':') === -1) ? prefix + collect_prefix(c, node, handle) : prefix;
-        set_prefix(c, tmp, handle);
-      }
-    }
-  }
-
   /**
    * Abstract Connector base class.
    */
@@ -598,7 +574,6 @@
   AWML.Options.bind = BindingOption;
 
   Object.assign(AWML, {
-    set_prefix: set_prefix,
     Binding: Binding,
     get_binding: get_binding,
     get_bindings: get_bindings,

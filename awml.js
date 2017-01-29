@@ -344,7 +344,39 @@
     d[tag][name] = value;
   };
 
+  var prefix_tags = "";
+
+  function register_prefix_tag(tag) {
+    var tmp = prefix_tags.length ? prefix_tags.split(" ") : [];
+    tmp.push(tag);
+    prefix_tags = tmp.join(" ");
+  }
+
+  function set_prefix(node, prefix, handle) {
+
+    if (!handle) handle = "";
+
+    if (node.awml_set_prefix) {
+      node.awml_set_prefix(prefix, handle);
+    } else {
+      var list, i, c;
+
+      list = node.querySelectorAll(prefix_tags);
+
+      for (i = 0; i < list.length; i++) {
+        var tmp;
+        c = list.item(i);
+        tmp = (prefix.search(':') === -1) ? prefix + collect_prefix(c, node, handle) : prefix;
+        set_prefix(c, tmp, handle);
+      }
+    }
+  }
+
+  AWML.set_prefix = set_prefix;
+
   function register_element(tagName, prototype) {
+    if (prototype.awml_set_prefix)
+      register_prefix_tag(tagName);
     prototype = Object.assign(Object.create(HTMLElement.prototype), prototype);
     return document.registerElement(tagName, { prototype: prototype });
   }
@@ -370,6 +402,8 @@
   }
 
   function register_element_polyfill(tagName, prototype) {
+    if (prototype.awml_set_prefix)
+      register_prefix_tag(tagName);
     custom_elements[tagName.toUpperCase()] =
       Object.assign({
         attachedCallback: function() {},
@@ -544,6 +578,11 @@
     },
     attributeChangedCallback: function(name, old_value, value) {
       AWML.warn('changing awml-option tags is not supported, yet');
+    },
+    awml_set_prefix: function(prefix, handle) {
+      var o = this.options;
+      if (!o || !o.set_prefix) return;
+      o.set_prefix(prefix, handle);
     },
   });
 
