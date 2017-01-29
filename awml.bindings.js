@@ -165,9 +165,8 @@
         this.binding = null;
       } else {
         this.binding = AWML.get_binding(this.src);
+        this.bind(this.binding, node, widget);
       }
-
-      if (this.binding) this.bind(this.binding, node, widget);
 
       if (!this.readonly) {
         widget.add_event(this.get_send_event(), this.get_send_cb());
