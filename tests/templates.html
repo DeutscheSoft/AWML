@@ -1,17 +1,23 @@
 <html>
     <head>
-    <link rel="stylesheet" type="text/css" href="../toolkit/toolkit/styles/css/toolkit.all.css">
-    <script src='../toolkit/toolkit.all.js'></script>
-    <script src='../awml.js'></script>
-    <script src='../awml.bindings.js'></script>
-    <script src='../awml.backends.js'></script>
-    <script src='../awml.templates.js'></script>
+        <link rel="stylesheet" type="text/css" href="../toolkit/toolkit/styles/css/toolkit.all.css">
+        <script src='../toolkit/toolkit/G.js'></script>
+        <script src='../toolkit/toolkit/toolkit.js'></script>
+        <script src='../toolkit/toolkit/implements/base.js'></script>
+        <script src='../toolkit/toolkit/widgets/widget.js'></script>
+        <script src='../toolkit/toolkit/widgets/container.js'></script>
+        <script src='../toolkit/toolkit/widgets/root.js'></script>
+        <script src='../toolkit/toolkit/widgets/button.js'></script>
+        <script src='../awml.js'></script>
+        <script src='../awml.bindings.js'></script>
+        <script src='../awml.backends.js'></script>
+        <script src='../awml.templates.js'></script>
     </head>
     <body>
         <template id='foo'>
             <awml-button label='hello'>
-                <awml-option type=bind src='button' name='value' prefix></awml-option>
-                <awml-option type=bind src='button' name='value' prefix='remote'></awml-option>
+                <awml-option type=bind src='button' name='state' prefix></awml-option>
+                <awml-option type=bind src='button' name='state' prefix='remote'></awml-option>
             </awml-button>
 
         </template>
