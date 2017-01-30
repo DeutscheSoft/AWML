@@ -38,7 +38,7 @@
     receive: function(v) {
       this.trigger_redraw();
     },
-    redraw: function(v) {
+    redraw: function() {
       var O = this.awml_data;
       var v = O.binding.value;
       if (!O.get_styles)
