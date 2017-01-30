@@ -135,24 +135,33 @@
       }
       return ret;
   }
-  function parse_format(type, x) {
+  function trim_whitespace(x) {
+      x = x.replace(/^\s*/g, "");
+      x = x.replace(/\s*$/g, "");
+      return x;
+  }
+  function parse_format(type, x, fallback) {
       switch (type) {
       case "js":
-        x = x.replace(/^\s*/g, "");
-        x = x.replace(/\s*$/g, "");
-        try {
-            return new Function([], "return ("+x+");").call(this);
-        } catch (e) {
-            AWML.error("Syntax error", e, "in", x);
-            return undefined;
+        x = trim_whitespace(x);
+        if (x.length) {
+          try {
+              return new Function([], "return ("+x+");").call(this);
+          } catch (e) {
+              AWML.error("Syntax error", e, "in", x);
+          }
         }
+        return fallback;
       case "json":
-        try {
-            return JSON.parse(x);
-        } catch (e) {
-            AWML.error("Syntax error", e, "in JSON", x);
-            return undefined;
+        x = trim_whitespace(x);
+        if (x.length) {
+          try {
+              return JSON.parse(x);
+          } catch (e) {
+              AWML.error("Syntax error", e, "in JSON", x);
+          }
         }
+        return fallback;
       case "string":
         return x;
       case "number":
@@ -162,17 +171,17 @@
       case "sprintf":
         return TK.FORMAT(x);
       case "bool":
+        x = trim_whitespace(x);
         if (x === "true") {
           return true;
         } else if (x === "false") {
           return false;
-        } else {
-          AWML.error("Malformed 'bool': ", x);
-          return undefined;
         }
+        AWML.error("Malformed 'bool': ", x);
+        return fallback;
       default:
         AWML.error("unsupported type", type);
-        return undefined;
+        return fallback;
       }
   }
   AWML.parse_format = parse_format;
