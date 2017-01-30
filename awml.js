@@ -408,21 +408,23 @@
   AWML.PrefixLogic = {
     is_awml_node: true,
     createdCallback: function() {
-      this.binding = null;
-      this.prefix = null;
-      this.attached = false;
-      this.transform_receive = null;
+      var O = this.awml_data;
+      O.binding = null;
+      O.prefix = null;
+      O.attached = false;
+      O.transform_receive = null;
     },
     attachedCallback: function() {
-      var src = node.getAttribute("src");
-      var prefix = node.getAttribute("prefix");
+      var O = this.awml_data;
+      var src = this.getAttribute("src");
+      var prefix = this.getAttribute("prefix");
 
-      if (!prefix) this.bind(src);
+      if (prefix === null) this.bind(src);
 
-      this.attached = true;
+      O.attached = true;
     },
     detachedCallback: function() {
-      this.attached = false;
+      this.awml_data.attached = false;
 
       if (this.binding) this.unbind();
     },
@@ -436,29 +438,58 @@
       }
     },
     awml_set_prefix: function(prefix, handle) {
-      if (handle !== node.getAttribute("prefix")) return;
+      var O = this.awml_data;
+      if (handle !== this.getAttribute("prefix")) return;
 
       if (this.binding) this.unbind();
 
-      this.prefix = prefix;
+      O.prefix = prefix;
 
-      if (!this.attached) return;
+      if (!O.attached) return;
 
-      this.bind(prefix + node.getAttribute("src");;
+      this.bind(prefix + this.getAttribute("src"));
     },
     bind: function(src) {
-      if (!this.transform_receive) {
+      var O = this.awml_data;
+      if (!O.transform_receive) {
         var tmp = this.getAttribute("transform-receive");
-        if (tmp) this.transform_receive = AWML.parse_format("js", tmp);
+        if (tmp) O.transform_receive = AWML.parse_format("js", tmp);
       }
-      this.binding = AWML.get_binding(src);
-      this.binding.addListener(this);
+      if (!src) {
+        AWML.error(this.tagName, "is missing src attribute");
+        return;
+      }
+      O.binding = AWML.get_binding(src);
+      O.binding.addListener(this);
     },
     unbind: function() {
-      this.binding.removeListener(this);
-      this.binding = null;
+      var O = this.awml_data;
+      O.binding.removeListener(this);
+      O.binding = null;
     },
     receive: function(v) { },
+  };
+
+  AWML.RedrawLogic = {
+    is_awml_node: true,
+    createdCallback: function() {
+      var O = this.awml_data;
+      O._redraw = null;
+      O.will_redraw = false;
+    },
+    trigger_redraw: function() {
+      var O = this.awml_data;
+      if (O.will_redraw) return;
+      if (!O._redraw) O._redraw = this.redraw.bind(this);
+      TK.S.add(O._redraw, 1);
+    },
+    remove_redraw: function() {
+      var O = this.awml_data;
+      if (O.will_redraw) {
+        O.will_redraw = false;
+        TK.S.remove(O._redraw, 1);
+      }
+    },
   };
 
   function register_element(tagName, prototype) {
