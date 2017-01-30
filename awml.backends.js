@@ -30,10 +30,12 @@
     var pending = this.pending_subscriptions.get(uri);
 
     if (pending) {
+      var s = new Set();
       this.pending_subscriptions.delete(uri);
-      this.subscriptions.set(key, new Set(pending));
+      this.subscriptions.set(key, s);
       pending.forEach(function(a) {
         a[1]([uri, id]);
+        s.add(a[0]);
       }, this);
     }
 
