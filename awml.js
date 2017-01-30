@@ -364,7 +364,7 @@
   }
 
   function collect_prefix(from, to, handle) {
-    var attr = handle.length ? "prefix-"+handle : "prefix";
+    var attr = handle && handle.length ? "prefix-"+handle : "prefix";
     var prefix = [];
     var tmp;
 
@@ -382,28 +382,30 @@
     return prefix.reverse().join("");
   }
 
-
   function set_prefix(node, prefix, handle) {
+    var attr = handle !== void 0 ? "prefix-"+handle : "prefix";
+    node.setAttribute(attr, prefix);
+    update_prefix(node, handle);
+  }
 
-    if (!handle) handle = "";
+  function update_prefix(node, handle) {
+    if (node.awml_update_prefix)
+      node.awml_update_prefix(handle);
 
-    if (node.awml_set_prefix) {
-      node.awml_set_prefix(prefix, handle);
-    } else {
-      var list, i, c;
+    var list, i, c;
 
-      list = node.querySelectorAll(prefix_tags);
+    list = node.querySelectorAll(prefix_tags);
 
-      for (i = 0; i < list.length; i++) {
-        var tmp;
-        c = list.item(i);
-        tmp = (prefix.search(':') === -1) ? prefix + collect_prefix(c, node, handle) : prefix;
-        set_prefix(c, tmp, handle);
-      }
+    for (i = 0; i < list.length; i++) {
+      var tmp;
+      c = list.item(i);
+      update_prefix(c, handle);
     }
   }
 
+  AWML.collect_prefix = collect_prefix;
   AWML.set_prefix = set_prefix;
+  AWML.update_prefix = update_prefix;
 
   AWML.PrefixLogic = {
     is_awml_node: true,
@@ -417,11 +419,11 @@
     attachedCallback: function() {
       var O = this.awml_data;
       var src = this.getAttribute("src");
-      var prefix = this.getAttribute("prefix");
-
-      if (prefix === null) this.bind(src);
 
       O.attached = true;
+
+      /* update all prefixes */
+      this.awml_update_prefix(null);
     },
     detachedCallback: function() {
       this.awml_data.attached = false;
@@ -433,21 +435,35 @@
         this.detachedCallback();
         this.attachedCallback(); 
       }
+      if (name === "src-prefix") {
+        this.awml_update_prefix(null);
+      }
       if (name === "prefix") {
-        AWML.error("Dynamic prefix is not supported!");
+        AWML.update_prefix(this, value);
       }
     },
-    awml_set_prefix: function(prefix, handle) {
+    awml_update_prefix: function(handle) {
+      if (handle !== null) {
+        if (handle !== this.getAttribute("prefix")) return;
+      }
+
       var O = this.awml_data;
-      if (handle !== this.getAttribute("prefix")) return;
 
       if (this.binding) this.unbind();
 
-      O.prefix = prefix;
+      var src = this.getAttribute("src");
 
-      if (!O.attached) return;
+      if (src === null) return;
 
-      this.bind(prefix + this.getAttribute("src"));
+      if (src.search(':') === -1) {
+        var handle = this.getAttribute("src-prefix") || "";
+        var prefix = AWML.collect_prefix(this, handle);
+
+        if (prefix.search(':') === -1) return;
+        src = prefix + src;
+      }
+
+      this.bind(src);
     },
     bind: function(src) {
       var O = this.awml_data;
@@ -493,7 +509,7 @@
   };
 
   function register_element(tagName, prototype) {
-    if (prototype.awml_set_prefix)
+    if (prototype.awml_update_prefix)
       register_prefix_tag(tagName);
     prototype = Object.assign(Object.create(HTMLElement.prototype), prototype);
     return document.registerElement(tagName, { prototype: prototype });
@@ -519,8 +535,23 @@
     }
   }
 
+  function downgrade_element(node) {
+    var prototype;
+    var tagName = node.tagName;
+    var i;
+    if (custom_elements.hasOwnProperty(tagName)) {
+      if (node.is_awml_node) {
+        node.detachedCallback();
+      }
+    }
+    var children = node.childNodes||node.children;
+    for (i = 0; i < children.length; i++) {
+      downgrade_element(children[i]);
+    }
+  }
+
   function register_element_polyfill(tagName, prototype) {
-    if (prototype.awml_set_prefix)
+    if (prototype.awml_update_prefix)
       register_prefix_tag(tagName);
     custom_elements[tagName.toUpperCase()] =
       Object.assign({
@@ -535,10 +566,12 @@
   if (document.registerElement) {
     AWML.register_element = register_element;
     AWML.upgrade_element = function(node) {}
+    AWML.downgrade_element = function(node) {}
   } else {
     custom_elements = {};
     AWML.register_element = register_element_polyfill;
     AWML.upgrade_element = upgrade_element;
+    AWML.downgrade_element = downgrade_element;
     AWML.warn('Running with simple polyfill. Only static AWML is supported.');
   }
 
@@ -697,10 +730,11 @@
     attributeChangedCallback: function(name, old_value, value) {
       AWML.warn('changing awml-option tags is not supported, yet');
     },
-    awml_set_prefix: function(prefix, handle) {
+    awml_update_prefix: function(handle) {
       var o = this.option;
-      if (!o || !o.set_prefix) return;
-      o.set_prefix(prefix, handle);
+      if (!o || !o.update_prefix) return;
+
+      o.update_prefix(handle);
     },
   });
 

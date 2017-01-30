@@ -125,7 +125,7 @@
   function BindingOption(node) {
     AWML.Option.call(this, node);
     this.src = node.getAttribute("src");
-    this.prefix = node.getAttribute("prefix");
+    this.prefix = node.getAttribute("src-prefix");
     this.sync = node.getAttribute("sync") !== null;
     this.value = node.getAttribute("value");
     this.format = node.getAttribute("format");
@@ -161,12 +161,7 @@
     attach: function(node, widget) {
       AWML.Option.prototype.attach.call(this, node, widget);
 
-      if (this.prefix !== null) {
-        this.binding = null;
-      } else {
-        this.binding = AWML.get_binding(this.src);
-        this.bind(this.binding, node, widget);
-      }
+      this.update_prefix(null);
 
       if (!this.readonly) {
         widget.add_event(this.get_send_event(), this.get_send_cb());
@@ -181,23 +176,26 @@
 
       AWML.Option.prototype.detach.call(this, node, widget);
     },
-    set_prefix: function(prefix, handle) {
-      if (this.prefix !== handle) return;
-
+    update_prefix: function(handle) {
       var node = this.node;
       var widget = this.widget;
-      var attached = widget !== null;
 
-      if (attached) {
-        if (this.binding) this.unbind(this.binding, node, widget);
+      if (widget === null) return;
+
+      if (this.binding) this.unbind(this.binding, node, widget);
+
+      var src = this.src;
+
+      if (src === null) return;
+
+      if (src.search(':') === -1) {
+        var prefix = AWML.collect_prefix(node, this.prefix);
+        if (prefix.search(':') === -1) return;
+        src = prefix + src;
       }
 
-      if (typeof prefix === "string") {
-        this.binding = AWML.get_binding(prefix + this.src);
-        if (attached) this.bind(this.binding, node, widget);
-      } else {
-        this.binding = null;
-      }
+      this.binding = AWML.get_binding(src);
+      this.bind(this.binding, node, widget);
     },
     send: function(v) {
       if (!this.recurse && this.binding) {

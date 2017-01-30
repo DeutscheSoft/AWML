@@ -8,23 +8,60 @@
         <script src='../toolkit/toolkit/widgets/container.js'></script>
         <script src='../toolkit/toolkit/widgets/root.js'></script>
         <script src='../toolkit/toolkit/widgets/button.js'></script>
+        <script src='../toolkit/toolkit/widgets/value.js'></script>
         <script src='../awml.js'></script>
         <script src='../awml.bindings.js'></script>
         <script src='../awml.backends.js'></script>
         <script src='../awml.templates.js'></script>
-    </head>
-    <body>
-        <template id='foo'>
-            <awml-button label='hello'>
-                <awml-option type=bind src='button' name='state' prefix></awml-option>
-                <awml-option type=bind src='button' name='state' prefix='remote'></awml-option>
-            </awml-button>
+        <script>
+            function template_select(v) {
+                if (v === "edit") return "col_edit";
+                else return "col_static";
+            }
 
+            function toggle_template() {
+                var b = AWML.get_binding("local:type");
+
+                console.log(b.value);
+
+                if (b.value === "edit") {
+                    b.set("foo");
+                } else {
+                    b.set("edit");
+                }
+
+            }
+        </script>
+        <awml-backend type=local name=local>
+            {
+                "row1/col1/label": "1",
+                "row1/col2/label": "2",
+                "row1/col3/label": "3",
+                "row2/col1/label": "4",
+                "row2/col2/label": "5",
+                "row2/col3/label": "6",
+                "row3/col1/label": "7",
+                "row3/col2/label": "8",
+                "row3/col3/label": "9",
+                "type": "edit"
+            }
+        </awml-backend>
+        <template id='col_static'>
+            <awml-button label='hello'>
+                <awml-option type=bind src='label' name=label></awml-option>
+                <awml-option type=bind src='button' name=state></awml-option>
+                <awml-option type=bind src='button' name=state src-prefix='remote'></awml-option>
+            </awml-button>
         </template>
-        <template id='bar'>
-            <awml-clone template='foo' prefix='foo1/'></awml-clone>
-            <awml-clone template='foo' prefix='foo2/'></awml-clone>
-            <awml-clone template='foo' prefix='foo3/'></awml-clone>
+        <template id='col_edit'>
+            <awml-value format='sprintf:%s'>
+                <awml-option type=bind src=label name=value></awml-option>
+            </awml-value>
+        </template>
+        <template id='row'>
+            <awml-clone src='local:type' transform-receive=template_select prefix='col1/'></awml-clone>
+            <awml-clone src='local:type' transform-receive=template_select prefix='col2/'></awml-clone>
+            <awml-clone src='local:type' transform-receive=template_select prefix='col3/'></awml-clone>
             <br>
         </template>
 
@@ -32,11 +69,14 @@
             <awml-clone template='rec'></awml-clone>
         </template>
 
+    </head>
+    <body>
         <awml-root>
-            <awml-clone template='bar' prefix-remote='remote:bar' prefix='local:bar1/'></awml-clone>
-            <awml-clone template='bar' prefix='local:bar1/'></awml-clone>
-            <awml-clone template='bar' prefix='local:bar1/'></awml-clone>
-            <awml-clone template='rec' prefix='local:bar1/'></awml-clone>
+            <awml-clone template='row' prefix-remote='remote:bar' prefix='local:row1/'></awml-clone>
+            <awml-clone template='row' prefix='local:row2/'></awml-clone>
+            <awml-clone template='row' prefix='local:row3/'></awml-clone>
+
+            <button onclick="javascript:toggle_template();">EDIT</button>
         </awml-root>
     </body>
 </html>
