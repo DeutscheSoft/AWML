@@ -698,7 +698,7 @@
       AWML.warn('changing awml-option tags is not supported, yet');
     },
     awml_set_prefix: function(prefix, handle) {
-      var o = this.options;
+      var o = this.option;
       if (!o || !o.set_prefix) return;
       o.set_prefix(prefix, handle);
     },
