@@ -278,9 +278,14 @@
     },
   };
 
-  function Local() {
+  function Local(name, values) {
+    this.name = name;
     Base.call(this);
     this.open();
+
+    for (var uri in values) {
+      AWML.get_binding(this.name + ":" + uri).set(values[uri]);
+    }
   }
   Local.prototype = Object.assign(Object.create(Base.prototype), {
     low_subscribe: function(uri) {
@@ -295,7 +300,7 @@
     low_unsubscribe: function(id) { },
     set: receive,
     arguments_from_node: function(node) {
-        return [];
+        return [ node.getAttribute("name"), AWML.parse_format("json", node.textContent, {}) ];
     },
   });
 
