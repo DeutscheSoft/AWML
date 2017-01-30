@@ -328,7 +328,9 @@
     return options;
   }
 
-  var _warn_stack = [ TK.warn ];
+  var TK = window.TK;
+
+  var _warn_stack = [ TK ? TK.warn : function() {} ];
   
   AWML.warn = function() {
     _warn_stack[_warn_stack.length-1].apply(this, arguments);
@@ -576,7 +578,7 @@
   if (!AWML.Tags) AWML.Tags = {};
 
   // awml-root is somewhat custom, because it has no awml parents
-  AWML.Tags.Root = AWML.register_element("awml-root", {
+  if (TK && TK.Root) AWML.Tags.Root = AWML.register_element("awml-root", {
     is_awml_node: true,
     createdCallback: function() {
       this.widget = null;
@@ -590,7 +592,7 @@
     },
   });
 
-  for (var key in TK) {
+  if (TK && TK.Widget) for (var key in TK) {
       var f = TK[key];
       if (AWML.Tags[key]) continue;
       if (typeof f === "function" && f.prototype && TK.Widget.prototype.isPrototypeOf(f.prototype)) {
