@@ -358,10 +358,30 @@
   var prefix_tags = "";
 
   function register_prefix_tag(tag) {
-    var tmp = prefix_tags.length ? prefix_tags.split(" ") : [];
+    var tmp = prefix_tags.length ? prefix_tags.split(",") : [];
     tmp.push(tag);
-    prefix_tags = tmp.join(" ");
+    prefix_tags = tmp.join(",");
   }
+
+  function collect_prefix(from, to, handle) {
+    var attr = handle.length ? "prefix-"+handle : "prefix";
+    var prefix = [];
+    var tmp;
+
+    var node = from.parentNode;
+
+    while (node && node.getAttribute) {
+      tmp = node.getAttribute(attr);
+      if (tmp) {
+        prefix.push(tmp);
+      }
+      if (node === to) break;
+      node = node.parentNode;
+    }
+
+    return prefix.reverse().join("");
+  }
+
 
   function set_prefix(node, prefix, handle) {
 

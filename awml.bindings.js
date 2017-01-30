@@ -217,25 +217,6 @@
     },
   });
 
-  function collect_prefix(from, to, handle) {
-    var attr = handle.length ? "prefix-"+handle : "prefix";
-    var prefix = [];
-    var tmp;
-
-    var node = from.parentNode;
-
-    while (node && node.getAttribute) {
-      tmp = node.getAttribute(attr);
-      if (tmp) {
-        prefix.push(tmp);
-      }
-      if (node === to) break;
-      node = node.parentNode;
-    }
-
-    return prefix.reverse().join("");
-  }
-
   /**
    * Abstract Connector base class.
    */
