@@ -492,10 +492,11 @@
     AWML.Backends.shared = Shared;
   }
 
-  function LocalStorage() {
+  function LocalStorage(clear) {
     Base.call(this);
     try {
       this.storage = window.localStorage;
+      if (clear) this.storage.clear();
     } catch (e) {
       AWML.error("Cannot use LocalStorage backend. Probably because this page is accessed through a file:// URL.");
     }
@@ -535,7 +536,7 @@
       }
     },
     arguments_from_node: function(node) {
-        return [];
+        return [ node.getAttribute("clear") !== null ];
     },
   });
 
