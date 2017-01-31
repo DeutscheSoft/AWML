@@ -263,8 +263,8 @@
       return null;
   };
 
-  AWML.find_parent_widget = find_parent;
-  AWML.find_root_widget = find_root;
+  AWML.find_parent_widget = function(node) { return find_parent.call(node); }
+  AWML.find_root_widget = function(node) { return find_root.call(node); }
 
 
   function extract_options(widget) {
