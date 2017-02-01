@@ -846,15 +846,33 @@
       this.style.display = "none";
       this.type = this.getAttribute("type");
       this.fun = parse_format.call(this, "js", this.textContent);
+      if (typeof(this.type) !== "string") {
+        AWML.error("AWML-EVENT without type.");
+      }
+      if (typeof(this.fun) !== "function") {
+        AWML.error("AWML-EVENT without function.");
+      }
     },
     awml_attributeChangedCallback: function(name, old_value, value) {
       TK.warn("not implemented");
     },
     awml_detachedCallback: function(root, parent_node) {
-      parent_node.widget.remove_event(this.type, this.fun);
+      var types = this.type.split(",");
+      var type;
+      for (var i = 0; i < types.length; i++) {
+        type = trim_whitespace(types[i]);
+        if (!type.length) continue;
+        parent_node.widget.remove_event(type, this.fun);
+      }
     },
     awml_attachedCallback: function(root, parent_node) {
-      parent_node.widget.add_event(this.type, this.fun);
+      var types = this.type.split(",");
+      var type;
+      for (var i = 0; i < types.length; i++) {
+        type = trim_whitespace(types[i]);
+        if (!type.length) continue;
+        parent_node.widget.add_event(type, this.fun);
+      }
     }
   });
 
