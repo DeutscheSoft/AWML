@@ -83,7 +83,7 @@
 
     },
     set: function(value) {
-      if (value === this.requested_value) return;
+      if (value === this.requested_value && value === this.value) return;
       this.requested_value = value;
       if (this.id !== false) {
         this.backend.set(this.id, value);
