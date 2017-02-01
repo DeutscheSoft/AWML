@@ -42,16 +42,20 @@
     this.fire('register_success', [ uri, id ]);
   }
 
-  function receive(id, value) {
-    this.values.set(id, value);
-
-    var subscriptions = this.subscriptions.get(id);
-
-    subscriptions.forEach(function(cb) {
+  function call_subscribers(cbs, id, value) {
+    cbs.forEach(function(cb) {
         if (typeof(cb) === "function") {
           cb(id, value);
         } else cb.update(id, value);
     });
+  }
+
+  function receive(id, value) {
+    this.values.set(id, value);
+
+    var cbs = this.subscriptions.get(id);
+
+    call_subscribers(cbs, id, value);
   }
 
   function invalid_transition(from, to) {
@@ -118,6 +122,7 @@
   function clear_all_subscriptions(reason) {
     var subscriptions = this.subscriptions;
     var pending = this.pending_subscriptions;
+    var id2uri = this.id2uri;
 
     this.id2uri = new Map();
     this.uri2id = new Map();
@@ -127,9 +132,8 @@
     
     subscriptions.forEach(function(cbs, id) {
         var uri = typeof(id) === "string" ? id : id2uri.get(id);
-        cbs.forEach(function(cb) {
-          cb(false, uri);
-        });
+
+        call_subscribers(cbs, false, uri);
     });
     pending.forEach(function(cbs, uri) {
         cbs.forEach(function(a) {
