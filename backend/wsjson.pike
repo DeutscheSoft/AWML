@@ -77,6 +77,8 @@ void incoming(object frame, object from) {
                 con->send_text(Standards.JSON.encode(d));
             }
         }
+    } else if (data == Val.false) {
+        values = ([]);
     }
 }
 

@@ -349,7 +349,7 @@
     return r;
   }
 
-  function websocket(url) {
+  function websocket(url, clear) {
     if (!url) {
       url = get_relative_wsurl();
     } else if (url[0] == "/"[0]) {
@@ -358,7 +358,7 @@
     }
     this.url = url;
     Base.call(this);
-    if (url) this.connect();
+    if (url) this.connect(clear);
     else AWML.error("Missing URL in websocket backend. Cannot connect.");
   }
   /* NOTE: due to a bug in the pike websocket implementation
@@ -407,11 +407,14 @@
         }
       } else AWML.warn('Unexpected message on WebSocket:', d);
     },
-    connect: function() {
+    connect: function(clear) {
       try {
         var ws;
         ws = new WebSocket(this.url, 'json');
-        ws.onopen = function() { this.open(); }.bind(this);
+        ws.onopen = function() {
+          if (clear) this.ws.send(pad("false"));
+          this.open();
+        }.bind(this);
         ws.onclose = function() { this.close(); }.bind(this);
         ws.onerror = function(ev) { this.error(""); }.bind(this);
         ws.onmessage = this.message.bind(this);
@@ -458,7 +461,7 @@
       this.ws.send(pad(JSON.stringify([ id, value ])));
     },
     arguments_from_node: function(node) {
-      return [ node.getAttribute("src") ];
+      return [ node.getAttribute("src"), node.getAttribute("clear") !== null ];
     },
   });
 
