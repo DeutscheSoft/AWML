@@ -42,11 +42,15 @@
     this.fire('register_success', [ uri, id ]);
   }
 
+  function call_subscriber(cb, id, value) {
+    if (typeof(cb) === "function") {
+      cb(id, value);
+    } else cb.update(id, value);
+  }
+
   function call_subscribers(cbs, id, value) {
     cbs.forEach(function(cb) {
-        if (typeof(cb) === "function") {
-          cb(id, value);
-        } else cb.update(id, value);
+      call_subscriber(cb, id, value);
     });
   }
 
@@ -55,7 +59,7 @@
 
     var cbs = this.subscriptions.get(id);
 
-    call_subscribers(cbs, id, value);
+    if (cbs) call_subscribers(cbs, id, value);
   }
 
   function invalid_transition(from, to) {
@@ -192,7 +196,12 @@
 
           s.add(cb);
 
-          if (values.has(key)) window.setTimeout(cb.bind(0, key, values.get(key)), 0);
+          /* NOTE: this is needed because we should not call the subscriber
+           * before the promise resolve callback has been executed
+           *
+           * FIXME: replace this by something better
+           */
+          if (values.has(key)) window.setTimeout(call_subscriber.bind(this, cb, key, values.get(key)), 0);
 
           resolve([uri, id]);
         });
