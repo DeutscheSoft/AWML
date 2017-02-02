@@ -98,6 +98,7 @@
 
     this.state = 'error';
     clear_all_subscriptions.call(this, error);
+    AWML.error("Backend error", error);
     this.fire('error', error);
   }
 
@@ -348,7 +349,8 @@
     }
     this.url = url;
     Base.call(this);
-    this.connect();
+    if (url) this.connect();
+    else AWML.error("Missing URL in websocket backend. Cannot connect.");
   }
   /* NOTE: due to a bug in the pike websocket implementation
    * we have to pad all outgoing frames so they are longer than
@@ -397,11 +399,17 @@
       } else AWML.warn('Unexpected message on WebSocket:', d);
     },
     connect: function() {
-      this.ws = new WebSocket(this.url, 'json');
-      this.ws.onopen = function() { this.open(); }.bind(this);
-      this.ws.onclose = function() { this.close(); }.bind(this);
-      this.ws.onerror = function(ev) { this.error(""); }.bind(this);
-      this.ws.onmessage = this.message.bind(this);
+      try {
+        var ws;
+        ws = new WebSocket(this.url, 'json');
+        ws.onopen = function() { this.open(); }.bind(this);
+        ws.onclose = function() { this.close(); }.bind(this);
+        ws.onerror = function(ev) { this.error(""); }.bind(this);
+        ws.onmessage = this.message.bind(this);
+        this.ws = ws;
+      } catch (e) {
+        this.error(e);
+      }
     },
     close: function() {
       teardown.call(this);
@@ -409,7 +417,7 @@
     },
     error: function(reason) {
       teardown.call(this);
-      Base.prototype.close.call(this, reason);
+      Base.prototype.error.call(this, reason);
     },
     low_subscribe: function(uri) {
       var d = {};

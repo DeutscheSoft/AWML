@@ -385,7 +385,7 @@
       this.style.display = "none";
       this.name = "";
       this.backend = null;
-      this.error_cb = function() {
+      this.error_cb = function(e) {
         window.setTimeout(function() {
           this.detachedCallback();
           this.attachedCallback();
