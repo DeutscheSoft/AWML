@@ -201,7 +201,7 @@
       if (!this.recurse && this.binding) {
         this.recurse = true;
         if (this.transform_send) v = this.transform_send(v);
-        this.binding.set(v);
+        if (v !== void(0)) this.binding.set(v);
         this.recurse = false;
       }
     },
@@ -209,7 +209,7 @@
       if (!this.recurse) {
         this.recurse = true;
         if (this.transform_receive) v = this.transform_receive(v);
-        this.widget.set(this.name, v);
+        if (v !== void(0)) this.widget.set(this.name, v);
         this.recurse = false;
       }
     },
