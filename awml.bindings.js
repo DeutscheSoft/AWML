@@ -378,6 +378,8 @@
       if (transform) v = transform(v);
       this.method(v);
     },
+    /* MethodBindings are read-only */
+    publish: function() { },
   });
 
   AWML.Tags.Backend = AWML.register_element("awml-backend", {
