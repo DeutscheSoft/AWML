@@ -59,7 +59,7 @@
 
       this.appendChild(node = document.importNode(template.content, true));
 
-      AWML.upgrade_element(node);
+      AWML.upgrade_element(this);
     },
     detachedCallback: function() {
       AWML.PrefixLogic.detachedCallback.call(this);
