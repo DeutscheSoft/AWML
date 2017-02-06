@@ -3,6 +3,24 @@
   "use strict";
   if (!AWML.Backends) AWML.Backends = {};
 
+  var q = [];
+  var dispatched = false;
+
+  function dispatch(cb) {
+    q.push(cb);
+    if (!dispatched) {
+      window.postMessage(true, "*");
+    }
+  }
+
+  window.addEventListener("message", function(ev) {
+    if (ev.source !== window) return;
+    for (var i = 0; i < q.length; i++) {
+      q[i]();
+    }
+    q.length = 0;
+  });
+
   function subscribe_fail(uri, error) {
     var pending = this.pending_subscriptions.get(uri);
 
@@ -357,6 +375,12 @@
       url = get_relative_wsurl() + url;
     }
     this.url = url;
+    this.changeset = [];
+    this.send_changes = function() {
+      var a = this.changeset;
+      this.ws.send(pad(JSON.stringify(a)));
+      a.length = 0;
+    }.bind(this);
     Base.call(this);
     if (url) this.connect(clear);
     else AWML.error("Missing URL in websocket backend. Cannot connect.");
@@ -458,7 +482,9 @@
     set: function(id, value) {
       // the websocket backend will not respond
       receive.call(this, id, value);
-      this.ws.send(pad(JSON.stringify([ id, value ])));
+      var a = this.changeset;
+      a.push(id, value);
+      if (a.length === 2) dispatch(this.send_changes);
     },
     arguments_from_node: function(node) {
       return [ node.getAttribute("src"), node.getAttribute("clear") !== null ];
