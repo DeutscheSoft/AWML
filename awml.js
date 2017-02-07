@@ -411,6 +411,7 @@
     is_awml_node: true,
     createdCallback: function() {
       var O = this.awml_data;
+      if (!O) this.awml_data = O = {};
       O.binding = null;
       O.prefix = null;
       O.attached = false;
