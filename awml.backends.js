@@ -310,13 +310,31 @@
     },
   };
 
-  function Local(name, values) {
+  function Local(name, values, src) {
     this.name = name;
     Base.call(this);
     this.open();
 
     for (var uri in values) {
-      AWML.get_binding(this.name + ":" + uri).set(values[uri]);
+      AWML.get_binding(name + ":" + uri).set(values[uri]);
+    }
+
+    if (src) {
+      if (!window.fetch) {
+        AWML.error("This browser does not support fetch().");
+        return;
+      }
+      window.fetch(src).then(function(response) {
+          if (response.ok)
+            return response.json().then(function(values) {
+              for (var uri in values) {
+                AWML.get_binding(name + ":" + uri).set(values[uri]);
+              }
+            });
+          else return Promise.reject(response.statusText);
+      }).catch(function(e) {
+        AWML.error("Failed to load values from "+src+": ", e)
+      });
     }
   }
   Local.prototype = Object.assign(Object.create(Base.prototype), {
@@ -332,7 +350,7 @@
     low_unsubscribe: function(id) { },
     set: receive,
     arguments_from_node: function(node) {
-        return [ node.getAttribute("name"), AWML.parse_format("json", node.textContent, {}) ];
+        return [ node.getAttribute("name"), AWML.parse_format("json", node.textContent, {}), node.getAttribute("src") ];
     },
   });
 
