@@ -4,29 +4,100 @@
 
   if (!AWML.Tags) AWML.Tags = {};
 
+  var url_stack = [ window.location.href ];
+
+  function push_url(url) {
+    url_stack.push(url);
+  }
+
+  function pop_url() {
+    url_stack.length--;
+  }
+
+  function get_url(path, base) {
+    if (!base) base = url_stack[url_stack.length - 1];
+
+    return new URL(path, base).href;
+  }
+
+  function fetch_template(path, base) {
+    var url = get_url(path, base);
+
+    return fetch(url).then(function(response) {
+      if (!response.ok) throw new Error(response.statusText);
+      return response.text().then(function(text) {
+        var template = document.createElement("TEMPLATE");
+        template.url = url;
+        template.innerHTML = text;
+        return template;
+      });
+    });
+  }
+
+  var cache = new Map();
+
+  function fetch_template_cached(path, base) {
+    var url = get_url(path, base);
+
+    if (cache.has(url)) return Promise.resolve(cache.get(url));
+
+    return fetch_template(path, base).then(function(template) {
+      cache.set(url, template);
+      return template;
+    });
+  }
+
+  AWML.fetch_template = fetch_template;
+  AWML.fetch_template_cached = fetch_template_cached;
+
   AWML.Tags.Clone = AWML.register_element("awml-clone", Object.assign({}, AWML.PrefixLogic, AWML.RedrawLogic, {
     is_awml_node: true,
     createdCallback: function() {
-      var O = {};
-      this.awml_data = O;
+      this.awml_data = {
+        handle: null,
+        fetch: false,
+        template: null,
+        cached: false,
+      };
       AWML.PrefixLogic.createdCallback.call(this);
       AWML.RedrawLogic.createdCallback.call(this);
-      O.template_name = null;
     },
     attachedCallback: function() {
       var O = this.awml_data;
       AWML.PrefixLogic.attachedCallback.call(this);
-      var template_name = this.getAttribute("template");
-      if (!template_name) return;
-      O.template_name = template_name;
-      this.trigger_redraw();
+      O.handle = this.getAttribute("template");
+      O.fetch = this.getAttribute("fetch") !== null;
+      O.cached = this.getAttribute("cached") !== null;
+      this.reload();
     },
     receive: function(v) {
       var O = this.awml_data;
       var transform = O.transform_receive;
       if (transform) v = transform(v);
-      O.template_name = v;
-      this.trigger_redraw();
+      O.handle = v;
+      this.reload();
+    },
+    reload: function() {
+      var O = this.awml_data;
+
+      if (!O.fetch) {
+        O.template = document.getElementById(O.handle);
+        if (!O.template) {
+            AWML.error("Unknown template: ", O.handle);
+            return;
+        }
+        /* we are not fetching the template, simply reload it */
+        this.trigger_redraw();
+      } else {
+        var fetch = O.cached ? fetch_template_cached : fetch_template;
+        /* async template loading */
+        fetch(O.handle).then(function(template) {
+          this.awml_data.template = template;
+          this.trigger_redraw();
+        }.bind(this)).catch(function (e) {
+          AWML.error("Could not load template", O.handle, ":", e);
+        });
+      }
     },
     redraw: function() {
       var O = this.awml_data;
@@ -36,30 +107,23 @@
         this.removeChild(this.lastChild);
       }
 
-      var template_name = O.template_name;
-
-      if (!template_name || !template_name.length) return;
-
-      var template = document.getElementById(template_name);
-
-      if (!template) {
-          AWML.error("Unknown template: ", this.getAttribute("template"));
-      }
+      var template = O.template;
 
       var node = this.parentNode;
 
       while (node) {
-          if (node.tagName === this.tagName &&
-              node.getAttribute('template') === template_name) {
+          if (node.tagName === this.tagName && node.awml_options.handle === O.handle) {
               AWML.error("Recursive template definition.");
               return;
           }
           node = node.parentNode;
       }
 
+      var url = template.url || window.location.href;
+      push_url(url);
       this.appendChild(node = document.importNode(template.content, true));
-
       AWML.upgrade_element(this);
+      pop_url();
     },
     detachedCallback: function() {
       AWML.PrefixLogic.detachedCallback.call(this);

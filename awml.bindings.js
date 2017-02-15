@@ -113,6 +113,10 @@
         call_listener(a, value);
       }
     },
+    in_sync: function() {
+      console.log(this.value, this.requested_value);
+      return this.has_value && (this.value === this.requested_value || this.requested_value === null);
+    },
   };
 
   function binding_set_handler(v) {
