@@ -112,7 +112,7 @@
       var node = this.parentNode;
 
       while (node) {
-          if (node.tagName === this.tagName && node.awml_options.handle === O.handle) {
+          if (node.tagName === this.tagName && node.awml_data.handle === O.handle) {
               AWML.error("Recursive template definition.");
               return;
           }
