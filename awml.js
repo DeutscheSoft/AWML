@@ -162,6 +162,8 @@
           }
         }
         return fallback;
+      case "html":
+        return TK.html(x);
       case "string":
         return x;
       case "number":
