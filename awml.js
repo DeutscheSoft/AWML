@@ -135,15 +135,10 @@
       }
       return ret;
   }
-  function trim_whitespace(x) {
-      x = x.replace(/^\s*/g, "");
-      x = x.replace(/\s*$/g, "");
-      return x;
-  }
   function parse_format(type, x, fallback) {
       switch (type) {
       case "js":
-        x = trim_whitespace(x);
+        x = x.trim();
         if (x.length) {
           try {
               return new Function([], "return ("+x+");").call(this);
@@ -153,7 +148,7 @@
         }
         return fallback;
       case "json":
-        x = trim_whitespace(x);
+        x = x.trim();
         if (x.length) {
           try {
               return JSON.parse(x);
@@ -173,7 +168,7 @@
       case "sprintf":
         return TK.FORMAT(x);
       case "bool":
-        x = trim_whitespace(x);
+        x = x.trim();
         if (x === "true") {
           return true;
         } else if (x === "false") {
@@ -863,7 +858,7 @@
       var types = this.type.split(",");
       var type;
       for (var i = 0; i < types.length; i++) {
-        type = trim_whitespace(types[i]);
+        type = types[i].trim();
         if (!type.length) continue;
         parent_node.widget.remove_event(type, this.fun);
       }
@@ -872,7 +867,7 @@
       var types = this.type.split(",");
       var type;
       for (var i = 0; i < types.length; i++) {
-        type = trim_whitespace(types[i]);
+        type = types[i].trim();
         if (!type.length) continue;
         parent_node.widget.add_event(type, this.fun);
       }
