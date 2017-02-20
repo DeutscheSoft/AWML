@@ -58,6 +58,7 @@
         fetch: false,
         template: null,
         cached: false,
+        trigger_resize: function() { AWML.find_parent_widget(this).widget.trigger_resize(); }.bind(this),
       };
       AWML.PrefixLogic.createdCallback.call(this);
       AWML.RedrawLogic.createdCallback.call(this);
@@ -122,6 +123,11 @@
       var url = template.url || window.location.href;
       push_url(url);
       this.appendChild(node = document.importNode(template.content, true));
+      var styles = this.getElementsByTagName("link");
+      for (var i = 0; i < styles.length; i++) {
+        if (styles[i].getAttribute('rel') !== 'stylesheet') continue;
+        styles[i].addEventListener('load', O.trigger_resize);
+      }
       AWML.upgrade_element(this);
       pop_url();
     },
