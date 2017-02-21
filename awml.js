@@ -360,7 +360,7 @@
     prefix_tags = tmp.join(",");
   }
 
-  function collect_prefix(from, to, handle) {
+  function collect_prefix(from, handle) {
     var attr = handle && handle.length ? "prefix-"+handle : "prefix";
     var prefix = [];
     var tmp;
@@ -372,7 +372,6 @@
       if (tmp) {
         prefix.push(tmp);
       }
-      if (node === to) break;
       node = node.parentNode;
     }
 
@@ -442,7 +441,7 @@
     },
     awml_update_prefix: function(handle) {
       if (handle !== null) {
-        if (handle !== this.getAttribute("prefix")) return;
+        if (handle !== this.getAttribute("src-prefix")) return;
       }
 
       var O = this.awml_data;
@@ -454,7 +453,7 @@
       if (src === null) return;
 
       if (src.search(':') === -1) {
-        var handle = this.getAttribute("src-prefix") || "";
+        handle = this.getAttribute("src-prefix") || "";
         var prefix = AWML.collect_prefix(this, handle);
 
         if (prefix.search(':') === -1) return;
