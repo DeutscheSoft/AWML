@@ -94,7 +94,8 @@
 
   function remove_attributes(node, attr) {
     if (!attr) return;
-    for (var name in attr) {
+    for (var i = 0; i < attr.length; i++) {
+      var name = attr[i];
       node.removeAttribute(name);
     }
   }
