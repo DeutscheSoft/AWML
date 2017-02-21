@@ -67,8 +67,6 @@
       var O = this.awml_data;
       AWML.PrefixLogic.attachedCallback.call(this);
       O.handle = this.getAttribute("template");
-      O.fetch = this.getAttribute("fetch") !== null;
-      O.cached = this.getAttribute("cached") !== null;
       this.reload();
     },
     receive: function(v) {
@@ -80,6 +78,11 @@
     },
     reload: function() {
       var O = this.awml_data;
+
+      O.fetch = this.getAttribute("fetch") !== null;
+      O.cached = this.getAttribute("cached") !== null;
+
+      if (!O.handle) return;
 
       if (!O.fetch) {
         O.template = document.getElementById(O.handle);
