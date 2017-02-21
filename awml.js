@@ -83,17 +83,17 @@
     }
     return options;
   }
-  function attach_option(node, widget, name, value) {
+  function attach_option(node, widget, name, value, simple) {
       if (value instanceof Option) {
           value.attach(node, widget);
-      } else if (typeof value !== "undefined") {
+      } else if (typeof value !== "undefined" && simple) {
           check_option(widget, name, value);
           widget.set(name, value);
       }
   }
-  function attach_options(node, widget, options) {
+  function attach_options(node, widget, options, simple) {
       for (var key in options) {
-          attach_option(node, widget, key, options[key]);
+          attach_option(node, widget, key, options[key], simple);
       }
   }
   function detach_option(node, widget, name, value) {
@@ -636,7 +636,7 @@
           if (widget.prototype._options.element)
               options.element = this;
           this.widget = new widget(check_options(widget.prototype, evaluate_options(options)));
-          attach_options(this, this.widget, options);
+          attach_options(this, this.widget, options, false);
         }
         parent_node.widget.add_child(this.widget);
       },
@@ -822,7 +822,7 @@
       }
       var options = check_options(TK.EqBand.prototype, evaluate_options(this.options));
       this.widget = parent_node.widget.add_band(options);
-      attach_options(this, this.widget, this.options);
+      attach_options(this, this.widget, this.options, false);
     },
     awml_detachedCallback: function(root, parent_node) {
       detach_options(this, this.widget, this.options);
