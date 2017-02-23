@@ -364,7 +364,7 @@
     var prefix = [];
     var tmp;
 
-    var node = from.parentNode;
+    var node = from;
 
     while (node && node.getAttribute) {
       tmp = node.getAttribute(attr);
