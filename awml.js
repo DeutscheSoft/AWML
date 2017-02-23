@@ -865,10 +865,16 @@
     awml_attachedCallback: function(root, parent_node) {
       var types = this.type.split(",");
       var type;
+      var w = parent_node.widget;
       for (var i = 0; i < types.length; i++) {
         type = types[i].trim();
         if (!type.length) continue;
-        parent_node.widget.add_event(type, this.fun);
+        w.add_event(type, this.fun);
+        if (type === 'initialized') {
+          /* the initialization has already happened, 
+           * so we call it manually */
+          this.fun.call(w);
+        }
       }
     }
   });
