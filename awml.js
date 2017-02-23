@@ -493,6 +493,7 @@
       var O = this.awml_data;
       if (O.will_redraw) return;
       if (!O._redraw) O._redraw = this.redraw.bind(this);
+      O.will_redraw = true;
       TK.S.add(O._redraw, 1);
     },
     remove_redraw: function() {
