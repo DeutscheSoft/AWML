@@ -266,7 +266,6 @@
 
   function extract_options(widget) {
     var O = widget ? widget.prototype._options : null;
-    var tagName = this.tagName;
     var attr = this.attributes;
     var merge_options;
     var options = {};
@@ -321,7 +320,7 @@
         }
     }
     options = do_merge_options(merge_options, options);
-    options = do_merge_options(AWML.options.defaults[tagName], options);
+    options = do_merge_options(AWML.options.defaults[this.tagName.toLowerCase()], options);
     return options;
   }
 
