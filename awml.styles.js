@@ -8,11 +8,10 @@
   if (!AWML.Tags) AWML.Tags = {};
 
   function remove_styles(elem, styles) {
-    if (!styles) return;
     var s = elem.style;
     
-    for (var i = 0; i < styles.length; i++) {
-      s.removeProperty(styles[i]);
+    for (var name in styles) {
+      s.removeProperty(name);
     }
   }
 
@@ -25,119 +24,90 @@
     return;
   }
 
-  AWML.Tags.Styles = AWML.register_element("awml-styles", Object.assign({}, AWML.PrefixLogic, AWML.RedrawLogic, {
-    createdCallback: function() {
-      var O = {};
-      this.awml_data = O;
-      AWML.PrefixLogic.createdCallback.call(this);
-      AWML.RedrawLogic.createdCallback.call(this);
-      O.get_styles = null;
-      O.prev_styles = null;
-      this.style.display = 'none';
-    },
-    receive: function(v) {
-      this.trigger_redraw();
-    },
-    redraw: function() {
-      var O = this.awml_data;
-      var v = O.binding.value;
-      if (!O.get_styles)
-        O.get_styles = AWML.parse_format("js", this.textContent, id);
-      var transform = O.transform_receive;
-      if (transform) v = transform(v);
-      var s = O.get_styles(v);
-      remove_styles(this.parentNode, O.prev_styles);
-      O.prev_styles = Object.keys(s);
-      TK.set_styles(this.parentNode, s);
-    },
-    unbind: function(src) {
-      var O = this.awml_data;
-      this.remove_redraw();
-      if (O.prev_styles)
-        remove_styles(this.parentNode, O.prev_styles);
-      AWML.PrefixLogic.bind.call(this, src);
-    },
-  }));
+  var C = 0;
 
-  AWML.Tags.Class = AWML.register_element("awml-class", Object.assign({}, AWML.PrefixLogic, AWML.RedrawLogic, {
-    createdCallback: function() {
-      var O = {};
-      this.awml_data = O;
-      AWML.PrefixLogic.createdCallback.call(this);
-      AWML.RedrawLogic.createdCallback.call(this);
-      O.get_class = null;
-      O.prev_class = null;
-      this.style.display = 'none';
-    },
-    receive: function(v) {
-      this.trigger_redraw();
-    },
-    redraw: function() {
-      var O = this.awml_data;
-      var v = O.binding.value;
-      if (!O.get_class)
-        O.get_class = AWML.parse_format("js", this.textContent, id);
-      var transform = O.transform_receive;
-      if (transform) v = transform(v);
-      var s = O.get_class(v);
-      if (O.prev_class) TK.remove_class(this.parentNode, O.prev_class);
-      O.prev_class = s;
-      TK.add_class(this.parentNode, s);
-    },
-    unbind: function(src) {
-      var O = this.awml_data;
-      this.remove_redraw();
-      if (O.prev_class) TK.remove_class(this.parentNode, O.prev_class);
-      AWML.PrefixLogic.bind.call(this, src);
-    },
-  }));
+  function register_style_tag(name, apply, remove) {
+    return AWML.register_element(name, Object.assign({}, AWML.PrefixLogic, AWML.RedrawLogic, {
+      createdCallback: function() {
+        var O = {};
+        this.awml_data = O;
+        AWML.PrefixLogic.createdCallback.call(this);
+        AWML.RedrawLogic.createdCallback.call(this);
+        O.prev = null;
+        O.get = null;
+        O.c = C++;
+        O.apply = apply;
+        O.remove = remove;
+        this.style.display = 'none';
+      },
+      attachedCallback: function() {
+        AWML.PrefixLogic.attachedCallback.call(this);
+        var b = this.awml_data.binding;
+        if (b && b.has_value)
+          this.trigger_redraw();
+      },
+      detachedCallback: function() {
+        AWML.PrefixLogic.detachedCallback.call(this);
+        this.remove_redraw();
+      },
+      receive: function(v) {
+        var O = this.awml_data;
+        if (!O.attached) return;
+        this.trigger_redraw();
+      },
+      redraw: function() {
+        var O = this.awml_data;
+        var v = O.binding.value,
+            transform = O.transform_receive,
+            node = this.parentNode;
+        if (!O.get) O.get = AWML.parse_format("js", this.textContent, id);
+        if (transform) v = transform(v);
+        if (O.prev) O.remove(node, O.prev);
+        var s = O.get(v);
+        O.prev = s;
+        if (s) O.apply(node, s);
+      },
+      unbind: function(src) {
+        var O = this.awml_data;
+        this.remove_redraw();
+        if (O.prev)
+          O.remove(this.parentNode, O.prev);
+        AWML.PrefixLogic.bind.call(this, src);
+      },
+    }));
+  }
+
+  AWML.Tags.Styles = register_style_tag("awml-styles", TK.set_styles, remove_styles);
+
+  function remove_classes(node, c) {
+    if (Array.isArray(c)) {
+      TK.remove_class.apply(TK, [ node ].concat(c));
+    } else {
+      TK.remove_class(node, c);
+    }
+  }
+
+  function add_classes(node, c) {
+    if (Array.isArray(c)) {
+      TK.add_class.apply(TK, [ node ].concat(c));
+    } else {
+      TK.add_class(node, c);
+    }
+  }
+
+  AWML.Tags.Class = register_style_tag("awml-class", add_classes, remove_classes);
 
   function remove_attributes(node, attr) {
-    if (!attr) return;
-    for (var i = 0; i < attr.length; i++) {
-      var name = attr[i];
+    for (var name in attr) {
       node.removeAttribute(name);
     }
   }
 
   function add_attributes(node, attr) {
-    if (!attr) return;
     for (var name in attr) {
       node.setAttribute(name, attr[name]);
     }
   }
 
-  AWML.Tags.Attributes = AWML.register_element("awml-attributes", Object.assign({}, AWML.PrefixLogic, AWML.RedrawLogic, {
-    createdCallback: function() {
-      var O = {};
-      this.awml_data = O;
-      AWML.PrefixLogic.createdCallback.call(this);
-      AWML.RedrawLogic.createdCallback.call(this);
-      O.get_attributes = null;
-      O.prev_attributes = null;
-      this.style.display = 'none';
-    },
-    receive: function(v) {
-      this.trigger_redraw();
-    },
-    redraw: function() {
-      var O = this.awml_data;
-      var v = O.binding.value;
-      if (!O.get_attributes)
-        O.get_attributes = AWML.parse_format("js", this.textContent, id);
-      var transform = O.transform_receive;
-      if (transform) v = transform(v);
-      var s = O.get_attributes(v);
-      remove_attributes(this.parentNode, O.prev_attributes);
-      O.prev_attributes = Object.keys(s);
-      add_attributes(this.parentNode, s);
-    },
-    unbind: function(src) {
-      var O = this.awml_data;
-      this.remove_redraw();
-      remove_attributes(this.parentNode, O.prev_attributes);
-      AWML.PrefixLogic.bind.call(this, src);
-    },
-  }));
-
+  AWML.Tags.Attributes = register_style_tag("awml-attributes", add_attributes, remove_attributes);
 })(this.AWML || (this.AWML = {}));
