@@ -672,6 +672,38 @@
       this.widget = null;
     },
   });
+  
+  AWML.Tags.ResponseHandle = create_tag("awml-responsehandle", {
+    awml_createdCallback: function() {
+      this.style.display = "none";
+      this.options = extract_options.call(this, TK.ResponseHandle);
+    },
+    awml_attachedCallback: function(root, parent_node) {
+      if (!(parent_node.widget instanceof TK.ResponseHandler)) {
+        AWML.error("awml-responsehandle needs to be inside of a awml-responsehandler.");
+        return;
+      }
+      if (this.widget) {
+        detach_options(this, this.widget, this.options);
+        parent_node.widget.remove_handle(this.widget);
+      }
+      var options = check_options(TK.ResponseHandle.prototype, evaluate_options(this.options));
+      this.widget = parent_node.widget.add_handle(options);
+      attach_options(this, this.widget, this.options, false);
+    },
+    awml_detachedCallback: function(root, parent_node) {
+      detach_options(this, this.widget, this.options);
+      parent_node.widget.remove_handle(this.widget);
+      this.widget = null;
+    },
+    attributeChangedCallback: function(name, old_value, value) {
+      if (this.widget && has_attribute(this.widget, name)) {
+          value = parse_attribute(value);
+          update_option(this, this.widget, name, this.options[name], value);
+          this.options[name] = value;
+      }
+    }
+  });
 
   if (TK && TK.Widget) for (var key in TK) {
       var f = TK[key];
