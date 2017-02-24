@@ -733,7 +733,7 @@
       if (!o) return;
 
       if (parent_node.widget) {
-        if (o.name.charCodeAt(0) !== 95 && !parent_node.widget._options[o.name])
+        if (o.name.charCodeAt(0) !== 95 && !parent_node.widget._options[o.name] && this.getAttribute("force") === null)
           AWML.warn("%o has no option called %o.\n", parent_node.widget._class, o.name);
         o.attach(parent_node, parent_node.widget); 
       } else if (parent_node instanceof AWML.Tags.Options) {
