@@ -122,8 +122,12 @@
   function binding_set_handler(v) {
     this.send(v);
   }
-  function binding_user_handler(k, v) {
+  function binding_useraction_handler(k, v) {
     this.send(v);
+  }
+  function binding_userset_handler(k, v) {
+    this.send(v);
+    return false;
   }
 
   function BindingOption(node) {
@@ -134,6 +138,10 @@
     this.value = node.getAttribute("value");
     this.format = node.getAttribute("format");
     this.readonly = node.getAttribute("readonly") !== null;
+    this.writeonly = node.getAttribute("writeonly") !== null;
+
+    if (this.sync && this.writeonly)
+      AWML.warn("Setting both 'sync' and 'writeonly' does not work.");
 
     var transform_send = node.getAttribute("transform-send");
     var transform_receive = node.getAttribute("transform-receive");
@@ -149,11 +157,19 @@
   };
   BindingOption.prototype = Object.assign(Object.create(AWML.Option.prototype), {
     get_send_event: function() {
-      return this.sync ? "set_"+this.name : "useraction";
+      if (this.writeonly) return "userset";
+      if (this.sync) return "set_"+this.name;
+      return "useraction";
     },
     get_send_cb: function() {
       var cb = this.send_cb;
-      if (!cb) this.send_cb = cb = (this.sync ? binding_set_handler : binding_user_handler).bind(this);
+      if (cb) return cb;
+      if (this.writeonly) cb = binding_userset_handler;
+      else if (this.sync) cb = binding_set_handler;
+      else cb = binding_useraction_handler;
+
+      cb = cb.bind(this);
+      this.send_cb = cb;
       return cb;
     },
     bind: function(binding, node, widget) {
