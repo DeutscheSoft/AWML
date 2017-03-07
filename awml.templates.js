@@ -96,14 +96,16 @@
         var fetch = O.cached ? fetch_template_cached : fetch_template;
         /* async template loading */
         fetch(O.handle).then(function(template) {
-          this.awml_data.template = template;
-          this.trigger_redraw();
+          var O = this.awml_data;
+          O.template = template;
+          if (O.attached) this.trigger_redraw();
         }.bind(this)).catch(function (e) {
           AWML.error("Could not load template", O.handle, ":", e);
         });
       }
     },
     redraw: function() {
+      AWML.RedrawLogic.redraw.call(this);
       var O = this.awml_data;
 
       while (this.lastChild) {
@@ -143,10 +145,9 @@
     },
     attributeChangedCallback: function(name, old_value, value) {
       if (name === "template") {
-          this.detachedCallback();
-          this.attachedCallback();
-      }
-      if (name.startsWith("prefix")) {
+        this.detachedCallback();
+        this.attachedCallback();
+      } else if (name.startsWith("prefix")) {
         var handle = name.substr(7);
         AWML.update_prefix(this, handle);
       }

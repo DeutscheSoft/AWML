@@ -496,6 +496,10 @@
       O.will_redraw = true;
       TK.S.add(O._redraw, 1);
     },
+    redraw: function() {
+      var O = this.awml_data;
+      O.will_redraw = false;
+    },
     remove_redraw: function() {
       var O = this.awml_data;
       if (O.will_redraw) {
