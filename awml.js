@@ -547,6 +547,13 @@
     }
   }
 
+  function update_attribute(node, name, value) {
+    var old = node.getAttribute(name);
+    node.setAttribute(name, value);
+    if (node.attributeChangedCallback)
+      node.attributeChangedCallback(name, old, node.getAttribute(name));
+  }
+
   function register_element_polyfill(tagName, prototype) {
     if (prototype.awml_update_prefix)
       register_prefix_tag(tagName);
@@ -564,11 +571,13 @@
     AWML.register_element = register_element;
     AWML.upgrade_element = function(node) {}
     AWML.downgrade_element = function(node) {}
+    AWML.update_attribute = function(node, name, value) { node.setAttribute(name, value); }
   } else {
     custom_elements = {};
     AWML.register_element = register_element_polyfill;
     AWML.upgrade_element = upgrade_element;
     AWML.downgrade_element = downgrade_element;
+    AWML.update_element = update_element;
     AWML.warn('Running with simple polyfill. Only static AWML is supported.');
   }
 
