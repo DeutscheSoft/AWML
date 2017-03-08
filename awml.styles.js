@@ -56,6 +56,7 @@
         this.trigger_redraw();
       },
       redraw: function() {
+        AWML.RedrawLogic.redraw.call(this);
         var O = this.awml_data;
         var v = O.binding.value,
             transform = O.transform_receive,
@@ -63,7 +64,7 @@
         if (!O.get) O.get = AWML.parse_format("js", this.textContent, id);
         if (transform) v = transform(v);
         if (O.prev) O.remove(node, O.prev);
-        var s = O.get(v);
+        var s = O.get.call(this, v);
         O.prev = s;
         if (s) O.apply(node, s);
       },
