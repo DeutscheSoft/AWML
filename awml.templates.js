@@ -51,13 +51,29 @@
     return p;
   }
 
-  function find_style(list, style) {
+  function find_tag(list, e) {
     var s;
-    var to = style.outerHTML;
+    var to = e.outerHTML;
     for (var i = 0; i < list.length; i++) {
-      if (list[i].outerHTML === to) return list[i];
+      if (list[i].outerHTML === to) {
+        e.remove();
+        return list[i];
+      }
     }
-    return style;
+    return e;
+  }
+
+  function deduplicate_to_head(node, selector, O) {
+      var elems = node.querySelectorAll(selector);
+      var helems = document.head.querySelectorAll(selector);
+      var e;
+      for (var i = 0; i < elems.length; i++) {
+        e = find_tag(helems, elems[i]);
+        if (e.parentNode !== document.head)
+          document.head.appendChild(e);
+        if (e.tagName === 'link')
+          e.addEventListener('load', O.trigger_resize);
+      }
   }
 
   AWML.fetch_template = fetch_template;
@@ -142,17 +158,9 @@
       push_url(url);
       node = document.importNode(template.content, true);
       if (O.cached) {
-        var styles = node.querySelectorAll("link[rel=stylesheet]");
-        var hstyles = document.head.querySelectorAll("link[rel=stylesheet]");
-        var style;
-        for (var i = 0; i < styles.length; i++) {
-          if (styles[i].getAttribute('rel') !== 'stylesheet') continue;
-          style = find_style(hstyles, styles[i]);
-          if (style.parentNode !== document.head)
-            document.head.appendChild(styles[i]);
-          style.addEventListener('load', O.trigger_resize);
-        }
+        deduplicate_to_head(node, "link[rel=stylesheet]", O);
       }
+      deduplicate_to_head(node, "template", O);
       this.appendChild(node);
       AWML.upgrade_element(this);
       pop_url();
