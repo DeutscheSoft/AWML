@@ -39,12 +39,25 @@
   function fetch_template_cached(path, base) {
     var url = get_url(path, base);
 
-    if (cache.has(url)) return Promise.resolve(cache.get(url));
+    if (cache.has(url)) return cache.get(url);
 
-    return fetch_template(path, base).then(function(template) {
+    var p = fetch_template(path, base).then(function(template) {
       cache.set(url, template);
       return template;
     });
+
+    cache.set(url, p);
+
+    return p;
+  }
+
+  function find_style(list, style) {
+    var s;
+    var to = style.outerHTML;
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].outerHTML === to) return list[i];
+    }
+    return style;
   }
 
   AWML.fetch_template = fetch_template;
@@ -127,12 +140,20 @@
 
       var url = template.url || window.location.href;
       push_url(url);
-      this.appendChild(node = document.importNode(template.content, true));
-      var styles = this.getElementsByTagName("link");
-      for (var i = 0; i < styles.length; i++) {
-        if (styles[i].getAttribute('rel') !== 'stylesheet') continue;
-        styles[i].addEventListener('load', O.trigger_resize);
+      node = document.importNode(template.content, true);
+      if (O.cached) {
+        var styles = node.querySelectorAll("link[rel=stylesheet]");
+        var hstyles = document.head.querySelectorAll("link[rel=stylesheet]");
+        var style;
+        for (var i = 0; i < styles.length; i++) {
+          if (styles[i].getAttribute('rel') !== 'stylesheet') continue;
+          style = find_style(hstyles, styles[i]);
+          if (style.parentNode !== document.head)
+            document.head.appendChild(styles[i]);
+          style.addEventListener('load', O.trigger_resize);
+        }
       }
+      this.appendChild(node);
       AWML.upgrade_element(this);
       pop_url();
     },
