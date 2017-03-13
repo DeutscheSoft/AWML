@@ -122,10 +122,12 @@
   function binding_set_handler(v) {
     this.send(v);
   }
-  function binding_useraction_handler(k, v) {
+  function binding_useraction_handler(name, k, v) {
+    if (name !== k) return;
     this.send(v);
   }
-  function binding_userset_handler(k, v) {
+  function binding_userset_handler(name, k, v) {
+    if (name !== k) return;
     this.send(v);
     return false;
   }
@@ -164,9 +166,9 @@
     get_send_cb: function() {
       var cb = this.send_cb;
       if (cb) return cb;
-      if (this.writeonly) cb = binding_userset_handler;
+      if (this.writeonly) cb = binding_userset_handler.bind(this, this.name);
       else if (this.sync) cb = binding_set_handler;
-      else cb = binding_useraction_handler;
+      else cb = binding_useraction_handler.bind(this, this.name);
 
       cb = cb.bind(this);
       this.send_cb = cb;
