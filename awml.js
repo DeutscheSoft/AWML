@@ -662,8 +662,6 @@
               value = parse_attribute(value);
 
               update_option(this, this.widget, name, this.options[name], value);
-
-              this.options[name] = value;
           }
       },
     });
@@ -835,25 +833,21 @@
         this.widget = new TK.Container(options);
     },
     attributeChangedCallback: function(name, old_value, value) {
-        if (name !== "class" && name !== "id")
-          TK.warn("not implemented");
+        if (this.widget && has_attribute(this.widget, name)) {
+            value = parse_attribute(value);
+
+            update_option(this, this.widget, name, this.options[name], value);
+        }
     },
     awml_detachedCallback: function(root, parent_node) {
-        TK.warn("not implemented");
+        parent_node.widget.remote_page(this.widget);
     },
     awml_attachedCallback: function(root, parent_node) {
       if (!(parent_node.widget instanceof TK.Pager)) {
         AWML.error("awml-page needs to be inside of a awml-pager.");
         return;
       }
-      /* FIXME: the custom tags polyfill does not like
-       * if the DOM is modified directly from within the
-       * attached/detached callbacks. We do it on the next
-       * frame.
-       */
-      TK.S.add_next(function() {
-        parent_node.widget.add_page(this.label, this.widget);
-      }.bind(this));
+      parent_node.widget.add_page(this.label, this.widget);
     }
   });
   AWML.Tags.Filter = create_tag("awml-filter", {
