@@ -583,7 +583,7 @@
     AWML.register_element = register_element_polyfill;
     AWML.upgrade_element = upgrade_element;
     AWML.downgrade_element = downgrade_element;
-    AWML.update_element = update_element;
+    AWML.update_attribute = update_attribute;
     AWML.warn('Running with simple polyfill. Only static AWML is supported.');
   }
 
