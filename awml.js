@@ -262,6 +262,9 @@
 
   AWML.find_parent_widget = function(node) { return find_parent.call(node); }
   AWML.find_root_widget = function(node) { return find_root.call(node); }
+  AWML.get_widget = function(node) {
+    return node.widget;
+  }
 
 
   function extract_options(widget) {

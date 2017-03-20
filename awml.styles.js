@@ -111,4 +111,23 @@
   }
 
   AWML.Tags.Attributes = register_style_tag("awml-attributes", add_attributes, remove_attributes);
+
+  function hide(node, state) {
+    var widget = AWML.get_widget(node);
+    if (!widget || !widget.parent || !widget.parent.hide_child) {
+      AWML.error("AWML-HIDE: widget has no parent container.");
+    }
+    widget.parent.hide_child(widget);
+  }
+
+  function show(node, state) {
+    var widget = AWML.get_widget(node);
+    if (!widget || !widget.parent || !widget.parent.show_child) {
+      AWML.error("AWML-HIDE: widget has no parent container.");
+    }
+    widget.parent.show_child(widget);
+  }
+
+  AWML.Tags.Attributes = register_style_tag("awml-hide", hide, show);
+
 })(this.AWML || (this.AWML = {}));
