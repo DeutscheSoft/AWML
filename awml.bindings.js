@@ -463,48 +463,6 @@
     }
   });
 
-  AWML.Tags.Binding = AWML.register_element("awml-binding", {
-    createdCallback: function() {
-        this.style.display = "none";
-        this.bind = null;
-        AWML.warn("awml-binding is deprecated");
-    },
-    attributeChangedCallback: function(name, old_value, value) {
-        if (name === "option" || name === "source") {
-          this.attachedCallback();
-        }
-    },
-    detachedCallback: function() {
-      if (this.bind) {
-        this.bind.deactivate();
-        this.bind = null
-      }
-    },
-    attachedCallback: function() {
-      var parent_node = AWML.find_parent_widget.call(this);
-      var type = this.getAttribute("type");
-      var cl;
-
-      if (this.bind) this.bind.deactivate();
-
-      if (parent_node) {
-        switch (type) {
-        case "sync":
-          cl = SyncBinding;
-          break;
-        case "user":
-        default:
-          cl = UserBinding;
-          break;
-        }
-        this.bind = new cl(this.getAttribute("source"),
-                           parent_node.widget,
-                           this.getAttribute("option"));
-        this.bind.activate();
-      }
-    }
-  });
-
   var bindings = new Map(),
       backends = new Map();
 
