@@ -930,10 +930,27 @@
     media: MediaOption,
   };
 
-  if (!document.registerElement) {
+  var loading = 1;
+
+  function unregister_loading() {
+    if (!--loading)
+      TK.S.after_frame(document.dispatchEvent.bind(document, new Event("AWMLContentLoaded")));
+  }
+
+  AWML.register_loading = function(p) {
+    if (!loading) return p; /* already done loading */
+    loading ++;
+    p.then(unregister_loading, unregister_loading);
+    return p;
+  };
+
+  AWML.unregister_loading = unregister_loading;
+
+  if (!document.registerElement)
     document.addEventListener('DOMContentLoaded', function() {
       AWML.upgrade_element(this.head);
       AWML.upgrade_element(this.body);
     });
-  }
+
+  window.addEventListener("load", unregister_loading);
 })(this.AWML || (this.AWML = {}));

@@ -23,7 +23,7 @@
   function fetch_template(path, base) {
     var url = get_url(path, base);
 
-    return fetch(url).then(function(response) {
+    return AWML.register_loading(fetch(url).then(function(response) {
       if (!response.ok) throw new Error(response.statusText);
       return response.text().then(function(text) {
         var template = document.createElement("TEMPLATE");
@@ -31,7 +31,7 @@
         template.innerHTML = text;
         return template;
       });
-    });
+    }));
   }
 
   var cache = new Map();
@@ -117,14 +117,14 @@
             return;
         }
         /* we are not fetching the template, simply reload it */
-        this.trigger_redraw();
+        this.redraw();
       } else {
         var fetch = O.cached ? fetch_template_cached : fetch_template;
         /* async template loading */
         fetch(O.handle).then(function(template) {
           var O = this.awml_data;
           O.template = template;
-          if (O.attached) this.trigger_redraw();
+          if (O.attached) this.redraw();
         }.bind(this)).catch(function (e) {
           AWML.error("Could not load template", O.handle, ":", e);
         });
