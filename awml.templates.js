@@ -41,10 +41,7 @@
 
     if (cache.has(url)) return cache.get(url);
 
-    var p = fetch_template(path, base).then(function(template) {
-      cache.set(url, template);
-      return template;
-    });
+    var p = fetch_template(path, base);
 
     cache.set(url, p);
 
@@ -109,7 +106,7 @@
       var O = this.awml_data;
 
       O.fetch = this.getAttribute("fetch") !== null;
-      O.cached = this.getAttribute("cached") !== null;
+      O.cached = this.getAttribute("nocache") === null;
 
       if (!O.handle) return;
 
