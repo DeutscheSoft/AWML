@@ -2,6 +2,10 @@
 "use strict";
 (function(AWML) {
 
+  function inherit(from, o) {
+    return Object.assign(Object.create(from.prototype), o);
+  }
+
   function call_listener(cb, value) {
     if (typeof(cb) === "function") {
       cb(value);
@@ -10,37 +14,10 @@
     }
   }
 
-  function Binding(uri) {
-    this.uri = uri;
-    this.id = false;
-    this.backend = null;
-    this.value = null;
-    this.requested_value = null;
-    this.has_value = false;
+  function BaseBinding() {
     this.listeners = null;
-  };
-  Binding.prototype = {
-    set_backend: function(backend) {
-      this.backend = backend;
-      backend.subscribe(this.uri, this)
-        .then(
-          function(a) {
-            this.id = a[1];
-            if (this.requested_value !== null && this.value !== this.requested_value) {
-              this.backend.set(a[1], this.requested_value);
-            }
-          }.bind(this),
-          function(reason) {
-            AWML.warn("Subscription failed: ", reason);
-          });
-    },
-    delete_backend: function(backend) {
-      if (this.id !== false) {
-        backend.unsubscribe(this.id, this);
-      }
-      this.id = false;
-      this.backend = null;
-    },
+  }
+  BaseBinding.prototype = {
     hasListener: function(callback) {
       var a = this.listeners;
       if (a === null) return false;
@@ -80,7 +57,55 @@
           this.listeners = null;
         }
       }
+    },
+    hasListeners: function() {
+      return this.listeners !== null;
+    },
+    callListeners: function(v) {
+      var a = this.listeners;
 
+      if (a === null) return;
+
+      if (Array.isArray(a)) {
+        var i;
+        for (i = 0; i < a.length; i++)
+          call_listener(a[i], v);
+      } else {
+        call_listener(a, v);
+      }
+    }
+  };
+
+  function Binding(uri) {
+    this.uri = uri;
+    this.id = false;
+    this.backend = null;
+    this.value = null;
+    this.requested_value = null;
+    this.has_value = false;
+    BaseBinding.call(this);
+  };
+  Binding.prototype = inherit(BaseBinding, {
+    set_backend: function(backend) {
+      this.backend = backend;
+      backend.subscribe(this.uri, this)
+        .then(
+          function(a) {
+            this.id = a[1];
+            if (this.requested_value !== null && this.value !== this.requested_value) {
+              this.backend.set(a[1], this.requested_value);
+            }
+          }.bind(this),
+          function(reason) {
+            AWML.warn("Subscription failed: ", reason);
+          });
+    },
+    delete_backend: function(backend) {
+      if (this.id !== false) {
+        backend.unsubscribe(this.id, this);
+      }
+      this.id = false;
+      this.backend = null;
     },
     set: function(value) {
       if (value === this.requested_value && value === this.value) return;
@@ -101,23 +126,59 @@
       this.value = value;
       this.has_value = true;
 
-      a = this.listeners;
-
-      if (a === null) return;
-
-      if (Array.isArray(a)) {
-        var i;
-        for (i = 0; i < a.length; i++)
-          call_listener(a[i], value);
-      } else {
-        call_listener(a, value);
-      }
+      this.callListeners(value);
     },
     in_sync: function() {
-      console.log(this.value, this.requested_value);
       return this.has_value && (this.value === this.requested_value || this.requested_value === null);
     },
-  };
+  });
+
+  /* TODO: unbind/bind depending on the number of listeners. This is to make sure
+   * that things can get garbage collected */
+  function ListBinding(b) {
+    this.bindings = b;
+    this.has_value = false;
+    BaseBinding.call(this);
+    this.value = new Array(bindings.length);
+
+    var i;
+    for (i = 0; i < b.length; i++)
+      if (b[i].has_value) this.value[i] = b[i].value;
+
+    var cb = this.receive;
+    for (i = 0; i < b.length; i++)
+      b[i].addListener(cb.bind(this, i));
+  }
+  ListBinding.prototype = inherit(BaseBinding, {
+    in_sync: function() {
+      var b = this.bindings, i;
+
+      for (i = 0; i < b.lenght; i++)
+        if (!b[i].in_sync()) return false;
+
+      return true;
+    },
+    set: function(value) {
+      var b = this.bindings, i;
+
+      if (!Array.isArray(value) || value.length !== b.length)
+        throw new Error("ListBinding.set expects an array of correct length.");
+
+      for (i = 0; i < b.lenght; i++) b[i].set(value[i]);
+    },
+    receive: function(i, value) {
+      var v = this.value;
+      v[i] = value;
+
+      if (!this.has_value) {
+        var b = this.bindings, i;
+        for (i = 0; i < b.lenght; i++) if (!b[i].has_value) return;
+        this.has_value = true;
+      }
+
+      this.callListeners(v);
+    },
+  });
 
   function binding_set_handler(v) {
     this.send(v);
@@ -132,15 +193,45 @@
     return false;
   }
 
+  function src_needs_prefix(src) {
+    if (Array.isArray(src)) {
+      for (var i = 0; i < src.length; i++) {
+        if (src[i].search(':') === -1) return true;
+      }
+      return false;
+    } else {
+      return src.search(':') === -1;
+    }
+  }
+
+  function src_apply_prefix(src, prefix) {
+    if (Array.isArray(src)) {
+      var ret = new Array(src.length);
+      for (var i = 0; i < src.length; i++) {
+        ret[i] = src[i].search(':') === -1 ? prefix + src[i] : src[i];
+      }
+      return ret;
+    } else {
+      return prefix + src;
+    }
+  }
+
   function BindingOption(node) {
     AWML.Option.call(this, node);
-    this.src = node.getAttribute("src");
     this.prefix = node.getAttribute("src-prefix");
     this.sync = node.getAttribute("sync") !== null;
+    this.debug = node.getAttribute("debug") !== null;
     this.value = node.getAttribute("value");
     this.format = node.getAttribute("format");
     this.readonly = node.getAttribute("readonly") !== null;
     this.writeonly = node.getAttribute("writeonly") !== null;
+    var src = node.getAttribute("src");
+
+    if (src !== null && src.search(',') !== -1) {
+      src = src.split(",");
+    }
+
+    this.src = src;
 
     if (this.sync && this.writeonly)
       AWML.warn("Setting both 'sync' and 'writeonly' does not work.");
@@ -175,9 +266,11 @@
       return cb;
     },
     bind: function(binding, node, widget) {
+      if (this.debug) TK.log("bind", binding);
       binding.addListener(this);
     },
     unbind: function(binding, node, widget) {
+      if (this.debug) TK.log("unbind", binding);
       binding.removeListener(this);
     },
     attach: function(node, widget) {
@@ -210,16 +303,17 @@
 
       if (src === null) return;
 
-      if (src.search(':') === -1) {
+      if (src_needs_prefix(src)) {
         var prefix = AWML.collect_prefix(node, this.prefix);
         if (prefix.search(':') === -1) return;
-        src = prefix + src;
+        src = src_apply_prefix(src, prefix);
       }
 
-      this.binding = AWML.get_binding(src);
+      this.binding = Array.isArray(src) ? new ListBinding(src.map(get_binding)) : AWML.get_binding(src);
       this.bind(this.binding, node, widget);
     },
     send: function(v) {
+      if (this.debug) TK.log("send", this.binding, v);
       if (!this.recurse && this.binding) {
         this.recurse = true;
         if (this.transform_send) v = this.transform_send(v);
@@ -228,6 +322,7 @@
       }
     },
     receive: function(v) {
+      if (this.debug) TK.log("receive", this.binding, v);
       if (!this.recurse) {
         this.recurse = true;
         if (this.transform_receive) v = this.transform_receive(v);
@@ -506,6 +601,7 @@
 
     return register_backend(proto, new (constructor.bind.apply(constructor, args)));
   }
+
   function get_binding (uri) {
     var i = uri.search(':');
     var bind;
@@ -535,6 +631,7 @@
 
   Object.assign(AWML, {
     Binding: Binding,
+    ListBinding: ListBinding,
     get_binding: get_binding,
     get_bindings: get_bindings,
     register_backend: register_backend,
