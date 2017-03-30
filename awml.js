@@ -773,7 +773,12 @@
       }
     },
     attributeChangedCallback: function(name, old_value, value) {
-      AWML.warn('changing awml-option tags is not supported, yet');
+      /* TODO: this could be much better */
+      var r = this.awml_root;
+      var p = this.awml_parent;
+      if (p) this.awml_detachedCallback(r, p);
+      this.awml_createdCallback();
+      this.awml_attachedCallback(r, p);
     },
     awml_update_prefix: function(handle) {
       var o = this.option;
