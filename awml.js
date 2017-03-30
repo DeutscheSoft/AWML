@@ -938,8 +938,10 @@
   var loading = 1;
 
   function unregister_loading() {
-    if (!--loading)
+    if (!--loading) {
+      window.dispatchEvent(new Event("resize"));
       TK.S.after_frame(document.dispatchEvent.bind(document, new Event("AWMLContentLoaded")));
+    }
   }
 
   AWML.register_loading = function(p) {

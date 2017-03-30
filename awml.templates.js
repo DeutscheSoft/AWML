@@ -60,6 +60,10 @@
     return e;
   }
 
+  function onload() {
+    window.dispatchEvent(new Event("resize"));
+  }
+
   function deduplicate_to_head(node, selector, O) {
       var elems = node.querySelectorAll(selector);
       var helems = document.head.querySelectorAll(selector);
@@ -69,7 +73,7 @@
         if (e.parentNode !== document.head)
           document.head.appendChild(e);
         if (e.tagName === 'link')
-          e.addEventListener('load', O.trigger_resize);
+          e.addEventListener('load', onload);
       }
   }
 
@@ -84,7 +88,6 @@
         fetch: false,
         template: null,
         cached: false,
-        trigger_resize: function() { AWML.find_parent_widget(this).widget.trigger_resize(); }.bind(this),
       };
       AWML.PrefixLogic.createdCallback.call(this);
       AWML.RedrawLogic.createdCallback.call(this);
@@ -161,6 +164,8 @@
       this.appendChild(node);
       AWML.upgrade_element(this);
       pop_url();
+      if (this.getAttribute("trigger-resize") !== null)
+        onload();
     },
     detachedCallback: function() {
       AWML.PrefixLogic.detachedCallback.call(this);
