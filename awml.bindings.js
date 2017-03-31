@@ -185,7 +185,7 @@
       if (!Array.isArray(value) || value.length !== b.length)
         throw new Error("ListBinding.set expects an array of correct length.");
 
-      for (i = 0; i < b.length; i++) b[i].set(value[i]);
+      for (var i = 0; i < b.length; i++) b[i].set(value[i]);
     },
     receive: function(n, value) {
       var v = this.value;
