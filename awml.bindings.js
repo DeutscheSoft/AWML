@@ -18,6 +18,8 @@
     this.listeners = null;
   }
   BaseBinding.prototype = {
+    subscribe: function() {},
+    unsubscribe: function() {},
     hasListener: function(callback) {
       var a = this.listeners;
       if (a === null) return false;
@@ -33,6 +35,7 @@
       var a = this.listeners;
       if (a === null) {
         this.listeners = callback;
+        this.subscribe();
       } else if (Array.isArray(a)) {
         a.push(callback);
       } else {
@@ -55,6 +58,7 @@
       } else {
         if (a === callback) {
           this.listeners = null;
+          this.unsubscribe();
         }
       }
     },
@@ -133,48 +137,68 @@
     },
   });
 
-  /* TODO: unbind/bind depending on the number of listeners. This is to make sure
-   * that things can get garbage collected */
   function ListBinding(b) {
     this.bindings = b;
-    this.has_value = false;
     BaseBinding.call(this);
-    this.value = new Array(bindings.length);
 
-    var i;
-    for (i = 0; i < b.length; i++)
-      if (b[i].has_value) this.value[i] = b[i].value;
+    this.has_value = false;
+    this.has_values = [];
+    this.value = new Array(b.length);
 
-    var cb = this.receive;
-    for (i = 0; i < b.length; i++)
-      b[i].addListener(cb.bind(this, i));
+    var C = this.cbs = new Array(b.length),
+        i, cb = this.receive;
+
+    for (i = 0; i < C.length; i++)
+      C[i] = cb.bind(this, i);
   }
   ListBinding.prototype = inherit(BaseBinding, {
-    in_sync: function() {
-      var b = this.bindings, i;
+    subscribe: function() {
+      this.has_values = [];
+      this.has_value = false;
+      var b = this.bindings,
+          V = this.value,
+          C = this.cbs;
 
-      for (i = 0; i < b.lenght; i++)
+      for (var i = 0; i < b.length; i++) {
+        b[i].addListener(C[i]);
+      }
+    },
+    unsubscribe: function() {
+      var b = this.bindings;
+      var C = this.cbs;
+      for (var i = 0; i < b.length; i++) {
+        b[i].removeListener(C[i]);
+      }
+      this.has_value = false;
+    },
+    in_sync: function() {
+      var b = this.bindings;
+
+      for (var i = 0; i < b.length; i++)
         if (!b[i].in_sync()) return false;
 
       return true;
     },
     set: function(value) {
-      var b = this.bindings, i;
+      var b = this.bindings;
 
       if (!Array.isArray(value) || value.length !== b.length)
         throw new Error("ListBinding.set expects an array of correct length.");
 
-      for (i = 0; i < b.lenght; i++) b[i].set(value[i]);
+      for (i = 0; i < b.length; i++) b[i].set(value[i]);
     },
-    receive: function(i, value) {
+    receive: function(n, value) {
       var v = this.value;
-      v[i] = value;
+      var has_values = this.has_values;
+      v[n] = value;
+      has_values[n] = true;
 
       if (!this.has_value) {
-        var b = this.bindings, i;
-        for (i = 0; i < b.lenght; i++) if (!b[i].has_value) return;
+        var b = this.bindings;
+        for (var i = 0; i < b.length; i++) if (!has_values[i]) return;
         this.has_value = true;
       }
+
 
       this.callListeners(v);
     },
@@ -215,6 +239,86 @@
       return prefix + src;
     }
   }
+
+  AWML.PrefixLogic = {
+    is_awml_node: true,
+    createdCallback: function() {
+      var O = this.awml_data;
+      if (!O) this.awml_data = O = {};
+      O.binding = null;
+      O.prefix = null;
+      O.attached = false;
+      O.transform_receive = null;
+    },
+    attachedCallback: function() {
+      var O = this.awml_data;
+
+      O.attached = true;
+
+      /* update all prefixes */
+      this.awml_update_prefix(null);
+    },
+    detachedCallback: function() {
+      this.awml_data.attached = false;
+
+      if (this.binding) this.unbind();
+    },
+    attributeChangedCallback: function(name, old_value, value) {
+      if (name === "src") {
+        this.detachedCallback();
+        this.attachedCallback(); 
+      }
+      if (name === "src-prefix") {
+        this.awml_update_prefix(null);
+      }
+      if (name === "prefix") {
+        AWML.update_prefix(this, value);
+      }
+    },
+    awml_update_prefix: function(handle) {
+      if (handle !== null) {
+        if (handle !== this.getAttribute("src-prefix")) return;
+      }
+
+      var O = this.awml_data;
+
+      if (this.binding) this.unbind();
+
+      var src = this.getAttribute("src");
+
+      if (src === null) return;
+
+      if (src.search(',') !== -1) src = src.split(",");
+
+      if (src_needs_prefix(src)) {
+        handle = this.getAttribute("src-prefix") || "";
+        var prefix = AWML.collect_prefix(this, handle);
+        if (prefix.search(':') === -1) return;
+        src = src_apply_prefix(src, prefix);
+      }
+
+      this.bind(src);
+    },
+    bind: function(src) {
+      var O = this.awml_data;
+      if (!O.transform_receive) {
+        var tmp = this.getAttribute("transform-receive");
+        if (tmp) O.transform_receive = AWML.parse_format("js", tmp);
+      }
+      if (!src) {
+        AWML.error(this.tagName, "is missing src attribute");
+        return;
+      }
+      O.binding = Array.isArray(src) ? new ListBinding(src.map(get_binding)) : AWML.get_binding(src);
+      O.binding.addListener(this);
+    },
+    unbind: function() {
+      var O = this.awml_data;
+      O.binding.removeListener(this);
+      O.binding = null;
+    },
+    receive: function(v) { },
+  };
 
   function BindingOption(node) {
     AWML.Option.call(this, node);

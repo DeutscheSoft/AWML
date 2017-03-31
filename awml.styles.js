@@ -62,7 +62,7 @@
             transform = O.transform_receive,
             node = this.parentNode;
         if (!O.get) O.get = AWML.parse_format("js", this.textContent, id);
-        if (transform) v = transform(v);
+        if (transform) v = transform.call(this, v);
         if (O.prev) O.remove(node, O.prev);
         var s = O.get.call(this, v);
         O.prev = s;
