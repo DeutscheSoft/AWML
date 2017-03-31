@@ -225,6 +225,7 @@
     this.format = node.getAttribute("format");
     this.readonly = node.getAttribute("readonly") !== null;
     this.writeonly = node.getAttribute("writeonly") !== null;
+    this.unsubscribe = node.getAttribute("never-unsubscribe") === null;
     var src = node.getAttribute("src");
 
     if (src !== null && src.search(',') !== -1) {
@@ -247,6 +248,12 @@
     this.binding = null;
 
     this.send_cb = null;
+
+    this.visibility_cb = this.unsubscribe ? function(state) {
+      if (!this.binding) return;
+      if (state) this.bind(this.binding, this.node, this.widget);
+      else this.unbind(this.binding, this.node, this.widget);
+    }.bind(this) : null;
   };
   BindingOption.prototype = Object.assign(Object.create(AWML.Option.prototype), {
     get_send_event: function() {
@@ -281,6 +288,9 @@
       if (!this.readonly) {
         widget.add_event(this.get_send_event(), this.get_send_cb());
       }
+
+      if (this.unsubscribe)
+        widget.add_event("visibility", this.visibility_cb);
     },
     detach: function(node, widget) {
       if (this.binding) this.unbind(this.binding, node, widget);
@@ -288,6 +298,9 @@
       if (!this.readonly) {
         widget.remove_event(this.get_send_event(), this.get_send_cb());
       }
+
+      if (this.unsubscribe)
+        widget.remove_event("visibility", this.visibility_cb);
 
       AWML.Option.prototype.detach.call(this, node, widget);
     },
@@ -310,7 +323,8 @@
       }
 
       this.binding = Array.isArray(src) ? new ListBinding(src.map(get_binding)) : AWML.get_binding(src);
-      this.bind(this.binding, node, widget);
+      if (!this.unsubscribe || widget.is_drawn())
+        this.bind(this.binding, node, widget);
     },
     send: function(v) {
       if (this.debug) TK.log("send", this.binding, v);
