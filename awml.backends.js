@@ -35,7 +35,7 @@
     this.pending_subscriptions.delete(uri);
     
     pending.forEach(function(a) {
-      a[2](error);
+      a[2]([ uri, error ]);
     });
 
     this.fire('register_fail', [ uri, error ]);
