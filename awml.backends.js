@@ -1,25 +1,33 @@
 // vim:sw=2
-(function(AWML) {
+(function(w, AWML) {
   "use strict";
   if (!AWML.Backends) AWML.Backends = {};
 
-  var q = [];
-  var dispatched = false;
+  var dispatch;
 
-  function dispatch(cb) {
-    q.push(cb);
-    if (!dispatched) {
-      window.postMessage(true, "*");
-    }
+  if ("addEventListener" in w && "postMessage" in w) {
+    var q = [];
+    var dispatched = false;
+
+    dispatch = function(cb) {
+      q.push(cb);
+      if (!dispatched) {
+        w.postMessage(true, "*");
+      }
+    };
+
+    w.addEventListener("message", function(ev) {
+      if (ev.source !== w) return;
+      for (var i = 0; i < q.length; i++) {
+        q[i]();
+      }
+      q.length = 0;
+    });
+  } else {
+    dispatch = function(cb) {
+      w.setTimeout(cb, 0);
+    };
   }
-
-  window.addEventListener("message", function(ev) {
-    if (ev.source !== window) return;
-    for (var i = 0; i < q.length; i++) {
-      q[i]();
-    }
-    q.length = 0;
-  });
 
   function subscribe_fail(uri, error) {
     var pending = this.pending_subscriptions.get(uri);
