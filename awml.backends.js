@@ -224,10 +224,8 @@
 
           /* NOTE: this is needed because we should not call the subscriber
            * before the promise resolve callback has been executed
-           *
-           * FIXME: replace this by something better
            */
-          if (values.has(key)) window.setTimeout(call_subscriber.bind(this, cb, key, values.get(key)), 0);
+          if (values.has(key)) dispatch(call_subscriber.bind(this, cb, key, values.get(key)), 0);
 
           resolve([uri, id]);
         });
