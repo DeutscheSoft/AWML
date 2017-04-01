@@ -10,13 +10,19 @@ function ElectronServerBackend(channel, backend, sender) {
 
   ServerBackend.call(this, backend);
 
-  ipcMain.on(this.channel, function(event, d) {
+  this.message_cb = function(event, d) {
     this.message(d);
-  }.bind(this));
+  }.bind(this);
+
+  ipcMain.on(this.channel, this.message_cb);
 }
 ElectronServerBackend.prototype = Object.assign(Object.create(ServerBackend.prototype), {
   send: function(d) {
     this.sender.send(this.channel, d);
+  },
+  destroy: function() {
+    ipcMain.removeListener(this.channel, this.message_cb);
+    channels.delete(this.channel);
   },
 });
 

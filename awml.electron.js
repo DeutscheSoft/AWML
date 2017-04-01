@@ -1,6 +1,12 @@
 (function(w, AWML) {
   var ClientBackend = AWML.ClientBackend;
-  const {ipcRenderer} = require('electron');
+
+  if (typeof require === "undefined") {
+    AWML.warn("Using awml.electron.js without Electron.");
+    return;
+  }
+
+  var ipcRenderer = require('electron').ipcRenderer;
 
   if (ipcRenderer === void(0)) {
     AWML.warn("Using awml.electron.js without Electron.");
