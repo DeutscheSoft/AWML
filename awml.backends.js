@@ -1,6 +1,5 @@
 // vim:sw=2
-(function(w, AWML) {
-  "use strict";
+var f = (function(w, AWML) {
   if (!AWML.Backends) AWML.Backends = {};
 
   var dispatch;
@@ -650,7 +649,6 @@
             backend.unsubscribe(uri, this._change_cb);
           }
         }
-        /* subscribtions */
       }
     }
   };
@@ -667,4 +665,6 @@
     websocket: websocket,
     localstorage: LocalStorage,
   });
-})(this, this.AWML || (this.AWML = {}));
+});
+if (typeof module !== "undefined" && !this.AWML) module.exports = f;
+else f(this, this.AWML || (this.AWML = {}));
