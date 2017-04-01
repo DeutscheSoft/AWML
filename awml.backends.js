@@ -326,11 +326,11 @@
     }
 
     if (src) {
-      if (!window.fetch) {
+      if (!w.fetch) {
         AWML.error("This browser does not support fetch().");
         return;
       }
-      window.fetch(src).then(function(response) {
+      w.fetch(src).then(function(response) {
           if (response.ok)
             return response.json().then(function(values) {
               for (var uri in values) {
@@ -377,7 +377,7 @@
   });
 
   function get_relative_wsurl() {
-    var l = window.location;
+    var l = w.location;
     var r;
 
     if (l.protocol == "http:") {
@@ -569,13 +569,13 @@
   function LocalStorage(clear) {
     Base.call(this);
     try {
-      this.storage = window.localStorage;
+      this.storage = w.localStorage;
       if (clear) this.storage.clear();
     } catch (e) {
       AWML.error("Cannot use LocalStorage backend. Probably because this page is accessed through a file:// URL.");
     }
     this.encoded_values = new Map();
-    window.addEventListener('storage', function(ev) {
+    w.addEventListener('storage', function(ev) {
       if (ev.storageArea !== this.storage) return;
       var key = ev.key;
       var old = ev.oldValue;
@@ -621,4 +621,4 @@
     websocket: websocket,
     localstorage: LocalStorage,
   });
-})(this.AWML || (this.AWML = {}));
+})(this, this.AWML || (this.AWML = {}));
