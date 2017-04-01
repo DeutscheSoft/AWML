@@ -197,6 +197,9 @@
     low_subscribe_batch: function(uris) {
       return Promise.all(uris.map(this.low_subscribe, this));
     },
+    clear: function() {
+      this.values = new Map();
+    },
     low_unsubscribe_batch: function(ids) {
       return Promise.all(ids.map(this.low_unsubscribe, this));
     },
@@ -348,7 +351,7 @@
       var id2uri = this.id2uri;
       var id;
       do {
-        id = (Math.random()*id2uri.size*2)|0;
+        id = 1+(Math.random()*id2uri.size*2)|0;
       } while (id2uri.has(id));
 
       subscribe_success.call(this, uri, id);
@@ -358,6 +361,19 @@
     arguments_from_node: function(node) {
         return [ node.getAttribute("name"), AWML.parse_format("json", node.textContent, {}), node.getAttribute("src") ];
     },
+  });
+
+  function Test(name, values, src) {
+    Local.call(this, name, values, src);
+    setInterval(function() {
+      this.uri2id.forEach(function(id, uri) {
+        if (uri.search("random") !== -1) {
+          this.receive(id, Math.random()); 
+        }
+      }, this);
+    }.bind(this), 500);
+  }
+  Test.prototype = Object.assign(Object.create(Local.prototype), {
   });
 
   function Cache(backend) {
@@ -391,24 +407,69 @@
     return r;
   }
 
-  function websocket(url, clear) {
-    if (!url) {
-      url = get_relative_wsurl();
-    } else if (url[0] == "/"[0]) {
-      /* relative url */
-      url = get_relative_wsurl() + url;
-    }
-    this.url = url;
+  function ClientBackend() {
+    Base.call(this);
     this.changeset = [];
     this.send_changes = function() {
       var a = this.changeset;
-      this.ws.send(pad(JSON.stringify(a)));
+      this.send(a);
       a.length = 0;
     }.bind(this);
-    Base.call(this);
-    if (url) this.connect(clear);
-    else AWML.error("Missing URL in websocket backend. Cannot connect.");
   }
+  ClientBackend.prototype = Object.assign(Object.create(Base.prototype), {
+    message: function(d) {
+      var uri, id, i;
+
+      if (typeof(d) === "object") {
+        if (d instanceof Array) {
+          for (i = 0; i < d.length; i+=2) {
+            this.receive(d[i], d[i+1]);
+          }
+        } else {
+          for (uri in d) {
+            id = d[uri];
+            if (id) subscribe_success.call(this, uri, id);
+            else subscribe_fail.call(this, uri, id);
+          }
+        }
+      } else AWML.warn('Unexpected message on WebSocket:', d);
+    },
+    low_subscribe: function(uri) {
+      var d = {};
+      d[uri] = 1;
+      this.send(d);
+    },
+    low_subscribe_batch: function(uris) {
+      var d = {}, i;
+      for (i = 0; i < uris.length; i++) {
+        d[uris[i]] = 1;
+      }
+      this.send(d);
+    },
+    low_unsubscribe: function(uri) {
+      var d = {};
+      d[uri] = 0;
+      this.send(d);
+    },
+    low_unsubscribe_batch: function(uris) {
+      var d = {}, i;
+      for (i = 0; i < uris.length; i++) {
+        d[uris[i]] = 0;
+      }
+      this.send(d);
+    },
+    set: function(id, value) {
+      var a = this.changeset;
+      a.push(id, value);
+      if (a.length === 2) dispatch(this.send_changes);
+    },
+    clear: function() {
+      this.send(false);
+    },
+  });
+
+  /* WebSocket backend implementation */
+
   /* NOTE: due to a bug in the pike websocket implementation
    * we have to pad all outgoing frames so they are longer than
    * 125 bytes. */
@@ -435,25 +496,14 @@
         ws.onmessage = null;
       }
   }
-  websocket.prototype = Object.assign(Object.create(Base.prototype), {
-    message: function(ev) {
-      var d = JSON.parse(ev.data);
-      var uri, id, fun, i;
-
-      if (typeof(d) === "object") {
-        if (d instanceof Array) {
-          fun = this.receive;
-          for (i = 0; i < d.length; i+=2) {
-            receive.call(this, d[i], d[i+1]);
-          }
-        } else {
-          fun = subscribe_success;
-          for (uri in d) {
-            id = d[uri];
-            fun.call(this, uri, id);
-          }
-        }
-      } else AWML.warn('Unexpected message on WebSocket:', d);
+  function websocket(url, clear) {
+    this.url = url;
+    ClientBackend.call(this);
+    this.connect(clear);
+  }
+  websocket.prototype = Object.assign(Object.create(ClientBackend.prototype), {
+    send: function(o) {
+      this.ws.send(pad(JSON.stringify(o)));
     },
     connect: function(clear) {
       try {
@@ -465,7 +515,9 @@
         }.bind(this);
         ws.onclose = function() { this.close(); }.bind(this);
         ws.onerror = function(ev) { this.error(""); }.bind(this);
-        ws.onmessage = this.message.bind(this);
+        ws.onmessage = function(ev) {
+          this.message(JSON.parse(ev.data));
+        }.bind(this);
         this.ws = ws;
       } catch (e) {
         this.error(e);
@@ -473,94 +525,44 @@
     },
     close: function() {
       teardown.call(this);
-      Base.prototype.close.call(this);
+      ClientBackend.prototype.close.call(this);
     },
     error: function(reason) {
       teardown.call(this);
-      Base.prototype.error.call(this, reason);
-    },
-    low_subscribe: function(uri) {
-      var d = {};
-      d[uri] = 1;
-      this.ws.send(pad(JSON.stringify(d)));
-    },
-    low_subscribe_batch: function(uris) {
-      var d = {}, i;
-      for (i = 0; i < uris.length; i++) {
-        d[uris[i]] = 1;
-      }
-      this.ws.send(pad(JSON.stringify(d)));
-    },
-    low_unsubscribe: function(uri) {
-      var d = {};
-      d[uri] = 0;
-      this.ws.send(pad(JSON.stringify(d)));
-    },
-    low_unsubscribe_batch: function(uris) {
-      var d = {}, i;
-      for (i = 0; i < uris.length; i++) {
-        d[uris[i]] = 0;
-      }
-      this.ws.send(pad(JSON.stringify(d)));
-    },
-    set: function(id, value) {
-      // the websocket backend will not respond
-      receive.call(this, id, value);
-      var a = this.changeset;
-      a.push(id, value);
-      if (a.length === 2) dispatch(this.send_changes);
+      ClientBackend.prototype.error.call(this, reason);
     },
     arguments_from_node: function(node) {
-      return [ node.getAttribute("src"), node.getAttribute("clear") !== null ];
+      var src = node.getAttribute("src");
+      if (!src) {
+        src = get_relative_wsurl();
+      } else if (src[0] == "/"[0]) {
+        /* relative url */
+        src = get_relative_wsurl() + src;
+      }
+      return [ src, node.getAttribute("clear") !== null ];
     },
   });
 
-  if ('SharedWorker' in window) {
+  if ('SharedWorker' in w) {
     var url = document.currentScript.getAttribute("src");
     url = url.replace(/awml\.backends\.js/, "awml.backends.sharedworker.js");
 
     var Shared = function(type) {
-      Base.call(this);
+      ClientBackend.call(this);
       var args = Array.prototype.slice.call(arguments, 1);
       this.worker = new SharedWorker(url, JSON.stringify([ type, args ]));
       this.worker.onerror = function(e) {
         AWML.error("Shared Worker generated an error:", e);
       };
       this.worker.port.addEventListener('message', function (ev) {
-          var d = ev.data;
-
-          if (typeof(d) === "object") {
-            if (d instanceof Array) {
-              var i;
-              for (i = 0; i < d.length; i+=2) {
-                receive.call(this, d[i], d[i+1]);
-              }
-              return;
-            } else {
-              var uri;
-              for (uri in d) {
-                subscribe_success.call(this, uri, d[uri]);
-              }
-              return;
-            }
-          }
+          this.message(ev.data);
         }.bind(this));
       this.worker.port.start();
       to_open.call(this);
     }
-    Shared.prototype = Object.assign(Object.create(Base.prototype), {
-      low_subscribe: function(uri) {
-        var d = {};
-        d[uri] = 1;
+    Shared.prototype = Object.assign(Object.create(ClientBackend.prototype), {
+      send: function(d) {
         this.worker.port.postMessage(d);
-      },
-      low_unsubscribe: function(uri) {
-        var d = {};
-        d[uri] = 0;
-        this.worker.port.postMessage(d);
-      },
-      set: function(id, value) {
-        this.worker.port.postMessage([ id, value ]);
       },
     });
     AWML.Backends.shared = Shared;
@@ -614,9 +616,53 @@
     },
   });
 
+  function ServerBackend(backend) {
+    this.backend = backend;
+    this._change_cb = function(id, value) {
+      this.send([id, value]);
+    }.bind(this);
+  }
+  ServerBackend.prototype = {
+    message: function(d) {
+      var backend = this.backend;
+      if (Array.isArray(d)) {
+        if (d.length & 1) throw new Error("Bad message from client.\n");
+        for (let i = 0; i < d.length; i+=2) backend.set(d[i], d[i+1]);
+      } else if (d === false) {
+        backend.clear(); 
+      } else {
+        for (let uri in d) {
+          if (d[uri]) {
+            backend.subscribe(uri, this._change_cb)
+              .then(
+                function(a) {
+                  var d = {};
+                  d[a[0]] = a[1];
+                  this.send(d);
+                }.bind(this),
+                function(a) {
+                  /* TODO: transfer error? */
+                  var d = {};
+                  d[a[0]] = 0;
+                  this.send(d);
+                });
+          } else {
+            backend.unsubscribe(uri, this._change_cb);
+          }
+        }
+        /* subscribtions */
+      }
+    }
+  };
+
+  AWML.ServerBackend = ServerBackend;
+  AWML.ClientBackend = ClientBackend;
+  AWML.BaseBackend = Base;
+
   Object.assign(AWML.Backends, {
     local: Local,
     base: Base,
+    test: Test,
     cache: Cache,
     websocket: websocket,
     localstorage: LocalStorage,
