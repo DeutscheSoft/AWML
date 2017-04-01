@@ -650,6 +650,8 @@
       var shared = typeof(this.getAttribute("shared")) === "string";
       var type = this.getAttribute("type");
 
+      if (type === null) return;
+
       if (!AWML.Backends[type]) {
         AWML.error("No such backend: ", type);
         return;
