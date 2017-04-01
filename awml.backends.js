@@ -24,7 +24,7 @@ var f = (function(w, AWML) {
     });
   } else {
     dispatch = function(cb) {
-      w.setTimeout(cb, 0);
+      setTimeout(cb, 0);
     };
   }
 
@@ -224,12 +224,12 @@ var f = (function(w, AWML) {
 
           s.add(cb);
 
+          resolve([uri, id]);
+
           /* NOTE: this is needed because we should not call the subscriber
            * before the promise resolve callback has been executed
            */
-          if (values.has(key)) dispatch(call_subscriber.bind(this, cb, key, values.get(key)), 0);
-
-          resolve([uri, id]);
+          if (values.has(key)) dispatch(call_subscriber.bind(this, cb, key, values.get(key)));
         });
       } else {
         var pending = this.pending_subscriptions;
@@ -620,8 +620,14 @@ var f = (function(w, AWML) {
     this._change_cb = function(id, value) {
       this.send([id, value]);
     }.bind(this);
+    this.subscriptions = new Set();
   }
   ServerBackend.prototype = {
+    destroy: function() {
+      this.subscriptions.forEach(function(id) {
+        this.backend.unsubscribe(id, this._change_cb);
+      }, this);
+    },
     message: function(d) {
       var backend = this.backend;
       if (Array.isArray(d)) {
@@ -636,6 +642,7 @@ var f = (function(w, AWML) {
               .then(
                 function(a) {
                   var d = {};
+                  this.subscriptions.add(a[1]);
                   d[a[0]] = a[1];
                   this.send(d);
                 }.bind(this),
@@ -646,7 +653,7 @@ var f = (function(w, AWML) {
                   this.send(d);
                 });
           } else {
-            backend.unsubscribe(uri, this._change_cb);
+            backend.unsubscribe(backend.uri2id.get(uri), this._change_cb);
           }
         }
       }
