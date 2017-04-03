@@ -410,10 +410,16 @@ var f = (function(w, AWML) {
   function ClientBackend() {
     Base.call(this);
     this.changeset = [];
+    this.pending = null;
     this.send_changes = function() {
+      var m = this.pending;
+      if (m) this.send(m);
+      this.pending = null;
       var a = this.changeset;
-      this.send(a);
-      a.length = 0;
+      if (a.length) {
+        this.send(a);
+        a.length = 0;
+      }
     }.bind(this);
   }
   ClientBackend.prototype = Object.assign(Object.create(Base.prototype), {
@@ -435,9 +441,10 @@ var f = (function(w, AWML) {
       } else AWML.warn('Unexpected message on WebSocket:', d);
     },
     low_subscribe: function(uri) {
-      var d = {};
+      if (this.changeset.length === 0 && this.pending === null) dispatch(this.send_changes);
+      var d = this.pending;
+      if (d === null) this.pending = d = {};
       d[uri] = 1;
-      this.send(d);
     },
     low_subscribe_batch: function(uris) {
       var d = {}, i;
@@ -447,9 +454,10 @@ var f = (function(w, AWML) {
       this.send(d);
     },
     low_unsubscribe: function(uri) {
-      var d = {};
+      if (this.changeset.length === 0 && this.pending === null) dispatch(this.send_changes);
+      var d = this.pending;
+      if (d === null) this.pending = d = {};
       d[uri] = 0;
-      this.send(d);
     },
     low_unsubscribe_batch: function(uris) {
       var d = {}, i;
@@ -459,9 +467,8 @@ var f = (function(w, AWML) {
       this.send(d);
     },
     set: function(id, value) {
-      var a = this.changeset;
-      a.push(id, value);
-      if (a.length === 2) dispatch(this.send_changes);
+      if (this.changeset.length === 0 && this.pending === null) dispatch(this.send_changes);
+      this.changeset.push(id, value);
     },
     clear: function() {
       this.send(false);
@@ -618,8 +625,22 @@ var f = (function(w, AWML) {
 
   function ServerBackend(backend) {
     this.backend = backend;
+    this.changeset = [];
+    this.pending = null;
+    this.send_changes = function() {
+      var m = this.pending;
+      if (m) this.send(m);
+      this.pending = null;
+      var a = this.changeset;
+      if (a.length) {
+        this.send(a);
+        a.length = 0;
+      }
+    }.bind(this);
+
     this._change_cb = function(id, value) {
-      this.send([id, value]);
+      if (this.changeset.length === 0 && this.pending === null) dispatch(this.send_changes);
+      this.changeset.push(id, value);
     }.bind(this);
     this.subscriptions = new Set();
   }
@@ -642,19 +663,22 @@ var f = (function(w, AWML) {
             backend.subscribe(uri, this._change_cb)
               .then(
                 function(a) {
-                  var d = {};
-                  this.subscriptions.add(a[1]);
+                  if (this.changeset.length === 0 && this.pending === null) dispatch(this.send_changes);
+                  var d = this.pending;
+                  if (d === null) this.pending = d = {};
                   d[a[0]] = a[1];
-                  this.send(d);
+                  this.subscriptions.add(a[1]);
                 }.bind(this),
                 function(a) {
-                  /* TODO: transfer error? */
-                  var d = {};
+                  if (this.changeset.length === 0 && this.pending === null) dispatch(this.send_changes);
+                  var d = this.pending;
+                  if (d === null) this.pending = d = {};
                   d[a[0]] = 0;
-                  this.send(d);
                 });
           } else {
-            backend.unsubscribe(backend.uri2id.get(uri), this._change_cb);
+            var id = backend.uri2id.get(uri);
+            backend.unsubscribe(id, this._change_cb);
+            this.subscriptions.delete(id);
           }
         }
       }
