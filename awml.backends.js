@@ -192,6 +192,7 @@ var f = (function(w, AWML) {
     close: to_closed,
     error: to_error,
     open: to_open,
+    is_open: function() { this.state === "open"; },
     receive: receive,
     low_subscribe_batch: function(uris) {
       return Promise.all(uris.map(this.low_subscribe, this));

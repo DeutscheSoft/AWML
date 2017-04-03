@@ -640,12 +640,14 @@
       AWML.register_backend(this.name, null);
     },
     attachedCallback: function() {
-      this.name = this.getAttribute("name");
+      var name = this.getAttribute("name");
 
-      if (typeof(this.name) !== "string") {
+      if (typeof(name) !== "string") {
         AWML.error("awml-backend without name.");
         return;
       }
+
+      this.name = name;
 
       var shared = typeof(this.getAttribute("shared")) === "string";
       var type = this.getAttribute("type");
@@ -669,12 +671,19 @@
         }
       }
 
-      this.backend = new (constructor.bind.apply(constructor, [ window ].concat(args)));
+      var backend = new (constructor.bind.apply(constructor, [ window ].concat(args)));
 
-      AWML.register_backend(this.name, this.backend);
+      this.backend = backend;
 
-      this.backend.addEventListener("error", this.error_cb);
-      this.backend.addEventListener("close", this.error_cb);
+      backend.addEventListener("error", this.error_cb);
+      backend.addEventListener("close", this.error_cb);
+
+
+      if (backend.is_open()) {
+        AWML.register_backend(name, backend);
+      } else {
+        backend.addEventListener("open", AWML.register_backend.bind(AWML, name, backend));
+      }
     }
   });
 
