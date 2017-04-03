@@ -10,18 +10,21 @@ var f = (function(w, AWML) {
 
     dispatch = function(cb) {
       q.push(cb);
-      if (!dispatched) {
-        w.postMessage(true, "*");
-      }
+      if (dispatched) return;
+      dispatched = true;
+      w.postMessage(true, "*");
     };
 
     w.addEventListener("message", function(ev) {
       if (ev.source !== w) return;
+      dispatched = false;
       for (var i = 0; i < q.length; i++) {
         q[i]();
       }
       q.length = 0;
     });
+  } else if (typeof setImmediate !== "undefined") {
+    dispatch = setImmediate;
   } else {
     dispatch = function(cb) {
       setTimeout(cb, 0);
