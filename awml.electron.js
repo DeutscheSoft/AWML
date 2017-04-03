@@ -12,15 +12,20 @@
 
   function Electron(channel) {
     ClientBackend.call(this);
-    this.channel = channel = ipcRenderer.sendSync("awml-connect", channel);
-    if (!channel) {
-        this.error();
-        return;
-    }
-    ipcRenderer.on(channel, function(ev, o) {
-      this.message(o);
-    }.bind(this));
-    this.open();
+    var handshake_cb = function(ev, channel) {
+        if (!channel) {
+            this.error();
+            return;
+        }
+        this.channel = channel;
+        ipcRenderer.on(channel, function(ev, o) {
+          this.message(o);
+        }.bind(this));
+        this.open();
+        ipcRenderer.removeEventListener(handshake_cb);
+    }.bind(this);
+    ipcRenderer.on("awml-connect", handshake_cb);
+    ipcRenderer.send("awml-connect", channel);
   };
   Electron.prototype = Object.assign(Object.create(ClientBackend.prototype), {
     send: function(o) {

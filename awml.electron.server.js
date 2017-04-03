@@ -30,7 +30,7 @@ function export_backends(backends) {
   ipcMain.on("awml-connect", function(event, backend) {
     var backend = backends[backend];
     if (!backend) {
-        event.returnValue = false;
+        event.sender.send(false);
         return;
     }
     var channel;
@@ -40,7 +40,7 @@ function export_backends(backends) {
 
 
     channels.set(channel, new ElectronServerBackend(channel, backend, event.sender));
-    event.returnValue = channel;
+    event.sender.send("awml-connect", channel);
   });
 }
 
