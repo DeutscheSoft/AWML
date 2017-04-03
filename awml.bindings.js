@@ -325,6 +325,24 @@
     this.readonly = node.getAttribute("readonly") !== null;
     this.writeonly = node.getAttribute("writeonly") !== null;
     this.unsubscribe = node.getAttribute("unsubscribe-when-hidden") !== null;
+
+    var delay = node.getAttribute("receive-delay");
+
+    /* default receive delay of 2 seconds */
+    this.receive_delay = delay === null ? 2000 : parseInt(delay);
+    this.receive_delay_id = 0;
+
+    if (this.receive_delay > 0) {
+      this.receive_delay_cb = function() {
+        var b = this.binding;
+        this.receive_delay_id = 0;
+        if (!b || !b.has_value) return;
+        this.receive(b.value);
+      }.bind(this);
+    } else {
+      this.receive_delay_cb = null;
+    }
+
     var src = node.getAttribute("src");
 
     if (src !== null && src.search(',') !== -1) {
@@ -342,6 +360,7 @@
     this.transform_send = transform_send ? AWML.parse_format("js", transform_send) : null;
     this.transform_receive = transform_receive ? AWML.parse_format("js", transform_receive) : null;
 
+    this.last_send = 0;
     this.recurse = false;
     this.attached = false;
     this.binding = null;
@@ -432,9 +451,22 @@
         if (this.transform_send) v = this.transform_send(v);
         if (v !== void(0)) this.binding.set(v);
         this.recurse = false;
+        this.last_send = Date.now();
       }
     },
     receive: function(v) {
+      var t = this.last_send;
+      var d = this.receive_delay;
+      if (t > 0 && d > 0) {
+        /* callout already happening */
+        if (this.receive_delay_id) return;
+        t += d - Date.now();
+        if (t > 0) {
+          /* delay receive */
+          this.receive_delay_id = setTimeout(this.receive_delay_cb, t);
+          return;
+        }
+      }
       if (this.debug) TK.log("receive", this.binding, v);
       if (!this.recurse) {
         this.recurse = true;
