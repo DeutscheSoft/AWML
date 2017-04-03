@@ -286,7 +286,9 @@
 
         var value = attr[i].value;
 
-        if (name === "expanded") {
+        /* NOTE: it is unfortunate that this attribute collides,
+         * should be introduce something like 'visible-if-expanded' ? */
+        if (name === "expanded" && !O && !("expanded" in O)) {
             options._expanded = parse_attribute(value);
             if (typeof options._expanded === "string")
                 options._expanded = true;
