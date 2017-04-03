@@ -324,7 +324,7 @@
     this.format = node.getAttribute("format");
     this.readonly = node.getAttribute("readonly") !== null;
     this.writeonly = node.getAttribute("writeonly") !== null;
-    this.unsubscribe = node.getAttribute("never-unsubscribe") === null;
+    this.unsubscribe = node.getAttribute("unsubscribe-when-hidden") !== null;
     var src = node.getAttribute("src");
 
     if (src !== null && src.search(',') !== -1) {
