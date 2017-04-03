@@ -22,10 +22,9 @@
     unsubscribe: function() {},
     hasListener: function(callback) {
       var a = this.listeners;
-      if (a === null) return false;
-      if (Array.isArray(a))
-        return a.indexOf(callback) !== -1;
-      return a === callback;
+      if (a === callback) return true;
+      if (a === null || !(a instanceof Set)) return false;
+      return a.has(callback);
     },
     addListener: function(callback) {
       if (this.hasListener(callback)) {
@@ -36,30 +35,26 @@
       if (a === null) {
         this.listeners = callback;
         this.subscribe();
-      } else if (Array.isArray(a)) {
-        a.push(callback);
+      } else if (a instanceof Set) {
+        a.add(callback);
       } else {
-        this.listeners = [ a, callback ];
+        this.listeners = new Set([ a, callback ]);
       }
       if (this.has_value) call_listener(callback, this.value);
     },
     removeListener: function(callback) {
       var a = this.listeners;
 
-      /* TODO: should we warn? */
-
       if (a === null) return;
-      if (Array.isArray(a)) {
-        var i;
-        if ((i = a.indexOf(callback)) != -1) {
-          a.splice(i, 1);
-          if (a.length === 1) this.listeners = a[0];
-        }
-      } else {
-        if (a === callback) {
-          this.listeners = null;
-          this.unsubscribe();
-        }
+      if (a === callback) {
+        this.listeners = null;
+        this.unsubscribe();
+      }
+      if (!(a instanceof Set)) return;
+      a.delete(callback);
+      if (a.size === 0) {
+        this.listeners = null
+        this.unsubscribe();
       }
     },
     hasListeners: function() {
@@ -70,12 +65,12 @@
 
       if (a === null) return;
 
-      if (Array.isArray(a)) {
-        var i;
-        for (i = 0; i < a.length; i++)
-          call_listener(a[i], v);
-      } else {
+      if (!(a instanceof Set)) {
         call_listener(a, v);
+      } else {
+        a.forEach(function(cb, foo, set) {
+          call_listener(cb, v);
+        });
       }
     }
   };
