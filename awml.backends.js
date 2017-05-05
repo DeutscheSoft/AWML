@@ -658,11 +658,11 @@ var f = (function(w, AWML) {
       var backend = this.backend;
       if (Array.isArray(d)) {
         if (d.length & 1) throw new Error("Bad message from client.\n");
-        for (let i = 0; i < d.length; i+=2) backend.set(d[i], d[i+1]);
+        for (var i = 0; i < d.length; i+=2) backend.set(d[i], d[i+1]);
       } else if (d === false) {
         backend.clear(); 
       } else {
-        for (let uri in d) {
+        for (var uri in d) {
           if (d[uri]) {
             backend.subscribe(uri, this._change_cb)
               .then(
