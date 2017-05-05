@@ -415,6 +415,7 @@ var f = (function(w, AWML) {
     this.changeset = [];
     this.pending = null;
     this.send_changes = function() {
+      if (this.state != "open") return;
       var m = this.pending;
       if (m) this.send(m);
       this.pending = null;
@@ -679,7 +680,8 @@ var f = (function(w, AWML) {
                   d[a[0]] = 0;
                 });
           } else {
-            var id = backend.uri2id.get(uri);
+            /* unsubscribe happens per id */
+            var id = parseInt(uri);
             backend.unsubscribe(id, this._change_cb);
             this.subscriptions.delete(id);
           }
