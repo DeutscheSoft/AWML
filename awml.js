@@ -481,7 +481,10 @@
 
   function update_attribute(node, name, value) {
     var old = node.getAttribute(name);
-    node.setAttribute(name, value);
+    if (value === null)
+      node.removeAttribute(name);
+    else
+      node.setAttribute(name, value);
     if (node.attributeChangedCallback)
       node.attributeChangedCallback(name, old, node.getAttribute(name));
   }
@@ -501,9 +504,14 @@
 
   if (document.registerElement) {
     AWML.register_element = register_element;
-    AWML.upgrade_element = function(node) {}
-    AWML.downgrade_element = function(node) {}
-    AWML.update_attribute = function(node, name, value) { node.setAttribute(name, value); }
+    AWML.upgrade_element = function(node) {};
+    AWML.downgrade_element = function(node) {};
+    AWML.update_attribute = function(node, name, value) {
+      if (value === null)
+        node.removeAttribute(name);
+      else
+        node.setAttribute(name, value);
+    };
   } else {
     custom_elements = {};
     AWML.register_element = register_element_polyfill;
