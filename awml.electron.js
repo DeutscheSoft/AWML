@@ -22,7 +22,7 @@
           this.message(o);
         }.bind(this));
         this.open();
-        ipcRenderer.removeEventListener(handshake_cb);
+        ipcRenderer.removeListener("awml-connect", handshake_cb);
     }.bind(this);
     ipcRenderer.on("awml-connect", handshake_cb);
     ipcRenderer.send("awml-connect", channel);
