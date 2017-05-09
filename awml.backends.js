@@ -4,6 +4,13 @@ var f = (function(w, AWML) {
 
   var dispatch;
 
+  if (!('CustomEvent' in w)) {
+    w.CustomEvent = function(type, o) {
+      this.type = type;
+      this.detail = o ? o.detail : null;
+    };
+  }
+
   if ("addEventListener" in w && "postMessage" in w) {
     var q = [];
     var dispatched = false;
@@ -19,7 +26,11 @@ var f = (function(w, AWML) {
       if (ev.source !== w) return;
       dispatched = false;
       for (var i = 0; i < q.length; i++) {
-        q[i]();
+        try {
+          q[i]();
+        } catch (e) {
+          console.log("Error in dispatched callback:", e);
+        }
       }
       q.length = 0;
     });
@@ -90,10 +101,11 @@ var f = (function(w, AWML) {
     if (cbs) call_subscribers(cbs, id, value);
   }
 
-  function invalid_transition(from, to) {
-    var error = AWML.error || (console && console.error);
+  var error = AWML.error || (console && console.error);
 
-    if (error) error('Cannot transition backend %o from %o to %o.', this, from, to);
+  function invalid_transition(from, to) {
+
+    error('Cannot transition backend %o from %o to %o.', this, from, to);
   }
 
   function to_open() {
@@ -123,15 +135,15 @@ var f = (function(w, AWML) {
     this.fire('close');
   }
 
-  function to_error(error) {
+  function to_error(err) {
     var state = this.state;
 
     if (state === 'error') return;
 
     this.state = 'error';
-    clear_all_subscriptions.call(this, error);
-    AWML.error("Backend error", error);
-    this.fire('error', error);
+    clear_all_subscriptions.call(this, err);
+    error("Backend error", err);
+    this.fire('error', err);
   }
 
   function to_state(state) {
@@ -306,7 +318,7 @@ var f = (function(w, AWML) {
         try {
           cb.call(this, ev);
         } catch (e) {
-          if (console && console.error) console.error(e);
+          error(e);
         }
       }, this);
     },
@@ -315,7 +327,7 @@ var f = (function(w, AWML) {
 
       if (!e.has(type)) return;
 
-      this.dispatchEvent(new CustomEvent(type, { detail: data }));
+      this.dispatchEvent(new w.CustomEvent(type, { detail: data }));
     },
     arguments_from_node: function(node) {
         throw new Error("Backend needs implementation of arguments_from_node()");
@@ -333,7 +345,7 @@ var f = (function(w, AWML) {
 
     if (src) {
       if (!w.fetch) {
-        AWML.error("This browser does not support fetch().");
+        error("This browser does not support fetch().");
         return;
       }
       w.fetch(src).then(function(response) {
@@ -345,7 +357,7 @@ var f = (function(w, AWML) {
             });
           else return Promise.reject(response.statusText);
       }).catch(function(e) {
-        AWML.error("Failed to load values from "+src+": ", e)
+        error("Failed to load values from "+src+": ", e)
       });
     }
   }
@@ -563,7 +575,7 @@ var f = (function(w, AWML) {
       var args = Array.prototype.slice.call(arguments, 1);
       this.worker = new SharedWorker(url, JSON.stringify([ type, args ]));
       this.worker.onerror = function(e) {
-        AWML.error("Shared Worker generated an error:", e);
+        error("Shared Worker generated an error:", e);
       };
       this.worker.port.addEventListener('message', function (ev) {
           this.message(ev.data);
@@ -585,7 +597,7 @@ var f = (function(w, AWML) {
       this.storage = w.localStorage;
       if (clear) this.storage.clear();
     } catch (e) {
-      AWML.error("Cannot use LocalStorage backend. Probably because this page is accessed through a file:// URL.");
+      error("Cannot use LocalStorage backend. Probably because this page is accessed through a file:// URL.");
     }
     this.encoded_values = new Map();
     w.addEventListener('storage', function(ev) {
