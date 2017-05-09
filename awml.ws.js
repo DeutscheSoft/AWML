@@ -24,13 +24,15 @@ module.exports = function(w, AWML) {
     },
     destroy: function() {
       var ws = this.ws;
-      ws.removeListener("message", this.message_cb);
-      ws.removeListener("error", this.close_cb);
-      ws.removeListener("close", this.close_cb);
-      if (ws.readyState <= 1) {
-        ws.close();
+      if (ws) {
+          ws.removeListener("message", this.message_cb);
+          ws.removeListener("error", this.close_cb);
+          ws.removeListener("close", this.close_cb);
+          if (ws.readyState <= 1) {
+            ws.close();
+          }
+          this.ws = null;
       }
-      this.ws = null;
       ServerBackend.prototype.destroy.call(this);
     },
   });
@@ -41,11 +43,11 @@ module.exports = function(w, AWML) {
       var ws = this.ws;
       if (ws) {
         this.ws = null;
-        try { ws.close(); } catch(e) {}
         ws.onopen = null;
         ws.onclose = null;
         ws.onerror = null;
         ws.onmessage = null;
+        try { ws.close(); } catch(e) {}
       }
   }
   function websocket(url, clear) {
@@ -78,6 +80,10 @@ module.exports = function(w, AWML) {
       } catch (e) {
         this.error(e);
       }
+    },
+    destroy: function() {
+      teardown.call(this);
+      ClientBackend.prototype.destroy.call(this);
     },
     close: function() {
       teardown.call(this);

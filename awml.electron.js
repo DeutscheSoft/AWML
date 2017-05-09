@@ -42,6 +42,12 @@
     ipcRenderer.send("awml-connect", [ "connect", name ]);
   };
   Electron.prototype = Object.assign(Object.create(ClientBackend.prototype), {
+    destroy: function() {
+        ipcRenderer.send("awml-connect", [ "disconnect", name ]);
+        ipcRenderer.removeListener("awml-connect", this.connect_cb);
+        ipcRenderer.removeListener(this.channel, this.message_cb);
+        ClientBackend.prototype.destroy.call(this);
+    },
     send: function(o) {
       ipcRenderer.send(this.channel, o);
     },

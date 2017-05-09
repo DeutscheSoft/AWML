@@ -139,6 +139,7 @@ var f = (function(w, AWML) {
     this.state = 'closed';
     clear_all_subscriptions.call(this, 'closed');
     this.fire('close');
+    this.destroy();
   }
 
   function to_error(err) {
@@ -150,6 +151,7 @@ var f = (function(w, AWML) {
     clear_all_subscriptions.call(this, err);
     error("Backend error", err);
     this.fire('error', err);
+    this.destroy();
   }
 
   function to_state(state) {
@@ -328,6 +330,10 @@ var f = (function(w, AWML) {
           error(e);
         }
       }, this);
+    },
+    destroy: function() {
+      this.fire("destroy");
+      this._event_handler = {}; 
     },
     fire: function(type, data) {
       var e = this._event_handlers;
@@ -527,11 +533,11 @@ var f = (function(w, AWML) {
       var ws = this.ws;
       if (ws) {
         this.ws = null;
-        try { ws.close(); } catch(e) {}
         ws.onopen = null;
         ws.onclose = null;
         ws.onerror = null;
         ws.onmessage = null;
+        try { ws.close(); } catch(e) {}
       }
   }
   function websocket(url, clear) {
@@ -560,6 +566,10 @@ var f = (function(w, AWML) {
       } catch (e) {
         this.error(e);
       }
+    },
+    destroy: function() {
+      teardown.call(this);
+      ClientBackend.prototype.destroy.call(this);
     },
     close: function() {
       teardown.call(this);

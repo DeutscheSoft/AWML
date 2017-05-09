@@ -674,7 +674,15 @@
       }
     },
     detachedCallback: function() {
-      AWML.register_backend(this.name, null);
+      var backend = this.backend;
+      if (backend) {
+        AWML.register_backend(this.name, null);
+        backend.removeEventListener("error", this.error_cb);
+        backend.removeEventListener("close", this.error_cb);
+        backend.removeEventListener("destroy", this.error_cb);
+        backend.destroy();
+        backend = null;
+      }
     },
     attachedCallback: function() {
       var name = this.getAttribute("name");
@@ -714,7 +722,7 @@
 
       backend.addEventListener("error", this.error_cb);
       backend.addEventListener("close", this.error_cb);
-
+      backend.addEventListener("destroy", this.error_cb);
 
       if (backend.is_open()) {
         AWML.register_backend(name, backend);
