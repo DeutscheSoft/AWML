@@ -4,7 +4,8 @@ const AWML = require(".").AWML;
 const ServerBackend = AWML.ServerBackend;
 const channels = new Map();
 
-function ElectronServerBackend(channel, backend, sender) {
+function ElectronServerBackend(name, channel, backend, sender) {
+  this.name = name;
   this.channel = channel;
   this.sender = sender;
 
@@ -50,7 +51,7 @@ function export_backends(backends) {
             channel = "channel-" + (Math.random() * 2 * channels.size).toString();
         } while (channels.has(channel));
 
-        channels.set(channel, new ElectronServerBackend(channel, backend, event.sender));
+        channels.set(channel, new ElectronServerBackend(name, channel, backend, event.sender));
         event.sender.send("awml-connect", [ "connected", msg[1], channel ]);
     } else if (cmd === "ping") {
         event.sender.send("awml-connect", [ "pong" ]);
