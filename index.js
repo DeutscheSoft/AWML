@@ -5,5 +5,6 @@ const w = {
 };
 
 require("./awml.backends.js")(w, AWML);
+require("./awml.ws.js")(w, AWML);
 
 module.exports = w;
