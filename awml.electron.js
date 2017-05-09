@@ -10,22 +10,36 @@
     return;
   }
 
-  function Electron(channel) {
+  function onmessage(ev, o) {
+    this.message(o);
+  }
+
+  function onconnect(ev, msg) {
+    var cmd = msg[0];
+
+    if (cmd === "connected" && msg[1] === this.name) {
+      this.channel = msg[2];
+      ipcRenderer.on(this.channel, this.message_cb);
+      this.open();
+    } else if (cmd === "error") {
+      this.error(msg[1]);
+    } else if (cmd === "disconnected" && msg[1] === this.channel) {
+      ipcRenderer.removeListener("awml-connect", this.connect_cb);
+      ipcRenderer.removeListener(this.channel, this.message_cb);
+      this.close();
+    }
+  }
+
+  function Electron(name) {
     ClientBackend.call(this);
-    var handshake_cb = function(ev, channel) {
-        if (!channel) {
-            this.error();
-            return;
-        }
-        this.channel = channel;
-        ipcRenderer.on(channel, function(ev, o) {
-          this.message(o);
-        }.bind(this));
-        this.open();
-        ipcRenderer.removeListener("awml-connect", handshake_cb);
-    }.bind(this);
-    ipcRenderer.on("awml-connect", handshake_cb);
-    ipcRenderer.send("awml-connect", channel);
+
+    this.name = name;
+    this.channel = null;
+    this.message_cb = onmessage.bind(this);
+    this.connect_cb = onconnect.bind(this);
+
+    ipcRenderer.on("awml-connect", this.connect_cb);
+    ipcRenderer.send("awml-connect", [ "connect", name ]);
   };
   Electron.prototype = Object.assign(Object.create(ClientBackend.prototype), {
     send: function(o) {
