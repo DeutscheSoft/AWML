@@ -72,8 +72,14 @@ var f = (function(w, AWML) {
       var s = new Set();
       this.pending_subscriptions.delete(uri);
       this.subscriptions.set(key, s);
+      var ret;
+      if (this.values.has(id)) {
+        ret = [uri, id, this.values.get(id) ];
+      } else {
+        ret = [uri, id];
+      }
       pending.forEach(function(a) {
-        a[1]([uri, id]);
+        a[1](ret);
         s.add(a[0]);
       }, this);
     }
@@ -240,12 +246,13 @@ var f = (function(w, AWML) {
 
           s.add(cb);
 
-          resolve([uri, id]);
+          var has_value = values.has(key);
 
-          /* NOTE: this is needed because we should not call the subscriber
-           * before the promise resolve callback has been executed
-           */
-          if (values.has(key)) dispatch(call_subscriber.bind(this, cb, key, values.get(key)));
+          if (values.has(key)) {
+            resolve([uri, id, values.get(key) ]);
+          } else {
+            resolve([uri, id ]);
+          }
         });
       } else {
         var pending = this.pending_subscriptions;
@@ -440,7 +447,7 @@ var f = (function(w, AWML) {
   }
   ClientBackend.prototype = Object.assign(Object.create(Base.prototype), {
     message: function(d) {
-      var uri, id, i;
+      var uri, id, i, tmp;
 
       if (typeof(d) === "object") {
         if (d instanceof Array) {
@@ -449,9 +456,17 @@ var f = (function(w, AWML) {
           }
         } else {
           for (uri in d) {
-            id = d[uri];
-            if (id) subscribe_success.call(this, uri, id);
-            else subscribe_fail.call(this, uri, id);
+            tmp = d[uri];
+            if (tmp) {
+              if (Array.isArray(tmp)) {
+                id = tmp[0];
+                this.values.set(tmp[0], tmp[1]);
+              } else {
+                id = tmp;
+              }
+              subscribe_success.call(this, uri, id);
+            }
+            else subscribe_fail.call(this, uri, tmp);
           }
         }
       } else AWML.warn('Unexpected message on WebSocket:', d);
@@ -682,7 +697,11 @@ var f = (function(w, AWML) {
                   if (this.changeset.length === 0 && this.pending === null) dispatch(this.send_changes);
                   var d = this.pending;
                   if (d === null) this.pending = d = {};
-                  d[a[0]] = a[1];
+                  if (a.length === 3) {
+                    d[a[0]] = [ a[1], a[2] ];
+                  } else {
+                    d[a[0]] = a[1];
+                  }
                   this.subscriptions.add(a[1]);
                 }.bind(this),
                 function(a) {

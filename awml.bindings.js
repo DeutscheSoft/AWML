@@ -91,11 +91,21 @@
         .then(
           function(a) {
             this.id = a[1];
-            if (this.requested_value !== null && this.value !== this.requested_value) {
-              this.backend.set(a[1], this.requested_value);
+            var has_value = a.length === 3;
+            if (has_value) {
+              this.update(a[1], a[2]);
+
+              if (this.requested_value !== null && this.requested_value !== a[2]) {
+                this.backend.set(a[1], this.requested_value);
+              }
+            } else if (this.has_value) {
+              this.backend.set(a[1], this.value);
+              this.has_value = false;
+              this.value = null;
             }
           }.bind(this),
           function(reason) {
+            /* FIXME: this log output can be very annoying */
             AWML.warn("Subscription failed: ", reason);
           });
     },
