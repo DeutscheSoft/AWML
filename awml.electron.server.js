@@ -48,7 +48,7 @@ function export_backends(backends) {
         }
         var channel;
         do {
-            channel = "channel-" + (Math.random() * 2 * channels.size).toString();
+            channel = "channel-" + (Math.random() * 2 * channels.size).toFixed(0);
         } while (channels.has(channel));
 
         channels.set(channel, new ElectronServerBackend(name, channel, backend, event.sender));
