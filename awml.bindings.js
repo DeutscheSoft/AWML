@@ -82,6 +82,7 @@
     this.value = null;
     this.requested_value = null;
     this.has_value = false;
+    this.has_requested_value = false;
     BaseBinding.call(this);
   };
   Binding.prototype = inherit(BaseBinding, {
@@ -98,10 +99,14 @@
               if (this.requested_value !== null && this.requested_value !== a[2]) {
                 this.backend.set(a[1], this.requested_value);
               }
-            } else if (this.has_value) {
-              this.backend.set(a[1], this.value);
-              this.has_value = false;
-              this.value = null;
+            } else {
+              if (this.has_value) {
+                this.backend.set(a[1], this.value);
+                this.has_value = false;
+                this.value = null;
+              } else if (this.has_requested_value) {
+                this.backend.set(a[1], this.requested_value);
+              }
             }
           }.bind(this),
           function(reason) {
@@ -119,6 +124,7 @@
     set: function(value) {
       if (value === this.requested_value && value === this.value) return;
       this.requested_value = value;
+      this.has_requested_value = true;
       if (this.id !== false) {
         this.backend.set(this.id, value);
       }
