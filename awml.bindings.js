@@ -665,11 +665,14 @@
       this.style.display = "none";
       this.name = "";
       this.backend = null;
+      this.reconnect_id = 0;
       this.error_cb = function(e) {
-        window.setTimeout(function() {
-          this.detachedCallback();
+        this.detachedCallback();
+        if (this.reconnect_id) return;
+        this.reconnect_id = window.setTimeout(function() {
+          this.reconnect_id = 0;
           this.attachedCallback();
-        }.bind(this), 250);
+        }.bind(this), 500);
       }.bind(this);
     },
     attributeChangedCallback: function(name, old_value, value) {
