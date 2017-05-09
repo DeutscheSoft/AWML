@@ -118,7 +118,7 @@ var f = (function(w, AWML) {
     var state = this.state;
 
     if (state !== 'init') {
-      invalid_transition(state, 'open');
+      invalid_transition.call(this, state, 'open');
       return;
     }
 
@@ -133,7 +133,7 @@ var f = (function(w, AWML) {
     var state = this.state;
 
     if (state === 'closed' || state === 'error') {
-      invalid_transition(state, 'closed');
+      invalid_transition.call(this, state, 'closed');
     }
 
     this.state = 'closed';
