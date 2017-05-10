@@ -2,8 +2,6 @@
 var f = (function(w, AWML) {
   if (!AWML.Backends) AWML.Backends = {};
 
-  var dispatch;
-
   if (!('CustomEvent' in w)) {
     w.CustomEvent = function(type, o) {
       this.type = type;
@@ -11,34 +9,45 @@ var f = (function(w, AWML) {
     };
   }
 
-  if ("addEventListener" in w && "postMessage" in w) {
-    var q = [];
-    var dispatched = false;
+  var q = [];
+  var dispatched = false;
 
-    dispatch = function(cb) {
-      q.push(cb);
-      if (dispatched) return;
-      dispatched = true;
+  function dispatch_loop() {
+    dispatched = false;
+    for (var i = 0; i < q.length; i++) {
+      try {
+        q[i]();
+      } catch (e) {
+        console.log("Error in dispatched callback:", e);
+      }
+    }
+    q.length = 0;
+  }
+
+  var trigger_dispatch;
+
+  function dispatch(cb) {
+    q.push(cb);
+    if (dispatched) return;
+    dispatched = true;
+    trigger_dispatch();
+  }
+
+  if ("addEventListener" in w && "postMessage" in w) {
+    trigger_dispatch = function() {
       w.postMessage(true, "*");
     };
-
     w.addEventListener("message", function(ev) {
       if (ev.source !== w) return;
-      dispatched = false;
-      for (var i = 0; i < q.length; i++) {
-        try {
-          q[i]();
-        } catch (e) {
-          console.log("Error in dispatched callback:", e);
-        }
-      }
-      q.length = 0;
+      dispatch_loop();
     });
   } else if (typeof setImmediate !== "undefined") {
-    dispatch = setImmediate;
+    trigger_dispatch = function() {
+      setImmediate(dispatch_loop);
+    };
   } else {
-    dispatch = function(cb) {
-      setTimeout(cb, 0);
+    trigger_dispatch = function() {
+      setTimeout(dispatch_loop, 0);
     };
   }
 
