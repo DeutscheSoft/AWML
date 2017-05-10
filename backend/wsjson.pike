@@ -191,7 +191,7 @@ void http_cb(object r) {
 
 
 void accept_cb(array(string) protocols, object request) {
-    string name = request->not_query;
+    string name = request->full_query;
     if (!backends[name]) {
         backends[name] = Backend(name);
     }
