@@ -5,6 +5,8 @@ module.exports = function(w, AWML) {
   var ServerBackend = AWML.ServerBackend;
 
   function WebSocketServerBackend(ws, backend) {
+    if (!ws || ws.readyState !== 1)
+        throw new Error("WebSocket not open.");
     this.ws = ws;
     ServerBackend.call(this, backend);
     this.message_cb = function(data) {
@@ -19,8 +21,10 @@ module.exports = function(w, AWML) {
   }
   WebSocketServerBackend.prototype = Object.assign(Object.create(ServerBackend.prototype), {
     send: function(d) {
-      if (!this.ws) return;
-      this.ws.send(JSON.stringify(d));
+      var ws = this.ws;
+      /* this check is necessary because a send may be dispatched */
+      if (ws === null || ws.readyState !== 1) return;
+      ws.send(JSON.stringify(d));
     },
     destroy: function() {
       var ws = this.ws;
@@ -66,7 +70,9 @@ module.exports = function(w, AWML) {
   }
   websocket.prototype = Object.assign(Object.create(ClientBackend.prototype), {
     send: function(o) {
-      this.ws.send(JSON.stringify(o));
+      var ws = this.ws;
+      if (ws === null || ws.readyState !== 1) return;
+      ws.send(JSON.stringify(o));
     },
     connect: function() {
       try {
