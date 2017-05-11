@@ -108,9 +108,13 @@ class Backend {
         }
     }
 
+    void timeout() {
+        if (!sizeof(connections)) m_delete(backends, name);
+    }
+
     void close_cb(mixed status, object con) {
         m_delete(connections, con);
-        if (!sizeof(connections)) m_delete(backends, name);
+        if (!sizeof(connections)) call_out(timeout, 10);
     }
 
     void add_websocket(object con) {
