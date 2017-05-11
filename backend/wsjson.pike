@@ -7,11 +7,13 @@ class Backend {
     mapping(int:mixed) values = ([]);
     mapping(string:int) path2id = ([]);
     mapping(int:string) id2path = ([]);
+    string name;
 
     void create(string name) {
         if (search(name, "test") != -1) {
             simulate();
         }
+        this_program::name = name;
     }
 
     void simulate() {
@@ -108,15 +110,26 @@ class Backend {
 
     void close_cb(mixed status, object con) {
         m_delete(connections, con);
+        if (!sizeof(connections)) m_delete(backends, name);
+    }
+
+    void add_websocket(object con) {
+        connections[con] = ([]);
+
+        con->onmessage = incoming;
+        con->onclose = close_cb;
     }
 
     void accept(array(string) protocols, object request) {
         object con = request->websocket_accept("json");
 
-        connections[con] = ([]);
+        add_websocket(con);
+    }
 
-        con->onmessage = incoming;
-        con->onclose = close_cb;
+    void close() {
+        foreach (connections; object con;) {
+            con->close();
+        }
     }
 }
 
@@ -188,14 +201,21 @@ void http_cb(object r) {
     r->response_and_finish(([ "error" : 404, "data" : "No such file.", "type" : "text/plain" ]));
 }
 
-
-
-void accept_cb(array(string) protocols, object request) {
-    string name = request->full_query;
+Backend get_backend(string name) {
     if (!backends[name]) {
         backends[name] = Backend(name);
     }
-    backends[name]->accept(protocols, request);
+    return backends[name];
+}
+
+void accept_cb(array(string) protocols, object request) {
+    object backend = get_backend(request->full_query);
+    backend->accept(protocols, request);
+}
+
+void shutdown() {
+    foreach (backends; string name; object b) b->close();
+    backends = ([]);
 }
 
 void terminate() {
