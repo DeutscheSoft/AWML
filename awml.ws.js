@@ -62,7 +62,7 @@ module.exports = function(w, AWML) {
         this.open();
       }.bind(this);
     this.onclose = function() { this.close(); }.bind(this);
-    this.onerror = function() { this.error(""); }.bind(this);
+    this.onerror = function(ev) { this.error(ev); }.bind(this);
     this.onmessage = function(ev) {
         this.message(JSON.parse(ev.data));
       }.bind(this);

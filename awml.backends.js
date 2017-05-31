@@ -567,7 +567,7 @@ var f = (function(w, AWML) {
           this.open();
         }.bind(this);
         ws.onclose = function() { this.close(); }.bind(this);
-        ws.onerror = function(ev) { this.error(""); }.bind(this);
+        ws.onerror = function(ev) { this.error(ev); }.bind(this);
         ws.onmessage = function(ev) {
           this.message(JSON.parse(ev.data));
         }.bind(this);
