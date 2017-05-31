@@ -54,8 +54,9 @@ module.exports = function(w, AWML) {
         try { ws.close(); } catch(e) {}
       }
   }
-  function websocket(url, clear) {
+  function websocket(url, clear, options) {
     this.url = url;
+    this.options = options;
     ClientBackend.call(this);
     this.onopen = function() {
         if (clear) this.ws.send("false");
@@ -77,7 +78,7 @@ module.exports = function(w, AWML) {
     connect: function() {
       try {
         var ws;
-        ws = new WebSocket(this.url, 'json');
+        ws = new WebSocket(this.url, 'json', this.options);
         ws.addEventListener("open", this.onopen);
         ws.addEventListener("close", this.onclose);
         ws.addEventListener("error", this.onerror);
