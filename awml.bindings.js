@@ -797,8 +797,15 @@
     var cb;
 
     if (backends.has(proto)) {
-      document.dispatchEvent(new Event("AWMLBackendUnregistered", { detail: proto }));
-      backend_deactivate(proto, backends.get(proto));
+      var backend = backends.get(proto);
+      var ev = new CustomEvent("AWMLBackendUnregistered", {
+        detail: {
+          protocol: proto,
+          backend: backend,
+        },
+      });
+      document.dispatchEvent(ev);
+      backend_deactivate(proto, backend);
       backends.delete(proto);
     }
 
@@ -807,9 +814,14 @@
       cb = backend_deactivate.bind(this, proto, backend);
       backend.addEventListener('close', cb);
       backend.addEventListener('error', cb);
+      var ev = new CustomEvent("AWMLBackendRegistered", {
+        detail: {
+          protocol: proto,
+          backend: backend
+        },
+      });
+      document.dispatchEvent(ev);
       backend_activate(proto, backend);
-
-      document.dispatchEvent(new Event("AWMLBackendRegistered", { detail: proto }));
     }
 
     return backend;
