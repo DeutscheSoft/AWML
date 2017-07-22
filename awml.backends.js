@@ -743,6 +743,7 @@ var f = (function(w, AWML) {
   AWML.ServerBackend = ServerBackend;
   AWML.ClientBackend = ClientBackend;
   AWML.BaseBackend = Base;
+  AWML.dispatch = dispatch;
 
   Object.assign(AWML.Backends, {
     local: Local,
