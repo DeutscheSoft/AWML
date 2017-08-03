@@ -23,7 +23,11 @@ function update_prefix() {
     return;
   }
 
-  var prefix = this.current_value();
+  var tmp = this.current();
+
+  if (!tmp) return;
+
+  var prefix = tmp.get("value");
 
   var f = O.format_prefix;
   var handle = O.handle;
@@ -56,9 +60,8 @@ TK.PrefixSelect = TK.class({
     format_prefix: null,
   },
   static_events: {
-    useraction: function(key, val) {
-      if (key === "selected")
-        TK.S.add(update_prefix.bind(this), 1);
+    set_selected: function(val) {
+      TK.S.add(update_prefix.bind(this), 1);
     },
     initialized: update_prefix,
   },
