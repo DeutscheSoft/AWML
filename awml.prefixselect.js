@@ -24,10 +24,9 @@ function update_prefix() {
   }
 
   var tmp = this.current();
+  var prefix;
 
-  if (!tmp) return;
-
-  var prefix = tmp.get("value");
+  if (tmp) prefix = tmp.get("value");
 
   var f = O.format_prefix;
   var handle = O.handle;
@@ -38,10 +37,12 @@ function update_prefix() {
 
   if (s) {
     p.querySelectorAll(s).forEach(function(e) {
-      AWML.set_prefix(e, prefix, handle);
+      if (tmp) AWML.set_prefix(e, prefix, handle);
+      else AWML.set_prefix_block(e, handle);
     }, this);
   } else {
-    AWML.set_prefix(p, prefix, handle);
+    if (tmp) AWML.set_prefix(p, prefix, handle);
+      else AWML.set_prefix_block(e, handle);
   }
 }
 

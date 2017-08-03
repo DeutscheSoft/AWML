@@ -374,6 +374,7 @@
     while (node && node.getAttribute) {
       tmp = node.getAttribute(attr);
       if (tmp) {
+        if (tmp === ":noprefix:") return "";
         prefix.push(tmp);
         if (tmp.search(':') !== -1) break;
       }
@@ -388,6 +389,10 @@
     if (node.getAttribute(attr) === prefix) return;
     node.setAttribute(attr, prefix);
     update_prefix(node, handle);
+  }
+
+  function set_prefix_block(node, handle) {
+    set_prefix(node, ":noprefix:", handle);
   }
 
   function update_prefix(node, handle) {
@@ -407,6 +412,7 @@
 
   AWML.collect_prefix = collect_prefix;
   AWML.set_prefix = set_prefix;
+  AWML.set_prefix_block = set_prefix_block;
   AWML.update_prefix = update_prefix;
 
 
