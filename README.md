@@ -346,6 +346,14 @@ The basic idea behind the `awml-clone` tag is to allow cloning templates in a AW
       <awml-clone template='block'></awml-clone>
     </awml-root>
 
+Adding the attribute `fetch` to the `awml-clone` element fetches the file stated in the `template` attribute from the server. The path is relative to the document containing the `awml-clone` element.
+
+    <awml-root>
+        4x4 buttons:<br>
+        <awml-clone template='block.html' fetch></awml-clone>
+    </awml-root>
+
+
 The real benefit of the `awml-clone` tag is the built-in support for relative binding addresses.
 To illustrate this, we consider a situation where the value addressing scheme of the backend is in line with the structure of the user interface.
 For example, the URIs of the button values are of the form `remote:block%/row%/column%/value`.
