@@ -167,6 +167,8 @@
         return parseInt(x);
       case "sprintf":
         return TK.FORMAT(x);
+      case "regexp":
+        return new RegExp(x);
       case "bool":
         x = x.trim();
         if (x === "true") {
