@@ -42,7 +42,7 @@ function update_prefix() {
     }, this);
   } else {
     if (tmp) AWML.set_prefix(p, prefix, handle);
-      else AWML.set_prefix_block(e, handle);
+      else AWML.set_prefix_block(p, handle);
   }
 }
 
