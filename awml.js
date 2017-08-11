@@ -183,12 +183,16 @@
         return fallback;
       }
   }
+  var json_start = new RegExp("^[0-9tf\[\{\\-\+]"),
+      json_end = new RegExp("[0-9e\\]\\}]$");
   AWML.parse_format = parse_format;
   function parse_option(format, value) {
     if (format) return parse_format(format, value);
 
     try {
-      value = JSON.parse(value);
+      var tmp = value.trim();
+      if (tmp.match(json_start) && tmp.match(json_end))
+        value = JSON.parse(value);
     } catch(e) {
       // fall back to string.
     }
