@@ -613,6 +613,7 @@
     });
   }
 
+  AWML.create_tag = create_tag;
   AWML.registerWidget = registerWidget;
 
   if (!AWML.Tags) AWML.Tags = {};
