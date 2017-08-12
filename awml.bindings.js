@@ -210,7 +210,6 @@
         this.has_value = true;
       }
 
-
       this.callListeners(v);
     },
   });
@@ -535,19 +534,27 @@
       if (key === option) this.send(value);
     }.bind(this);
 
-    Connector.call(this, get_binding(uri), transform_in, transform_out);
+    /* allow bindings */
+    if (typeof uri === "string") {
+      uri = get_binding(uri);
+    }
+
+    Connector.call(this, uri, transform_in, transform_out);
   };
   UserBinding.prototype = Object.assign(Object.create(Connector.prototype), {
     activate: function() {
-      this.widget.add_event("useraction", this._send);
+      if (this.transform_out !== false)
+        this.widget.add_event("useraction", this._send);
       return Connector.prototype.activate.call(this);
     },
     deactivate: function() {
-      this.widget.remove_event("useraction", this._send);
+      if (this.transform_out !== false)
+        this.widget.remove_event("useraction", this._send);
       return Connector.prototype.deactivate.call(this);
     },
     receive: function(v) {
       var transform = this.transform_in;
+      if (transform === false) return;
       if (transform) v = transform(v);
       this.widget.set(this.option, v);
     }
