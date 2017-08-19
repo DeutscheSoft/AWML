@@ -157,9 +157,14 @@ var f = (function(w, AWML) {
     if (state === 'error') return;
 
     this.state = 'error';
+
     clear_all_subscriptions.call(this, err);
-    error("Backend error", err);
-    this.fire('error', err);
+
+    if (this.hasEventListener('error')) {
+      this.fire('error', err);
+    } else {
+      error("Backend error", err);
+    }
     this.destroy();
   }
 
@@ -323,6 +328,11 @@ var f = (function(w, AWML) {
       else s = e.get(event);
 
       s.delete(cb);
+    },
+    hasEventListener: function(event) {
+      var e = this._event_handlers;
+      var s;
+      return e.has(event);
     },
     dispatchEvent: function(ev) {
       var e = this._event_handlers;
