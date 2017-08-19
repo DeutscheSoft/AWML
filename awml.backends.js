@@ -350,9 +350,17 @@ var f = (function(w, AWML) {
         }
       }, this);
     },
+    is_destructed: function() {
+      return this.id2uri === null;
+    },
     destroy: function() {
+      this.id2uri = null;
+      this.uri2id = null;
+      this.values = null;
+      this.subscriptions = null;
+      this.pending_subscriptions = null;
       this.fire("destroy");
-      this._event_handler = {}; 
+      this._event_handler = {};
     },
     fire: function(type, data) {
       var e = this._event_handlers;

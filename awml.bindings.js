@@ -115,7 +115,7 @@
           });
     },
     delete_backend: function(backend) {
-      if (this.id !== false) {
+      if (this.id !== false && !backend.is_destructed()) {
         backend.unsubscribe(this.id, this);
       }
       this.id = false;
