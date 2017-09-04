@@ -586,6 +586,15 @@
   };
 
   function registerWidget(tagName, widget) {
+    var update_prefix = null;
+
+    if (widget.prototype.update_prefix) {
+      update_prefix = function(handle) {
+        var w = this.widget;
+        if (w) w.update_prefix(handle);
+      };
+    }
+
     return create_tag(tagName, {
       awml_createdCallback: function() {
         this.widget = null;
@@ -610,6 +619,7 @@
               update_option(this, this.widget, name, this.options[name], value);
           }
       },
+      awml_update_prefix: update_prefix,
     });
   }
 
