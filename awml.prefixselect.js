@@ -66,6 +66,17 @@ TK.PrefixSelect = TK.class({
 
     return o;
   },
+  find_prefix_target: function() {
+    var p = this.find_prefix_parent();
+
+    if (!p) return null;
+
+    var s = this.options.child_selector;
+
+    if (!s) return p;
+
+    return p.querySelector(s);
+  },
   redraw: function() {
     TK.Select.prototype.redraw.call(this);
   },
