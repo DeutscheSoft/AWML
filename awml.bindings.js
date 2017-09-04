@@ -769,6 +769,7 @@
     var cb;
 
     if (backends.has(proto)) {
+      document.dispatchEvent(new Event("AWMLBackendUnregistered", { detail: proto }));
       backend_deactivate(proto, backends.get(proto));
       backends.delete(proto);
     }
@@ -779,6 +780,8 @@
       backend.addEventListener('close', cb);
       backend.addEventListener('error', cb);
       backend_activate(proto, backend);
+
+      document.dispatchEvent(new Event("AWMLBackendRegistered", { detail: proto }));
     }
 
     return backend;
