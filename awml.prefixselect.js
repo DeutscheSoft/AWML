@@ -1,22 +1,9 @@
 "use strict";
 (function(w, TK, AWML){
 
-function find_parent(s) {
-  var o = this.element.parentNode;
-
-  while (o) {
-    if (o.matches(s)) return o;
-    o = o.parentNode;
-  }
-
-  return o;
-}
-
 function update_prefix() {
   var O = this.options;
-
-  var s = O.parent_selector;
-  var p = find_parent.call(this, s);
+  var p = this.find_prefix_parent();
 
   if (!p) {
     AWML.warn("No matching parent for %o", s);
@@ -33,7 +20,7 @@ function update_prefix() {
 
   if (f) prefix = f.call(this, prefix);
 
-  s = O.child_selector;
+  var s = O.child_selector;
 
   if (s) {
     p.querySelectorAll(s).forEach(function(e) {
@@ -65,6 +52,19 @@ TK.PrefixSelect = TK.class({
       TK.S.add(update_prefix.bind(this), 1);
     },
     initialized: update_prefix,
+  },
+  find_prefix_parent: function() {
+    var O = this.options;
+
+    var s = O.parent_selector;
+    var o = this.element.parentNode;
+
+    while (o) {
+      if (o.matches(s)) return o;
+      o = o.parentNode;
+    }
+
+    return o;
   },
   redraw: function() {
     TK.Select.prototype.redraw.call(this);
