@@ -472,12 +472,14 @@
     receive: function(v) {
       var t = this.last_send;
       var d = this.receive_delay;
+      var b = this.binding;
       if (t > 0 && d > 0) {
         /* callout already happening */
         if (this.receive_delay_id) return;
         t += d - Date.now();
-        if (t > 0) {
+        if (t > 0 && b.requested_value !== v) {
           /* delay receive */
+          if (this.debug) TK.log("delay receive", this.binding, v);
           this.receive_delay_id = setTimeout(this.receive_delay_cb, t);
           return;
         }
