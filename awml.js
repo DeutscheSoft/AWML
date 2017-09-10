@@ -84,7 +84,9 @@
     return options;
   }
   function attach_option(node, widget, name, value, simple) {
-      if (value instanceof Option) {
+      if (name === "classes") {
+        TK.add_class.apply(TK, [ node ].concat(value));
+      } else if (value instanceof Option) {
           value.attach(node, widget);
       } else if (typeof value !== "undefined" && simple) {
           check_option(widget, name, value);
@@ -97,7 +99,9 @@
       }
   }
   function detach_option(node, widget, name, value) {
-      if (value instanceof Option) {
+      if (name === "classes") {
+        TK.remove_class.apply(TK, [ node ].concat(value));
+      } else if (value instanceof Option) {
           value.detach(node, widget);
       } else if (value !== undefined) {
           // we set it back to the default
@@ -744,6 +748,8 @@
 
   AWML.Tags.Options = create_tag("awml-options", {
      awml_createdCallback: function() {
+        var classes = [];
+
         this.style.display = "none";
 
         this.name = this.getAttribute("name");
@@ -751,9 +757,15 @@
 
         if (this.widget) this.widget = this.widget.toLowerCase();
 
-        this.data = extract_options.call(this);
-        delete this.data.name;
-        delete this.data.widget;
+        var data = extract_options.call(this);
+        delete data.name;
+        delete data.widget;
+        if (this.classList.length) {
+          var classes = (data.classes || []).slice(0);
+          this.classList.forEach(function(cl) { classes.push(cl); });
+          data.classes = classes;
+        }
+        this.data = data;
     },
     awml_attachedCallback: function(root, parent_node) {
       if (parent_node.tagName !== "AWML-ROOT") {
@@ -764,7 +776,9 @@
         AWML.options[this.name] = this.data;
       } else if (this.widget) {
         AWML.options.defaults[this.widget] = this.data;
-      } else AWML.error("awml-options without name or widget.");
+      } else {
+        AWML.error("awml-options without name or widget.");
+      }
     },
     awml_detachedCallback: function(root, parent_node) {
       if (parent_node.tagName !== "AWML-ROOT") {
