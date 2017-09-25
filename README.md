@@ -59,6 +59,7 @@ Available formats are:
 * `int` - integers
 * `sprintf` - generates a formatting function from a sprintf-style format definition
 * `bool` - `true` or `false`
+* `regexp` - A regular expression.
 
 When no format has been specified explicitly, AWML will try to interpret the value as `json` and, if that fails, fall back to `string`.
 
@@ -192,40 +193,66 @@ Example:
 Note that, the `awml-clone` tag is a simple alternative to using templates with automatic prefix support.
 See the section about [templates](#templates) for more information.
 
-### Default options
+### Options and inheritance
 
-There are several possibilities to define default options for AWML widgets.
+In complex user interfaces many widgets end up sharing the same or similar sets of options.
+Repeating the same set of options every time a widget is created is cumbersome and unecessarily verbose.
+To simplify this scenario a predefined set of options can be defined using the `awml-options` tag.
 
-There are currently two limitations.
-Currently, only `static` options are allowed as defaults.
-Furthermore, changing the value of a set of default options does not change the options in existing widgets.
-Both of these might change in the future.
+Currently, the `awml-options` tag has two limitations.
 
-The first and most generic one is to specify a set of default options for one widget.
-This is done using the `awml-options` tag with the `widget` attribute set to the tag name (e.g. `awml-knob`, `awml-fader`, etc).
+1. Only `static` options are allowed as defaults.
+2. Changing the value of a set of default options does not change the options in existing widgets.
 
-The second possibility is to specify a set of default options with some name by setting the `name` attribute on the `awml-options` tag.
-These named options can then be applied to a widget by adding the name as a `options` attribute to that widget.
+Both of these limitations may be removed in the future.
 
-Both types of default options can be combined, named option defaults take preference over tag based ones.
+There are several possibilities to define default options:
+
+1. As defaults for one specific type of widget using the `widget` attribute.
+
+   Example:
+
+        <awml-root>
+          <awml-options widget='awml-fader' min=-96 max=6></awml-options>
+
+          <awml-fader></awml-fader>
+        </awml-root>
+
+2. As a set of named defaults using the `name` attribute. This set of options can then
+   be applied to a widget by referencing that name in the `options` attribute.
+
+   Example:
+
+        <awml-root>
+          <awml-options name='knob1' min=0 max=10></awml-options>
+
+          <awml-knob options='knob1'></awml-knob>
+        </awml-root>
+
+   It is possible to combine multiple named options using a list of names (e.g. `options='knob1 knob2'`).
+   Furthermore, `awml-options` tag can inherit each other using the same syntax. This allow building up
+   inhertance structures.
+
+Both types of default options can be combined, named options overwrite tagname based defaults.
 
 Example:
 
         <awml-root>
-          <awml-options name='knob1'
-              min=0 max=10
-            >
-            <awml-option></awml-option>
-          </awml-options>
+          <awml-options name='foo' max=10></awml-options>
+          <awml-options name='bar' options='foo' min=0></awml-options>
 
-          <awml-options widget='awml-fader'
-              min=-96 max=6
-            >
-          </awml-options>
+          <awml-options widget='awml-fader' min=-96 max=6></awml-options>
 
-          <awml-knob options='knob1'></awml-knob>
-          <awml-fader></awml-fader>
+          <awml-knob options='bar'></awml-knob>
+          <!-- will have min=0 and max=10 and min=0 -->
+
+          <awml-fader options='foo'></awml-fader>
+          <!-- will have min=-96 and max=10 -->
         </awml-root>
+
+Apart from widget options, the `awml-options` tag can also be given a CSS class. This class
+will be added to any tag the options are applied to. This is useful in situations where one set
+of options is directly linked to style properties.
 
 ## Events
 
