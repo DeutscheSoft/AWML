@@ -264,10 +264,10 @@ Example:
       <h1>These two knobs stay in sync</h1>
 
       <awml-knob min='0' max='10'>
-        <awml-binding option='value' source='local:foo'></awml-binding>
+        <awml-option type=bind name='value' src='local:foo'></awml-option>
       </awml-knob>
       <awml-knob min='0' max='10'>
-        <awml-binding option='value' source='local:foo'></awml-binding>
+        <awml-option type=bind name='value' src='local:foo'></awml-option>
       </awml-knob>
     </awml-root>
 
@@ -291,7 +291,7 @@ Example:
       <h1>All tabs will keep this knob in sync</h1>
 
       <awml-knob min='0' max='10'>
-        <awml-binding option='value' source='local:foo'></awml-binding>
+        <awml-option name='value' src='local:foo'></awml-option>
       </awml-knob>
     </awml-root>
 
@@ -314,7 +314,7 @@ Example:
       <h1>All connected clients will keep this in sync</h1>
 
       <awml-knob min='0' max='10'>
-        <awml-binding option='value' source='local:foo'></awml-binding>
+        <awml-option name='value' src='local:foo'></awml-option>
       </awml-knob>
     </awml-root>
 
