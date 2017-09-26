@@ -332,167 +332,231 @@
 
   function BindingOption(node) {
     AWML.Option.call(this, node);
-    this.prefix = node.getAttribute("src-prefix");
-    this.sync = node.getAttribute("sync") !== null;
-    this.debug = node.getAttribute("debug") !== null;
-    this.value = node.getAttribute("value");
-    this.format = node.getAttribute("format");
-    this.readonly = node.getAttribute("readonly") !== null;
-    this.writeonly = node.getAttribute("writeonly") !== null;
-    this.unsubscribe = node.getAttribute("unsubscribe-when-hidden") !== null;
-
-    var delay = node.getAttribute("receive-delay");
-
-    /* default receive delay of 2 seconds */
-    this.receive_delay = delay === null ? 2000 : parseInt(delay);
-    this.receive_delay_id = 0;
-
-    if (this.receive_delay > 0) {
-      this.receive_delay_cb = function() {
-        var b = this.binding;
-        this.receive_delay_id = 0;
-        if (!b || !b.has_value) return;
-        this.receive(b.value);
-      }.bind(this);
-    } else {
-      this.receive_delay_cb = null;
-    }
-
-    var src = node.getAttribute("src");
-
-    if (src !== null && src.search(',') !== -1) {
-      src = src.split(",");
-    }
-
-    this.src = src;
-
-    if (this.sync && this.writeonly)
-      AWML.warn("Setting both 'sync' and 'writeonly' does not work.");
-
-    var transform_send = node.getAttribute("transform-send");
-    var transform_receive = node.getAttribute("transform-receive");
-
-    this.transform_send = transform_send ? AWML.parse_format("js", transform_send) : null;
-    this.transform_receive = transform_receive ? AWML.parse_format("js", transform_receive) : null;
-
-    this.last_send = 0;
-    this.recurse = false;
-    this.attached = false;
-    this.binding = null;
-
-    this.send_cb = null;
-
-    this.visibility_cb = this.unsubscribe ? function(state) {
-      if (!this.binding) return;
-      if (state) this.bind(this.binding, this.node, this.widget);
-      else this.unbind(this.binding, this.node, this.widget);
-    }.bind(this) : null;
+    this.connector = null;
   };
   BindingOption.prototype = Object.assign(Object.create(AWML.Option.prototype), {
+    attach: function(node, widget) {
+      AWML.Option.prototype.attach.call(this, node, widget);
+
+      this.update_prefix(null);
+    },
+    detach: function(node, widget) {
+      if (this.connector) {
+        this.connector.destroy();
+        this.connector = null;
+      }
+
+      AWML.Option.prototype.detach.call(this, node, widget);
+    },
+    update_prefix: function(handle) {
+      var node = this.option;
+      var widget = this.widget;
+      var connector = this.connector;
+
+      if (connector) {
+        connector.destroy();
+        this.connector = null;
+      }
+
+      if (widget === null) return;
+
+      var src = node.getAttribute("src");
+
+      if (src === null) return;
+
+      if (src.search(',') !== -1) {
+        src = src.split(",");
+      }
+
+      if (src_needs_prefix(src)) {
+        handle = node.getAttribute("src-prefix");
+        var prefix = AWML.collect_prefix(node, handle);
+        if (prefix.search(':') === -1) return;
+        src = src_apply_prefix(src, prefix);
+      }
+
+      var binding = Array.isArray(src) ? new ListBinding(src.map(get_binding)) : AWML.get_binding(src);
+      var options = WidgetConnector.prototype.extract_options(node);
+
+      this.connector = connector = new WidgetConnector(binding, widget, options);
+
+      connector.activate();
+    },
+  });
+
+  function interpret_attributes(node, formats, defaults) {
+    var o = Object.create(defaults);
+
+    for (var key in formats) {
+      var v = node.getAttribute(key);
+      var fmt = formats[key];
+
+      if (fmt === "flag") {
+        v = v !== null;
+      } else {
+        if (v === null) continue;
+
+        if (typeof(fmt) === "string") {
+          v = AWML.parse_format(fmt, v);
+        }
+      }
+
+      o[key] = v;
+    }
+
+    return o;
+  }
+
+  function WidgetConnector(binding, widget, options) {
+    this.binding = binding;
+    this.widget = widget;
+    this.options = options;
+    this.last_send = 0;
+    this.send_cb = null;
+    this._delay_id = void(0);
+    this.recurse = false;
+    this.debug = true;
+
+    if (options.sync && options.writeonly)
+      AWML.warn("Setting both 'sync' and 'writeonly' does not work.");
+  }
+  WidgetConnector.prototype = {
+    destroy: function() {
+      this.deactivate();
+      this.send_cb = null;
+      if (this._delay_id) clearTimeout(this._delay_id);
+      this.widget = null;
+      this.options = null;
+      this.binding = null;
+    },
+    option_defaults: {
+      sync: false,
+      prefix: null,
+      debug: false,
+      readonly: false,
+      writeonly: false,
+      "unsubscribe-when-hidden": false,
+      "receive-delay": 1000,
+    },
+    option_formats: {
+      sync: "flag",
+      prefix: null,
+      debug: "flag",
+      readonly: "flag",
+      writeonly: "flag",
+      name: null,
+      "unsubscribe-when-hidden": "flag",
+      "receive-delay": "int",
+      "transform-receive": "js",
+      "transform-send": "js",
+    },
     get_send_event: function() {
-      if (this.writeonly) return "userset";
-      if (this.sync) return "set_"+this.name;
+      var o = this.options;
+      if (o.writeonly) return "userset";
+      if (o.sync) return "set_"+o.name;
       return "useraction";
     },
+    extract_options: function(node) {
+      return interpret_attributes(node, this.option_formats, this.option_defaults);
+    },
     get_send_cb: function() {
+      var o = this.options;
       var cb = this.send_cb;
       if (cb) return cb;
-      if (this.writeonly) cb = binding_userset_handler.bind(this, this.name);
-      else if (this.sync) cb = binding_set_handler;
-      else cb = binding_useraction_handler.bind(this, this.name);
+      if (o.writeonly) cb = binding_userset_handler.bind(this, o.name);
+      else if (o.sync) cb = binding_set_handler;
+      else cb = binding_useraction_handler.bind(this, o.name);
 
       cb = cb.bind(this);
       this.send_cb = cb;
       return cb;
     },
-    bind: function(binding, node, widget) {
-      if (this.debug) TK.log("bind", binding);
-      binding.addListener(this);
+    activate: function() {
+      var o = this.options;
+
+      if (!o.readonly)
+        this.widget.add_event(this.get_send_event(), this.get_send_cb());
+      this.binding.addListener(this);
     },
-    unbind: function(binding, node, widget) {
-      if (this.debug) TK.log("unbind", binding);
-      binding.removeListener(this);
+    deactivate: function() {
+      var o = this.options;
+
+      if (!o.readonly)
+        this.widget.remove_event(this.get_send_event(), this.get_send_cb());
+
+      this.binding.removeListener(this);
+      if (this._delay_id) clearTimeout(this._delay_id);
+      this._delay_id = 0;
     },
-    attach: function(node, widget) {
-      AWML.Option.prototype.attach.call(this, node, widget);
-
-      this.update_prefix(null);
-
-      if (!this.readonly) {
-        widget.add_event(this.get_send_event(), this.get_send_cb());
-      }
-
-      if (this.unsubscribe)
-        widget.add_event("visibility", this.visibility_cb);
-    },
-    detach: function(node, widget) {
-      if (this.binding) this.unbind(this.binding, node, widget);
-
-      if (!this.readonly) {
-        widget.remove_event(this.get_send_event(), this.get_send_cb());
-      }
-
-      if (this.unsubscribe)
-        widget.remove_event("visibility", this.visibility_cb);
-
-      AWML.Option.prototype.detach.call(this, node, widget);
-    },
-    update_prefix: function(handle) {
-      var node = this.node;
-      var widget = this.widget;
-
-      if (widget === null) return;
-
-      if (this.binding) this.unbind(this.binding, node, widget);
-
-      var src = this.src;
-
-      if (src === null) return;
-
-      if (src_needs_prefix(src)) {
-        var prefix = AWML.collect_prefix(node, this.prefix);
-        if (prefix.search(':') === -1) return;
-        src = src_apply_prefix(src, prefix);
-      }
-
-      this.binding = Array.isArray(src) ? new ListBinding(src.map(get_binding)) : AWML.get_binding(src);
-      if (!this.unsubscribe || widget.is_drawn())
-        this.bind(this.binding, node, widget);
-    },
-    send: function(v) {
-      if (this.debug) TK.log("send", this.binding, v);
-      if (!this.recurse && this.binding) {
-        this.recurse = true;
-        if (this.transform_send) v = this.transform_send(v);
-        if (v !== void(0)) this.binding.set(v);
-        this.recurse = false;
-        this.last_send = Date.now();
-      }
+    receive_delay_cb: function() {
+      /* this is rarely used */
+      return function() {
+        this._delay_id = 0;
+        var b = this.binding;
+        if (!b.has_value) return;
+        this.receive(b.value);
+      }.bind(this);
     },
     receive: function(v) {
       var t = this.last_send;
-      var d = this.receive_delay;
-      var b = this.binding;
-      if (t > 0 && d > 0) {
-        /* callout already happening */
-        if (this.receive_delay_id) return;
-        t += d - Date.now();
-        if (t > 0 && b.requested_value !== v) {
-          /* delay receive */
-          if (this.debug) TK.log("delay receive", this.binding, v);
-          this.receive_delay_id = setTimeout(this.receive_delay_cb, t);
-          return;
+      var o = this.options;
+
+      if (this.recurse) return;
+
+      if (t > 0) {
+        /* we might have to delay this value */
+        t += o["receive-delay"] - Date.now();
+        if (t > 0) {
+          /* if the returned value is identical to the requested value,
+           * we do not need to delay it */
+          if (this.binding.requested_value !== v) {
+            /* The call out is already in progress, so we are done */
+            if (this._delay_id) return;
+            this._delay_id = setTimeout(this.receive_delay_cb(), t);
+            return;
+          }
+        } else {
+          /* the last send is older than the receive delay, we can reset
+           * the timestamp */
+          this.last_send = 0;
         }
       }
-      if (this.debug) TK.log("receive", this.binding, v);
-      if (!this.recurse) {
-        this.recurse = true;
-        if (this.transform_receive) v = this.transform_receive(v);
-        if (v !== void(0)) this.widget.set(this.name, v);
+
+      var f = o["transform-receive"];
+      var w = this.widget;
+
+      this.recurse = true;
+
+      try {
+        if (f !== void(0)) v = f.call(w, v);
+        if (v !== void(0)) w.set(o.name, v);
+        if (this.debug) TK.log("Connector(%o) received %o", this.binding, v);
+      } catch (e) {
+        AWML.warn("Error when receiving value:", e);
+      } finally {
         this.recurse = false;
       }
     },
-  });
+    send: function(v) {
+      if (this.recurse) return;
+
+      var o = this.options;
+      var f = o["transform-send"];
+
+      this.recurse = true;
+
+      try {
+        if (f !== void(0)) v = f.call(w, v);
+        if (v !== void(0)) this.binding.set(v);
+      } catch (e) {
+        AWML.warn("Error when sending value:", e);
+      } finally {
+        this.recurse = false;
+      }
+
+      if (o["receive-delay"] > 0) this.last_send = Date.now();
+    },
+  };
 
   /**
    * Abstract Connector base class.
