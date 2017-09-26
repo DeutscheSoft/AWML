@@ -415,7 +415,7 @@
     this.send_cb = null;
     this._delay_id = void(0);
     this.recurse = false;
-    this.debug = true;
+    this.debug = false;
 
     if (options.sync && options.writeonly)
       AWML.warn("Setting both 'sync' and 'writeonly' does not work.");
@@ -548,6 +548,7 @@
       try {
         if (f !== void(0)) v = f.call(w, v);
         if (v !== void(0)) this.binding.set(v);
+        if (this.debug) TK.log("Connector(%o) sent %o", this.binding, v);
       } catch (e) {
         AWML.warn("Error when sending value:", e);
       } finally {
