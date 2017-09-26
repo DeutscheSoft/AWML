@@ -374,8 +374,9 @@ var f = (function(w, AWML) {
     },
   };
 
-  function Local(name, values, src) {
+  function Local(name, values, src, delay) {
     this.name = name;
+    this.delay = delay;
     Base.call(this);
     this.open();
 
@@ -412,9 +413,18 @@ var f = (function(w, AWML) {
       subscribe_success.call(this, uri, id);
     },
     low_unsubscribe: function(id) { },
-    set: receive,
+    set: function(id, value) {
+      setTimeout(function() {
+        this.receive(id, value);
+      }.bind(this), this.delay);
+    },
     arguments_from_node: function(node) {
-        return [ node.getAttribute("name"), AWML.parse_format("json", node.textContent, {}), node.getAttribute("src") ];
+        return [
+          node.getAttribute("name"),
+          AWML.parse_format("json", node.textContent, {}),
+          node.getAttribute("src"),
+          parseInt(node.getAttribute("delay"))
+        ];
     },
   });
 
