@@ -414,9 +414,14 @@ var f = (function(w, AWML) {
     },
     low_unsubscribe: function(id) { },
     set: function(id, value) {
-      setTimeout(function() {
+      var delay = this.delay;
+      if (delay > 0) {
+        setTimeout(function() {
+          this.receive(id, value);
+        }.bind(this), delay);
+      } else {
         this.receive(id, value);
-      }.bind(this), this.delay);
+      }
     },
     arguments_from_node: function(node) {
         return [
