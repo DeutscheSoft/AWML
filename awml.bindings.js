@@ -415,7 +415,6 @@
     this.send_cb = null;
     this._delay_id = void(0);
     this.recurse = false;
-    this.debug = false;
 
     if (options.sync && options.writeonly)
       AWML.warn("Setting both 'sync' and 'writeonly' does not work.");
@@ -474,6 +473,8 @@
     activate: function() {
       var o = this.options;
 
+      if (o.debug) TK.log("Connector(%o) activated.", this.binding);
+
       if (!o.readonly)
         this.widget.add_event(this.get_send_event(), this.get_send_cb());
       this.binding.addListener(this);
@@ -528,9 +529,9 @@
       this.recurse = true;
 
       try {
-        if (f !== void(0)) v = f.call(w, v);
+        if (f !== void(0)) v = f.call(this.binding, v);
         if (v !== void(0)) w.set(o.name, v);
-        if (this.debug) TK.log("Connector(%o) received %o", this.binding, v);
+        if (o.debug) TK.log("Connector(%o) received %o", this.binding, v);
       } catch (e) {
         AWML.warn("Error when receiving value:", e);
       } finally {
@@ -546,9 +547,9 @@
       this.recurse = true;
 
       try {
-        if (f !== void(0)) v = f.call(w, v);
+        if (f !== void(0)) v = f.call(this.binding, v);
         if (v !== void(0)) this.binding.set(v);
-        if (this.debug) TK.log("Connector(%o) sent %o", this.binding, v);
+        if (o.debug) TK.log("Connector(%o) sent %o", this.binding, v);
       } catch (e) {
         AWML.warn("Error when sending value:", e);
       } finally {
@@ -558,6 +559,42 @@
       if (o["receive-delay"] > 0) this.last_send = Date.now();
     },
   };
+
+  /** 
+   * UserBinding is a Connector, which connects a toolkit widget and a binding.
+   * It binds to the <code>useraction</code> event of the widget and does not react to
+   * external <code>set</code> events.
+   *
+   */
+  function UserBinding(uri, widget, option, transform_in, transform_out) {
+    if (typeof uri === "string") uri = get_binding(uri);
+
+    var options = Object.assign(Object.create(this.option_defaults), {
+      name: option,
+      "transform-send": transform_out,
+      "transform-receive": transform_in,
+    });
+
+    WidgetConnector.call(this, uri, widget, options);
+  };
+  UserBinding.prototype = WidgetConnector.prototype;
+
+  /**
+   * SyncBinding
+   */
+  function SyncBinding(uri, widget, option, transform_in, transform_out) {
+    if (typeof uri === "string") uri = get_binding(uri);
+
+    var options = Object.assign(Object.create(this.option_defaults), {
+      sync: true,
+      name: option,
+      "transform-send": transform_out,
+      "transform-receive": transform_in,
+    });
+
+    WidgetConnector.call(this, uri, widget, options);
+  };
+  SyncBinding.prototype = WidgetConnector.prototype;
 
   /**
    * Abstract Connector base class.
@@ -585,83 +622,6 @@
       return this;
     },
   };
-
-  /** 
-   * UserBinding is a Connector, which connects a toolkit widget and a binding.
-   * It binds to the <code>useraction</code> event of the widget and does not react to
-   * external <code>set</code> events.
-   *
-   */
-  function UserBinding(uri, widget, option, transform_in, transform_out) {
-    this.widget = widget;
-    this.option = option;
-
-    this._send = function(key, value) {
-      var option = this.option;
-      if (key === option) this.send(value);
-    }.bind(this);
-
-    /* allow bindings */
-    if (typeof uri === "string") {
-      uri = get_binding(uri);
-    }
-
-    Connector.call(this, uri, transform_in, transform_out);
-  };
-  UserBinding.prototype = Object.assign(Object.create(Connector.prototype), {
-    activate: function() {
-      if (this.transform_out !== false)
-        this.widget.add_event("useraction", this._send);
-      return Connector.prototype.activate.call(this);
-    },
-    deactivate: function() {
-      if (this.transform_out !== false)
-        this.widget.remove_event("useraction", this._send);
-      return Connector.prototype.deactivate.call(this);
-    },
-    receive: function(v) {
-      var transform = this.transform_in;
-      if (transform === false) return;
-      if (transform) v = transform(v);
-      this.widget.set(this.option, v);
-    }
-  });
-
-  /**
-   * SyncBinding
-   */
-  function SyncBinding(uri, widget, option, transform_in, transform_out) {
-    this.widget = widget;
-    this.option = option;
-    this.recurse = false;
-    this._send = this.send.bind(this);
-
-    Connector.call(this, get_binding(uri), transform_in, transform_out);
-  };
-  SyncBinding.prototype = Object.assign(Object.create(Connector.prototype), {
-    activate: function() {
-      this.widget.add_event("set_"+this.option, this._send);
-      return Connector.prototype.activate.call(this);
-    },
-    deactivate: function() {
-      this.widget.remove_event("set_"+this.option, this._send);
-      return Connector.prototype.deactivate.call(this);
-    },
-    receive: function(v) {
-      if (this.recurse) return;
-      var transform = this.transform_in;
-      if (transform) v = transform(v);
-      this.recurse = true;
-      this.widget.set(this.option, v);
-      this.recurse = false;
-    },
-    send: function(v) {
-      if (this.recurse) return;
-      this.recurse = true;
-      Connector.prototype.send.call(this, v);
-      this.recurse = false;
-    },
-  });
 
   /**
    * Property Binding, essentially only receives values.
