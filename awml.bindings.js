@@ -77,6 +77,7 @@
 
   function Binding(uri) {
     this.uri = uri;
+    this.path = uri.split(":")[1];
     this.id = false;
     this.backend = null;
     this.value = null;
@@ -88,7 +89,7 @@
   Binding.prototype = inherit(BaseBinding, {
     set_backend: function(backend) {
       this.backend = backend;
-      backend.subscribe(this.uri, this)
+      backend.subscribe(this.path, this)
         .then(
           function(a) {
             this.id = a[1];
