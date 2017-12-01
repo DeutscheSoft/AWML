@@ -264,10 +264,11 @@ var f = (function(w, AWML) {
 
           var has_value = values.has(key);
 
-          if (values.has(key)) {
-            resolve([uri, id, values.get(key) ]);
+          if (has_value) {
+            var val = values.get(key);
+            resolve([uri, key, val ]);
           } else {
-            resolve([uri, id ]);
+            resolve([uri, key ]);
           }
         });
       } else {
