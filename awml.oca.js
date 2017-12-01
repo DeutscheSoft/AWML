@@ -160,6 +160,11 @@
         function(err) {
           this.error(err);
         }.bind(this));
+      var m = OCA.OcaManagerDefaultObjectNumbers.prototype.names;
+      for (var ono in m) {
+        var name = m[ono];
+        resolve_object_tree(this, new OCA.ControlClasses["Oca"+name](ono, this.device), name);
+      }
     },
     low_subscribe: function(path) {
       var tmp = path.split("/");
