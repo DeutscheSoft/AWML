@@ -57,6 +57,11 @@
         this.unsubscribe();
       }
     },
+    removeAllListeners: function() {
+      if (this.listeners === null) return;
+      this.listeners = null;
+      this.unsubscribe();
+    },
     hasListeners: function() {
       return this.listeners !== null;
     },
