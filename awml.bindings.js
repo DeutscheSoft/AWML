@@ -106,11 +106,7 @@
                 this.backend.set(a[1], this.requested_value);
               }
             } else {
-              if (this.has_value) {
-                this.backend.set(a[1], this.value);
-                this.has_value = false;
-                this.value = null;
-              } else if (this.has_requested_value) {
+              if (this.has_requested_value) {
                 this.backend.set(a[1], this.requested_value);
               }
             }
