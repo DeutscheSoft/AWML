@@ -796,17 +796,17 @@
   }
   function register_backend(proto, backend) {
     var cb;
+    var old_backend = backends.get(proto);
 
-    if (backends.has(proto)) {
-      var backend = backends.get(proto);
+    if (old_backend) {
       var ev = new CustomEvent("AWMLBackendUnregistered", {
         detail: {
           protocol: proto,
-          backend: backend,
+          backend: old_backend,
         },
       });
       document.dispatchEvent(ev);
-      backend_deactivate(proto, backend);
+      backend_deactivate(proto, old_backend);
       backends.delete(proto);
     }
 
