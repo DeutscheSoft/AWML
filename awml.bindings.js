@@ -155,6 +155,7 @@
     BaseBinding.call(this);
 
     this.has_value = false;
+    this.partial = false;
     this.has_values = [];
     this.value = new Array(b.length);
 
@@ -206,7 +207,7 @@
       v[n] = value;
       has_values[n] = true;
 
-      if (!this.has_value) {
+      if (!this.has_value && !this.partial) {
         var b = this.bindings;
         for (var i = 0; i < b.length; i++) if (!has_values[i]) return;
         this.has_value = true;
@@ -377,7 +378,15 @@
         src = src_apply_prefix(src, prefix);
       }
 
-      var binding = Array.isArray(src) ? new ListBinding(src.map(get_binding)) : AWML.get_binding(src);
+      var binding;
+
+      if (Array.isArray(src)) {
+        binding = new ListBinding(src.map(get_binding));
+        binding.partial = node.getAttribute("partial") !== null;
+      } else {
+        binding = AWML.get_binding(src);
+      }
+
       var options = WidgetConnector.prototype.extract_options(node);
 
       this.connector = connector = new WidgetConnector(binding, widget, options);
