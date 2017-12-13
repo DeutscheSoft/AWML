@@ -61,6 +61,10 @@
 
       this.subscribed.add(name);
 
+      if (!this.o["Get"+name]) {
+        throw new Error("Property is missing getter.");
+      }
+
       this.o["Get"+name]()
         .then(function(val) { 
             this.backend.receive(id, val);
@@ -178,8 +182,12 @@
         return;
       }
 
-      this.subscribe_success(path, id);
-      p.subscribe(property_name);
+      try {
+        p.subscribe(property_name);
+        this.subscribe_success(path, id);
+      } catch (e) {
+        this.subscribe_fail(path, e.toString());
+      }
     },
     set: function(id, value) {
       var path = this.id2uri.get(id);
