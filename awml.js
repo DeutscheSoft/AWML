@@ -426,13 +426,18 @@
   AWML.set_prefix_block = set_prefix_block;
   AWML.update_prefix = update_prefix;
 
-
   AWML.RedrawLogic = {
     is_awml_node: true,
     createdCallback: function() {
       var O = this.awml_data;
       O._redraw = null;
       O.will_redraw = false;
+      var resize = this.getAttribute("trigger-resize");
+      if (resize !== null) {
+        O.resize = parseInt(resize);
+      } else {
+        O.resize = false;
+      }
     },
     trigger_redraw: function() {
       var O = this.awml_data;
@@ -444,6 +449,20 @@
     redraw: function() {
       var O = this.awml_data;
       O.will_redraw = false;
+      if (O.resize !== false) {
+        var p = AWML.find_parent_widget(this)
+        if (p) {
+          var w = AWML.get_widget(p);
+
+          if (w) {
+            if (O.resize > 0) {
+              window.setTimeout(w.trigger_resize.bind(w), O.resize);
+            } else {
+              w.trigger_resize();
+            }
+          }
+        }
+      }
     },
     remove_redraw: function() {
       var O = this.awml_data;
