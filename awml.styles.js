@@ -63,10 +63,10 @@
             node = this.parentNode;
         if (!O.get) O.get = AWML.parse_format("js", this.textContent, id);
         if (transform) v = transform.call(this, v);
-        if (O.prev) O.remove(node, O.prev);
+        if (O.prev !== null) O.remove(node, O.prev);
         var s = O.get.call(this, v);
         O.prev = s;
-        if (s) O.apply(node, s);
+        if (s !== null) O.apply(node, s);
       },
       unbind: function(src) {
         var O = this.awml_data;
@@ -117,17 +117,18 @@
     if (!widget || !widget.parent || !widget.parent.hide_child) {
       AWML.error("AWML-HIDE: widget has no parent container.");
     }
-    widget.parent.hide_child(widget);
+    if (state) {
+      widget.parent.hide_child(widget);
+    } else {
+      widget.parent.show_child(widget);
+    }
   }
 
   function show(node, state) {
-    var widget = AWML.get_widget(node);
-    if (!widget || !widget.parent || !widget.parent.show_child) {
-      AWML.error("AWML-HIDE: widget has no parent container.");
-    }
-    widget.parent.show_child(widget);
+    hide(node, !state);
   }
 
   AWML.Tags.Attributes = register_style_tag("awml-hide", hide, show);
+  AWML.Tags.Attributes = register_style_tag("awml-show", show, hide);
 
 })(this.AWML || (this.AWML = {}));
