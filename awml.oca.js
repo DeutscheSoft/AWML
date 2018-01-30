@@ -147,8 +147,8 @@
         var ws;
         ws = new WebSocket(this.url);
         ws.onopen = function() { this.open(); }.bind(this);
-        ws.onclose = function() { this.close(); }.bind(this);
-        ws.onerror = function(ev) { this.error(ev); }.bind(this);
+        ws.onclose = function() { ws.onerror = null; this.close(); }.bind(this);
+        ws.onerror = function(ev) { ws.onclose = null; this.error(ev); }.bind(this);
         this.ws = ws;
       } catch (e) {
         this.error(e);
