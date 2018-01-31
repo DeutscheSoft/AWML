@@ -85,7 +85,7 @@
     return options;
   }
   function attach_option(node, widget, name, value, simple) {
-      if (name === "classes") {
+      if (name === "@CLASSES") {
         TK.add_class.apply(TK, [ node ].concat(value));
       } else if (value instanceof Option) {
           value.attach(node, widget);
@@ -100,7 +100,7 @@
       }
   }
   function detach_option(node, widget, name, value) {
-      if (name === "classes") {
+      if (name === "@CLASSES") {
         TK.remove_class.apply(TK, [ node ].concat(value));
       } else if (value instanceof Option) {
           value.detach(node, widget);
@@ -781,9 +781,9 @@
         delete data.name;
         delete data.widget;
         if (this.classList.length) {
-          var classes = (data.classes || []).slice(0);
+          var classes = (data["@CLASSES"] || []).slice(0);
           this.classList.forEach(function(cl) { classes.push(cl); });
-          data.classes = classes;
+          data["@CLASSES"] = classes;
         }
         this.data = data;
     },
