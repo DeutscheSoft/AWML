@@ -12,11 +12,57 @@
 
   var property_event_data_signature = new SP.signature(OCA.OcaPropertyID, SP.REST);
 
+  function find_method(prefix, name, property, o) {
+    var f = o[prefix + name];
+
+    if (f) return f;
+
+    var tmp = [ name ];
+
+    if (property.aliases) tmp = tmp.concat(property.aliases);
+
+    tmp = tmp.map(function(s) { return (prefix+s).toLowerCase(); });
+
+    for (var name in o) {
+      if (tmp.indexOf(name.toLowerCase()) != -1) {
+        if (typeof(o[name]) === "function") {
+          return o[name];
+        }
+      }
+    }
+
+    return null;
+  }
+
+  function get_method(cache, prefix, o, name) {
+    var proto = o.__proto__;
+
+    var m = cache.get(proto);
+
+    if (!m) {
+      var p = o.__oca_properties__.properties;
+
+      m = {};
+
+      cache.set(p, m);
+
+      for (var pname in p) {
+        m[pname] = find_method(prefix, pname, p[pname], proto);
+      }
+    }
+
+    return m[name];
+  }
+
+  var get_getter = get_method.bind(this, new Map(), "Get");
+  var get_setter = get_method.bind(this, new Map(), "Set");
+
   function PropertySync(backend, o, path) {
     this.o = o;
     this.backend = backend;
     this.path = path;
     this.subscribed = new Set();
+
     this._property_changed_cb = function(n) {
       var a = property_event_data_signature.decode(new DataView(n.parameters));
       var o = this.o.__oca_properties__;
@@ -57,15 +103,17 @@
       }
 
       if (!this.subscribed.size)
-        this.o.onPropertyChanged(this._property_changed_cb);
+        o.onPropertyChanged(this._property_changed_cb);
 
       this.subscribed.add(name);
 
-      if (!this.o["Get"+name]) {
+      var getter = get_getter(o, name);
+
+      if (!getter) {
         throw new Error("Property is missing getter.");
       }
 
-      this.o["Get"+name]()
+      getter.call(o)
         .then(function(val) { 
             this.backend.receive(id, val);
           }.bind(this));
@@ -84,10 +132,12 @@
 
       if (!p) throw new Error("No such property: "+name);
 
-      if (p.static || p.readonly || !o["Set"+name])
+      var setter = get_setter(o, name);
+
+      if (p.static || p.readonly || !setter)
             throw new Error("Trying to modify readonly property.");
 
-      o["Set"+name](value);
+      setter.call(o, value);
     },
   };
 
