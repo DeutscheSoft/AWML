@@ -100,13 +100,13 @@
 
   function remove_attributes(node, attr) {
     for (var name in attr) {
-      node.removeAttribute(name);
+      AWML.update_attribute(node, name, null);
     }
   }
 
   function add_attributes(node, attr) {
     for (var name in attr) {
-      node.setAttribute(name, attr[name]);
+      AWML.update_attribute(node, name, attr[name]);
     }
   }
 
