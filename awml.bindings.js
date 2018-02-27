@@ -509,6 +509,12 @@
         this.receive(b.value);
       }.bind(this);
     },
+    transform_receive: function(v) {
+      var o = this.options;
+      var f = o["transform-receive"];
+      if (f !== void(0)) v = f.call(this.binding, v);
+      return v;
+    },
     receive: function(v) {
       var t = this.last_send;
       var o = this.options;
@@ -548,6 +554,14 @@
       } finally {
         this.recurse = false;
       }
+    },
+    transform_send: function(v) {
+      var o = this.options;
+      var f = o["transform-send"];
+
+      if (f !== void(0)) v = f.call(this.binding, v);
+
+      return v;
     },
     send: function(v) {
       if (this.recurse) return;
