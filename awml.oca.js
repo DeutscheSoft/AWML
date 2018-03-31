@@ -66,8 +66,8 @@
     this._property_changed_cb = function(n) {
       var a = property_event_data_signature.decode(new DataView(n.parameters));
       var o = this.o.__oca_properties__;
-      var property_id = a[0];
-      var buf = a[1];
+      var property_id = a.item(0);
+      var buf = a.item(1);
       var name = o.find_name(property_id);
       if (!this.subscribed.has(name)) return; /* ignore */
       var sig = o.find_signature(property_id);
@@ -87,6 +87,9 @@
       var id = p.index | (p.level << 16);
 
       return o.ObjectNumber + ":" + id;
+    },
+    full_path: function(name) {
+      return this.path + "/" + name;
     },
     subscribe: function(name) {
       var o = this.o;
@@ -113,9 +116,30 @@
         throw new Error("Property is missing getter.");
       }
 
-      getter.call(o)
+      return getter.call(o)
         .then(function(val) { 
-            this.backend.receive(id, val);
+            var path = this.full_path(name);
+            this.backend.subscribe_success(path, id);
+
+            if (val instanceof SP.Arguments) {
+              // Assume that [1] is Min and [2] is Max
+
+              var tmp = val.item(1);
+              if (tmp !== void(0)) {
+                this.backend.subscribe_success(path + "/Min", false);
+                this.backend.receive(path + "/Min", tmp);
+              }
+
+              tmp = val.item(2);
+              if (tmp !== void(0)) {
+                this.backend.subscribe_success(path + "/Max", false);
+                this.backend.receive(path + "/Max", tmp);
+              }
+
+              this.backend.receive(id, val.item(0));
+            } else {
+              this.backend.receive(id, val);
+            }
           }.bind(this));
     },
     unsubscribe: function(name) {
@@ -221,9 +245,26 @@
       }
     },
     low_subscribe: function(path) {
+      var meta;
+
+      if (path.endsWith("/Min")) {
+        meta = "Min";
+      } else if (path.endsWith("/Max")) {
+        meta = "Max";
+      }
+
       var tmp = path.split("/");
-      var object_path = tmp.slice(0, -1).join("/");
-      var property_name = tmp[tmp.length-1];
+      var object_path;
+      var property_name;
+
+      if (meta) {
+        object_path = tmp.slice(0, -2).join("/");
+        property_name = tmp[tmp.length-2];
+      } else {
+        object_path = tmp.slice(0, -1).join("/");
+        property_name = tmp[tmp.length-1];
+      }
+
       var p = this.objects.get(object_path);
       var id;
 
@@ -233,8 +274,10 @@
       }
 
       try {
-        p.subscribe(property_name);
-        this.subscribe_success(path, id);
+        p.subscribe(property_name)
+          .catch(function(e) {
+            this.subscribe_fail(path, e.toString());
+          }.bind(this));
       } catch (e) {
         this.subscribe_fail(path, e.toString());
       }
