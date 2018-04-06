@@ -417,7 +417,8 @@
     for (i = 0; i < list.length; i++) {
       var tmp;
       c = list.item(i);
-      update_prefix(c, handle);
+      if (c.awml_update_prefix)
+        c.awml_update_prefix(handle);
     }
   }
 
