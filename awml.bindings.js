@@ -274,7 +274,7 @@
     detachedCallback: function() {
       this.awml_data.attached = false;
 
-      if (this.binding) this.unbind();
+      if (this.awml_data.binding) this.unbind();
     },
     attributeChangedCallback: function(name, old_value, value) {
       if (name === "src") {
@@ -284,9 +284,6 @@
       if (name === "src-prefix") {
         this.awml_update_prefix(null);
       }
-      if (name === "prefix") {
-        AWML.update_prefix(this, value);
-      }
     },
     awml_update_prefix: function(handle) {
       if (handle !== null) {
@@ -295,7 +292,7 @@
 
       var O = this.awml_data;
 
-      if (this.binding) this.unbind();
+      if (O.binding) this.unbind();
 
       var src = this.getAttribute("src");
 
