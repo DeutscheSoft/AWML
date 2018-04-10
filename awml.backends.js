@@ -109,7 +109,11 @@ var f = (function(w, AWML) {
   }
 
   function receive(id, value) {
-    this.values.set(id, value);
+    var values = this.values;
+
+    if (values.has(id) && values.get(id) === value) return;
+
+    values.set(id, value);
 
     var cbs = this.subscriptions.get(id);
 

@@ -140,6 +140,8 @@
         return;
       }
 
+      if (this.has_value && this.value === value) return;
+
       this.value = value;
       this.has_value = true;
 
