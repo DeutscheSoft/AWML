@@ -61,7 +61,13 @@
         var v = O.binding.value,
             transform = O.transform_receive,
             node = this.parentNode;
-        if (!O.get) O.get = AWML.parse_format("js", this.textContent, id);
+        if (!O.get) {
+          O.get = AWML.parse_format("js", this.textContent, id);
+          if (typeof O.get !== 'function') {
+            AWML.error('Not a function', this.textContent, 'in', this);
+            return;
+          }
+        }
         if (transform) v = transform.call(this, v);
         if (O.prev !== null) O.remove(node, O.prev);
         var s = O.get.call(this, v);
