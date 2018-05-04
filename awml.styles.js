@@ -137,4 +137,14 @@
   AWML.Tags.Attributes = register_style_tag("awml-hide", hide, show);
   AWML.Tags.Attributes = register_style_tag("awml-show", show, hide);
 
+  function add_prefix(node, prefix) {
+    AWML.set_prefix(node, prefix);
+  }
+
+  function remove_prefix(node, prefix) {
+    AWML.set_prefix_block(node);
+  }
+
+  AWML.Tags.Prefix = register_style_tag("awml-prefix", add_prefix, remove_prefix);
+
 })(this.AWML || (this.AWML = {}));
