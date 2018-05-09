@@ -41,6 +41,8 @@
         this.listeners = new Set([ a, callback ]);
       }
       if (this.has_value) call_listener(callback, this.value);
+
+      return this;
     },
     removeListener: function(callback) {
       var a = this.listeners;
@@ -56,11 +58,15 @@
         this.listeners = null
         this.unsubscribe();
       }
+
+      return this;
     },
     removeAllListeners: function() {
       if (this.listeners === null) return;
       this.listeners = null;
       this.unsubscribe();
+
+      return this;
     },
     hasListeners: function() {
       return this.listeners !== null;
@@ -165,7 +171,7 @@
         i, cb = this.receive;
 
     for (i = 0; i < C.length; i++)
-      C[i] = cb.bind(this, i);
+      if (b[i]) C[i] = cb.bind(this, i);
   }
   ListBinding.prototype = inherit(BaseBinding, {
     subscribe: function() {
@@ -176,14 +182,14 @@
           C = this.cbs;
 
       for (var i = 0; i < b.length; i++) {
-        b[i].addListener(C[i]);
+        if (b[i]) b[i].addListener(C[i]);
       }
     },
     unsubscribe: function() {
       var b = this.bindings;
       var C = this.cbs;
       for (var i = 0; i < b.length; i++) {
-        b[i].removeListener(C[i]);
+        if (b[i]) b[i].removeListener(C[i]);
       }
       this.has_value = false;
     },
@@ -191,7 +197,7 @@
       var b = this.bindings;
 
       for (var i = 0; i < b.length; i++)
-        if (!b[i].in_sync()) return false;
+        if (b[i] && !b[i].in_sync()) return false;
 
       return true;
     },
@@ -201,7 +207,7 @@
       if (!Array.isArray(value) || value.length !== b.length)
         throw new Error("ListBinding.set expects an array of correct length.");
 
-      for (var i = 0; i < b.length; i++) b[i].set(value[i]);
+      for (var i = 0; i < b.length; i++) if (b[i]) b[i].set(value[i]);
     },
     receive: function(n, value) {
       var v = this.value;
@@ -211,7 +217,7 @@
 
       if (!this.has_value && !this.partial) {
         var b = this.bindings;
-        for (var i = 0; i < b.length; i++) if (!has_values[i]) return;
+        for (var i = 0; i < b.length; i++) if (b[i] && !has_values[i]) return;
         this.has_value = true;
       }
 
