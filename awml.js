@@ -674,8 +674,8 @@
       this.options = extract_options.call(this, TK.ResponseHandle);
     },
     awml_attachedCallback: function(root, parent_node) {
-      if (!(parent_node.widget instanceof TK.ResponseHandler)) {
-        AWML.error("awml-responsehandle needs to be inside of a awml-responsehandler.");
+      if (!(parent_node.widget instanceof TK.Chart)) {
+        AWML.error("awml-responsehandle needs to be inside of a awml-chart.");
         return;
       }
       if (this.widget) {
