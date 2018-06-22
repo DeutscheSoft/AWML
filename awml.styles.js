@@ -69,10 +69,10 @@
           }
         }
         if (transform) v = transform.call(this, v);
-        if (O.prev !== null) O.remove(node, O.prev);
+        if (O.prev !== null) O.remove(node, O.prev, this);
         var s = O.get.call(this, v);
         O.prev = s;
-        if (s !== null) O.apply(node, s);
+        if (s !== null) O.apply(node, s, this);
       },
       unbind: function(src) {
         var O = this.awml_data;
@@ -137,12 +137,16 @@
   AWML.Tags.Attributes = register_style_tag("awml-hide", hide, show);
   AWML.Tags.Attributes = register_style_tag("awml-show", show, hide);
 
-  function add_prefix(node, prefix) {
-    AWML.set_prefix(node, prefix);
+  function add_prefix(node, prefix, tag) {
+    var handle = tag.getAttribute("handle");
+    if (handle === null) handle = void(0);
+    AWML.set_prefix(node, prefix, handle);
   }
 
-  function remove_prefix(node, prefix) {
-    AWML.set_prefix_block(node);
+  function remove_prefix(node, prefix, tag) {
+    var handle = tag.getAttribute("handle");
+    if (handle === null) handle = void(0);
+    AWML.set_prefix_block(node, handle);
   }
 
   AWML.Tags.Prefix = register_style_tag("awml-prefix", add_prefix, remove_prefix);
