@@ -79,7 +79,7 @@
         this.remove_redraw();
         if (O.prev)
           O.remove(this.parentNode, O.prev);
-        AWML.PrefixLogic.bind.call(this, src);
+        AWML.PrefixLogic.unbind.call(this, src);
       },
     }));
   }
