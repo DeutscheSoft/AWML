@@ -88,6 +88,7 @@
         fetch: false,
         template: null,
         cached: false,
+        num_permanent: this.children.length,
       };
       AWML.PrefixLogic.createdCallback.call(this);
       AWML.RedrawLogic.createdCallback.call(this);
@@ -138,7 +139,7 @@
       AWML.RedrawLogic.redraw.call(this);
       var O = this.awml_data;
 
-      while (this.lastChild) {
+      while (this.children.length > O.num_stable) {
         AWML.downgrade_element(this.lastChild);
         this.removeChild(this.lastChild);
       }
