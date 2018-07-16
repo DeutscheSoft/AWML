@@ -270,6 +270,7 @@
       O.prefix = null;
       O.attached = false;
       O.transform_receive = null;
+      O.debug = this.getAttribute('debug') !== null;
     },
     attachedCallback: function() {
       var O = this.awml_data;
@@ -315,6 +316,9 @@
         src = src_apply_prefix(src, prefix);
       }
 
+      if (O.debug)
+        TK.log("Update prefix gives src %o", src);
+
       this.bind(src);
     },
     bind: function(src) {
@@ -329,6 +333,10 @@
       }
       O.binding = Array.isArray(src) ? new ListBinding(src.map(get_binding)) : AWML.get_binding(src);
       O.binding.addListener(this);
+
+      if (O.debug) {
+        TK.log("Binding %o", O.binding);
+      }
     },
     unbind: function() {
       var O = this.awml_data;
