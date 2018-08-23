@@ -139,7 +139,7 @@
       AWML.RedrawLogic.redraw.call(this);
       var O = this.awml_data;
 
-      while (this.children.length > O.num_stable) {
+      while (this.children.length > O.num_permanent) {
         AWML.downgrade_element(this.lastChild);
         this.removeChild(this.lastChild);
       }
