@@ -472,6 +472,7 @@
       "receive-delay": "int",
       "transform-receive": "js",
       "transform-send": "js",
+      "after-receive": "js",
     },
     get_send_event: function() {
       var o = this.options;
@@ -562,6 +563,8 @@
         if (f !== void(0)) v = f.call(this.binding, v);
         if (v !== void(0)) w.set(o.name, v);
         if (o.debug) TK.log("Connector(%o) received %o", this.binding, v);
+        f = o["after-receive"];
+        if (f !== void(0)) f.call(this, this.binding, w, v, o);
       } catch (e) {
         AWML.warn("Error when receiving value:", e);
       } finally {
