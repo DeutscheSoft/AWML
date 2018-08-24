@@ -92,7 +92,6 @@
     } else {
       TK.remove_class(node, c);
     }
-    this.resize=true;
   }
 
   function add_classes(node, c) {
@@ -101,7 +100,6 @@
     } else {
       TK.add_class(node, c);
     }
-    this.resize=true;
   }
 
   AWML.Tags.Class = register_style_tag("awml-class", add_classes, remove_classes);
