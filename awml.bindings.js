@@ -231,6 +231,8 @@
   function binding_useraction_handler(name, k, v) {
     if (name !== k) return;
     this.send(v);
+    if (this.options["prevent-default"])
+      return false;
   }
   function binding_userset_handler(name, k, v) {
     if (name !== k) return;
@@ -473,6 +475,7 @@
       "transform-receive": "js",
       "transform-send": "js",
       "after-receive": "js",
+      "prevent-default" : "flag",
     },
     get_send_event: function() {
       var o = this.options;
