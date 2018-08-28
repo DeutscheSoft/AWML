@@ -101,6 +101,7 @@
       }
   }
 
+  AWML.fetch_text = fetch_text;
   AWML.fetch_template = fetch_template;
   AWML.fetch_template_cached = fetch_template_cached;
 
