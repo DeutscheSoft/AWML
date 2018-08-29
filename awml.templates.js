@@ -14,6 +14,10 @@
     url_stack.length--;
   }
 
+  function get_base() {
+    return url_stack[ url_stack.length - 1];
+  }
+
   function get_url(path, base) {
     if (!base) base = url_stack[url_stack.length - 1];
 
@@ -85,6 +89,7 @@
         fetch: false,
         template: null,
         cached: false,
+        base_url: get_base(),
         num_permanent: this.children.length,
       };
       AWML.PrefixLogic.createdCallback.call(this);
@@ -123,7 +128,7 @@
       } else {
         var fetch = O.cached ? fetch_template_cached : fetch_template;
         /* async template loading */
-        fetch(O.handle).then(function(template) {
+        fetch(O.handle, O.base_url).then(function(template) {
           var O = this.awml_data;
           O.template = template;
           if (O.attached) this.redraw();
@@ -152,6 +157,7 @@
           }
           node = node.parentNode;
       }
+
 
       var url = template.url || window.location.href;
       push_url(url);
