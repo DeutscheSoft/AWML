@@ -386,36 +386,26 @@ var f = (function(w, AWML) {
     this.open();
 
     for (var uri in values) {
-      AWML.get_binding(name + ":" + uri).set(values[uri]);
+      this.receive(uri, values[uri]);
     }
 
     if (src) {
-      if (!w.fetch) {
-        error("This browser does not support fetch().");
-        return;
-      }
-      w.fetch(src).then(function(response) {
-          if (response.ok)
-            return response.json().then(function(values) {
-              for (var uri in values) {
-                AWML.get_binding(name + ":" + uri).set(values[uri]);
-              }
-            });
-          else return Promise.reject(response.statusText);
-      }).catch(function(e) {
-        error("Failed to load values from "+src+": ", e)
-      });
+      AWML.fetch_json(src)
+        .then(
+          function(values) {
+            for (var uri in values) {
+              this.receive(uri, values[uri]);
+            }
+          }.bind(this),
+          function(e) {
+            error("Failed to load values from %o: %o", src, e);
+          }
+        );
     }
   }
   Local.prototype = Object.assign(Object.create(Base.prototype), {
     low_subscribe: function(uri) {
-      var id2uri = this.id2uri;
-      var id;
-      do {
-        id = 1+(Math.random()*id2uri.size*2)|0;
-      } while (id2uri.has(id));
-
-      subscribe_success.call(this, uri, id);
+      subscribe_success.call(this, uri, uri);
     },
     low_unsubscribe: function(id) { },
     set: function(id, value) {
