@@ -949,4 +949,38 @@
     });
 
   window.addEventListener("load", unregister_loading);
+
+  function fetch_text(url) {
+    if ('fetch' in window) {
+      return fetch(url).then(function(response) {
+        if (!response.ok) throw new Error(response.statusText);
+        return response.text();
+      });
+    } else {
+      return new Promise(function(resolve, reject) {
+        var r = new XMLHttpRequest();
+        r.addEventListener("readystatechange", function() {
+          if (r.readyState === 4) {
+            if (r.status === 200) {
+              resolve(r.responseText);
+            } else {
+              reject("Error: " + r.status);
+            }
+          }
+        });
+        r.addEventListener("error", function(ev) {
+          reject(ev);
+        });
+        r.open("GET", url);
+        r.send();
+      });
+    }
+  }
+
+  function fetch_json(url) {
+    return fetch_text(url).then(function(data) { return JSON.parse(data); });
+  }
+
+  AWML.fetch_text = fetch_text;
+  AWML.fetch_json = fetch_json;
 })(this.AWML || (this.AWML = {}));
