@@ -54,6 +54,8 @@
         var O = this.awml_data;
         if (!O.attached) return;
         this.trigger_redraw();
+        if (O.debug)
+          TK.log("%o receive %o", this, v);
       },
       redraw: function() {
         AWML.RedrawLogic.redraw.call(this);
@@ -72,6 +74,8 @@
         if (O.prev !== null) O.remove(node, O.prev, this);
         var s = O.get.call(this, v);
         O.prev = s;
+        if (O.debug)
+          TK.log("%o applying %o to %o", this, s, node);
         if (s !== null) O.apply(node, s, this);
       },
       unbind: function(src) {
