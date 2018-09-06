@@ -756,7 +756,7 @@ var f = (function(w, AWML) {
                   var d = this.pending;
                   if (d === null) this.pending = d = {};
                   d[a[0]] = 0;
-                });
+                }.bind(this));
           } else {
             /* unsubscribe happens per id */
             var id = parseInt(uri);
