@@ -310,13 +310,13 @@ var f = (function(w, AWML) {
       s.delete(cb);
 
       if (!s.size) {
+        this.low_unsubscribe(id);
         subscriptions.delete(id);
         values.delete(id);
         id2uri.delete(id);
         uri2id.delete(uri);
-        this.low_unsubscribe(id);
         this.fire("unregister", [ uri, id ]);
-      } else subscriptions.set(id, s);
+      }
     },
     addEventListener: function(event, cb) {
       var e = this._event_handlers;
