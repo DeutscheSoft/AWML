@@ -672,6 +672,7 @@
     is_awml_node: true,
     awml_createdCallback: function () {
       if (!this.widget) {
+        var parent_node = find_parent.call(this);
         var options = extract_options.call(this, TK.Window);
         options.element = this;
         if (this.childNodes.length) {
@@ -683,6 +684,7 @@
         }
         this.widget = new TK.Window(options);
         attach_options(this, this.widget, options, false);
+        parent_node.widget.add_child(this.widget);
       }
     },
     awml_attachedCallback: function () {
