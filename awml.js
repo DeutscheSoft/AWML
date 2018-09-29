@@ -668,6 +668,37 @@
     },
   });
   
+  if (TK && TK.Window) AWML.Tags.Window = create_tag("awml-window", {
+    is_awml_node: true,
+    awml_createdCallback: function () {
+      if (!this.widget) {
+        var options = extract_options.call(this, TK.Window);
+        options.element = this;
+        if (this.childNodes.length) {
+          var dummy = document.createDocumentFragment();
+          while (this.childNodes.length > 0) {
+            dummy.appendChild(this.childNodes[0]);
+          }
+          options.content = dummy;
+        }
+        this.widget = new TK.Window(options);
+        attach_options(this, this.widget, options, false);
+      }
+    },
+    awml_attachedCallback: function () {
+      this.widget.enable_draw()
+    },
+    awml_detachedCallback: function () {
+      this.widget.disable_draw()
+    },
+    attributeChangedCallback: function(name, old_value, value) {
+      if (this.widget && has_attribute(this.widget, name)) {
+        value = parse_attribute(value);
+        update_option(this, this.widget, name, this.options[name], value);
+      }
+    },
+  });
+  
   AWML.Tags.ResponseHandle = create_tag("awml-responsehandle", {
     awml_createdCallback: function() {
       this.style.display = "none";
