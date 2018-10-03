@@ -226,6 +226,8 @@ var f = (function(w, AWML) {
     this._receive = receive.bind(this);
 
     this._event_handlers = new Map();
+
+    this.transform_path = options.transform_path;
   }
   Base.prototype = {
     subscribe_success: subscribe_success,
@@ -248,6 +250,9 @@ var f = (function(w, AWML) {
       var uri2id = this.uri2id;
       var subscriptions = this.subscriptions;
       var values = this.values;
+
+      if (this.transform_path !== null)
+        uri = this.transform_path(uri);
 
       if (uri2id.has(uri)) {
         return new Promise(function(resolve, reject) {
@@ -375,7 +380,10 @@ var f = (function(w, AWML) {
       this.dispatchEvent(new w.CustomEvent(type, { detail: data }));
     },
     arguments_from_node: function(node) {
-        return {};
+      var tmp = node.getAttribute("transform-path");
+      return {
+        transform_path: tmp ? AWML.parse_format("js", tmp, null) : null,
+      };
     },
   };
 
