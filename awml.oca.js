@@ -208,7 +208,8 @@
     });
   }
 
-  function oca(url) {
+  function oca(options) {
+    var url = options.url;
     this.device = null;
     this.url = url;
     this.objects = new Map();

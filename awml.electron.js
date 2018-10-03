@@ -30,8 +30,10 @@
     }
   }
 
-  function Electron(name) {
-    ClientBackend.call(this);
+  function Electron(options) {
+    ClientBackend.call(this, options);
+
+    var name = options.channel;
 
     this.name = name;
     this.channel = null;
@@ -52,7 +54,12 @@
       ipcRenderer.send(this.channel, o);
     },
     arguments_from_node: function(node) {
-      return [ node.getAttribute("channel")||node.getAttribute("name") ];
+      return Object.assign(
+        ClientBackend.prototype.arguments_from_node(node),
+        {
+          channel: node.getAttribute("channel")||node.getAttribute("name"),
+        }
+      );
     },
   });
   AWML.Backends.electron = Electron;

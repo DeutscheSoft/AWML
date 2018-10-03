@@ -213,7 +213,7 @@ var f = (function(w, AWML) {
     });
   }
 
-  function Base() {
+  function Base(options) {
     this.values = new Map();
     this.uri2id = new Map();
     this.id2uri = new Map();
@@ -375,19 +375,23 @@ var f = (function(w, AWML) {
       this.dispatchEvent(new w.CustomEvent(type, { detail: data }));
     },
     arguments_from_node: function(node) {
-        throw new Error("Backend needs implementation of arguments_from_node()");
+        return {};
     },
   };
 
-  function Local(name, values, src, delay) {
-    this.name = name;
-    this.delay = delay;
-    Base.call(this);
+  function Local(options) {
+    this.name = options.name;
+    this.delay = options.delay;
+    Base.call(this, options);
     this.open();
+
+    var values = options.values;
 
     for (var uri in values) {
       this.receive(uri, values[uri]);
     }
+
+    var src = options.src;
 
     if (src) {
       AWML.fetch_json(src)
@@ -419,12 +423,15 @@ var f = (function(w, AWML) {
       }
     },
     arguments_from_node: function(node) {
-        return [
-          node.getAttribute("name"),
-          AWML.parse_format("json", node.textContent, {}),
-          node.getAttribute("src"),
-          parseInt(node.getAttribute("delay"))
-        ];
+        return Object.assign(
+          Base.prototype.arguments_from_node(node),
+          {
+            name: node.getAttribute("name"),
+            values: AWML.parse_format("json", node.textContent, {}),
+            src: node.getAttribute("src"),
+            delay: parseInt(node.getAttribute("delay")),
+          }
+        );
     },
   });
 
@@ -577,10 +584,10 @@ var f = (function(w, AWML) {
         try { ws.close(); } catch(e) {}
       }
   }
-  function websocket(url, clear) {
-    this.url = url;
-    ClientBackend.call(this);
-    this.connect(clear);
+  function websocket(options) {
+    this.url = options.url;
+    ClientBackend.call(this, options);
+    this.connect(options.clear);
   }
   websocket.prototype = Object.assign(Object.create(ClientBackend.prototype), {
     send: function(o) {
@@ -624,7 +631,14 @@ var f = (function(w, AWML) {
         /* relative url */
         src = get_relative_wsurl() + src;
       }
-      return [ src, node.getAttribute("clear") !== null ];
+
+      return Object.assign(
+        ClientBackend.prototype.arguments_from_node(node),
+        {
+          url: src,
+          clear: node.getAttribute("clear") !== null,
+        }
+      );
     },
   });
 
@@ -653,8 +667,9 @@ var f = (function(w, AWML) {
     AWML.Backends.shared = Shared;
   }
 
-  function LocalStorage(clear) {
-    Base.call(this);
+  function LocalStorage(options) {
+    var clear = options.clear;
+    Base.call(this, options);
     try {
       this.storage = w.localStorage;
       if (clear) this.storage.clear();
@@ -697,7 +712,12 @@ var f = (function(w, AWML) {
       }
     },
     arguments_from_node: function(node) {
-        return [ node.getAttribute("clear") !== null ];
+      return Object.assign(
+        Base.prototype.arguments_from_node(node),
+        {
+          clear: node.getAttribute("clear") !== null,
+        }
+      );
     },
   });
 

@@ -155,11 +155,12 @@
     });
   }
 
-  function aes70(url) {
+  function aes70(options) {
+    var url = options.url;
     this.device = null;
     this.url = url;
     this.objects = new Map();
-    base.call(this);
+    base.call(this, options);
     this.connect();
   }
   aes70.prototype = Object.assign(Object.create(proto), {

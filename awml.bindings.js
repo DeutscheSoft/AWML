@@ -792,7 +792,7 @@
       }
 
       var constructor = AWML.Backends[type];
-      var args = constructor.prototype.arguments_from_node(this);
+      var args = [ constructor.prototype.arguments_from_node(this) ];
 
       if (shared) {
         if (AWML.Backends.shared) {
