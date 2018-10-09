@@ -1,4 +1,4 @@
-(function(w, AWML) {
+var f = (function(w, AWML) {
   var base = AWML.Backends.base;
   var proto = base.prototype;
 
@@ -10,6 +10,7 @@
     });
   }
 
+  var OCA = w.OCA;
   var SP = OCA.SP;
 
   function PropertySync(backend, o, path) {
@@ -156,19 +157,32 @@
   }
 
   function aes70(options) {
-    var url = options.url;
-    this.device = null;
-    this.url = url;
-    this.objects = new Map();
     base.call(this, options);
-    this.connect();
+
+    this.objects = new Map();
+
+    if (options.url)
+    {
+      this.device = null;
+      this.url = options.url;
+      this.connect();
+    }
+    else if (options.device)
+    {
+      this.url = null;
+      this.device = options.device;
+      this.open();
+    }
   }
   aes70.prototype = Object.assign(Object.create(proto), {
     connect: function() {
       try {
         var ws;
         ws = new WebSocket(this.url);
-        ws.onopen = function() { this.open(); }.bind(this);
+        ws.onopen = function() {
+          this.device = new OCA.RemoteDevice(new OCA.WebSocketConnection(this.ws));
+          this.open();
+        }.bind(this);
         ws.onclose = function() { ws.onerror = null; this.close(); }.bind(this);
         ws.onerror = function(ev) { ws.onclose = null; this.error(ev); }.bind(this);
         this.ws = ws;
@@ -178,7 +192,6 @@
     },
     arguments_from_node: AWML.Backends.websocket.prototype.arguments_from_node,
     open: function() {
-      this.device = new OCA.RemoteDevice(new OCA.WebSocketConnection(this.ws));
       resolve_object_tree(this, this.device.Root, "")
         .then(function() {
           proto.open.call(this);
@@ -242,4 +255,6 @@
   });
 
   AWML.Backends.aes70 = aes70;
- })(this, this.AWML);
+ });
+if (typeof module !== "undefined" && !this.AWML) module.exports = f;
+else f(this, this.AWML || (this.AWML = {}));
