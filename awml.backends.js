@@ -487,8 +487,8 @@ var f = (function(w, AWML) {
     return r;
   }
 
-  function ClientBackend() {
-    Base.call(this);
+  function ClientBackend(options) {
+    Base.call(this, options);
     this.changeset = [];
     this.pending = null;
     this.send_changes = function() {
