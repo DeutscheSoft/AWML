@@ -52,6 +52,9 @@ var f = (function(w, AWML) {
   }
 
   function subscribe_fail(uri, error) {
+    if (this.pending_subscriptions == null)
+      return;
+
     var pending = this.pending_subscriptions.get(uri);
 
     this.pending_subscriptions.delete(uri);
