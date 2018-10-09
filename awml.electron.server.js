@@ -4,6 +4,8 @@ const AWML = require(".").AWML;
 const ServerBackend = AWML.ServerBackend;
 const channels = new Map();
 
+ipcMain.setMaxListeners(0);
+
 function ElectronServerBackend(name, channel, backend, sender) {
   this.name = name;
   this.channel = channel;
@@ -29,18 +31,36 @@ ElectronServerBackend.prototype = Object.assign(Object.create(ServerBackend.prot
 });
 
 function export_backends(backends) {
+  function get_backends()
+  {
+    if (typeof backends === "function") {
+      return backends();
+    } else if (backends instanceof Map) {
+      const ret = [];
+      backends.forEach(function(b, name) { ret.push(name); });
+      return ret;
+    } else {
+      return Object.keys(backends);
+    }
+  }
+
+  function get_backend(name)
+  {
+    if (typeof backends === "function") {
+      return backends(name);
+    } else if (backends instanceof Map) {
+      return backends.get(name);
+    } else {
+      return backends[name];
+    }
+  }
+
   ipcMain.on("awml-connect", function(event, msg) {
     var cmd = msg[0];
-    
+
     if (cmd === "connect") {
         var name = msg[1];
-        var backend;
-
-        if (typeof backends === "function") {
-          backend = backends(name);
-        } else {
-          backend = backends[name];
-        }
+        var backend = get_backend(name);
 
         if (!backend) {
             event.sender.send(["error", "No such backend."]);
@@ -53,6 +73,8 @@ function export_backends(backends) {
 
         channels.set(channel, new ElectronServerBackend(name, channel, backend, event.sender));
         event.sender.send("awml-connect", [ "connected", msg[1], channel ]);
+    } else if (cmd === "discover") {
+        event.sender.send("awml-connect", [ "discover", get_backends() ]);
     } else if (cmd === "ping") {
         event.sender.send("awml-connect", [ "pong" ]);
     } else if (cmd === "disconnect") {

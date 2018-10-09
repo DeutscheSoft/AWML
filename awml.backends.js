@@ -748,13 +748,21 @@ var f = (function(w, AWML) {
       if (this.changeset.length === 0 && this.pending === null) dispatch(this.send_changes);
       this.changeset.push(id, value);
     }.bind(this);
+    this._destroy_cb = function() {
+      this.destroy();
+    }.bind(this);
     this.subscriptions = new Set();
+    backend.addEventListener('destroy', this._destroy_cb);
   }
   ServerBackend.prototype = {
     destroy: function() {
-      this.subscriptions.forEach(function(id) {
-        this.backend.unsubscribe(id, this._change_cb);
-      }, this);
+      if (this.backend)
+      {
+        this.subscriptions.forEach(function(id) {
+          this.backend.unsubscribe(id, this._change_cb);
+        }, this);
+        this.backend.removeEventListener('destroy', this._destroy_cb);
+      }
     },
     message: function(d) {
       var backend = this.backend;
@@ -783,6 +791,7 @@ var f = (function(w, AWML) {
                   if (this.changeset.length === 0 && this.pending === null) dispatch(this.send_changes);
                   var d = this.pending;
                   if (d === null) this.pending = d = {};
+                  console.log("subscription failed", a);
                   d[a[0]] = 0;
                 }.bind(this));
           } else {

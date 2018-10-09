@@ -10,6 +10,8 @@
     return;
   }
 
+  ipcRenderer.setMaxListeners(0);
+
   function onmessage(ev, o) {
     this.message(o);
   }
@@ -63,4 +65,26 @@
     },
   });
   AWML.Backends.electron = Electron;
+  Electron.discover = function()
+  {
+    return new Promise(function(resolve, reject) {
+      var timeout_id;
+      var on_message = function(ev, msg)
+      {
+        if (msg[0] === 'discover')
+        {
+          clearTimeout(timeout_id);
+          resolve(msg[1]);
+        }
+      };
+      var fail = function()
+      {
+        ipcRenderer.removeListener('awml-connect', on_message);
+        reject(new Error("timeout"));
+      };
+      ipcRenderer.on('awml-connect', on_message);
+      timeout_id = setTimeout(fail, 1000);
+      ipcRenderer.send("awml-connect", [ "discover" ]);
+    });
+  }
 })(this, this.AWML);
