@@ -6,7 +6,14 @@ const w = {
 
 
 require("./awml.backends.js")(w, AWML);
-require("./awml.ws.js")(w, AWML);
+
+try
+{
+  if (require.resolve('ws'))
+  {
+    require("./awml.ws.js")(w, AWML);
+  }
+} catch (e) {}
 
 
 try
