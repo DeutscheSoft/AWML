@@ -158,7 +158,7 @@ var f = (function(w, AWML) {
   function to_error(err) {
     var state = this.state;
 
-    if (state === 'error') return;
+    if (state === 'error' || state === 'closed') return;
 
     this.state = 'error';
 
