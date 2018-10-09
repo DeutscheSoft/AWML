@@ -227,7 +227,7 @@ var f = (function(w, AWML) {
 
     this._event_handlers = new Map();
 
-    this.transform_path = options.transform_path;
+    this.transform_path = options.transform_path || null;
   }
   Base.prototype = {
     subscribe_success: subscribe_success,
