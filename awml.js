@@ -870,7 +870,7 @@
         }
     },
     awml_detachedCallback: function(root, parent_node) {
-        parent_node.widget.remote_page(this.widget);
+        parent_node.widget.remove_page(this.widget);
     },
     awml_attachedCallback: function(root, parent_node) {
       if (!(parent_node.widget instanceof TK.Pager)) {
