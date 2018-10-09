@@ -21,12 +21,12 @@
 
     if (cmd === "connected" && msg[1] === this.name) {
       this.channel = msg[2];
+      ipcRenderer.removeListener("awml-connect", this.connect_cb);
       ipcRenderer.on(this.channel, this.message_cb);
       this.open();
     } else if (cmd === "error") {
       this.error(msg[1]);
     } else if (cmd === "disconnected" && msg[1] === this.channel) {
-      ipcRenderer.removeListener("awml-connect", this.connect_cb);
       ipcRenderer.removeListener(this.channel, this.message_cb);
       this.close();
     }
@@ -35,7 +35,7 @@
   function Electron(options) {
     ClientBackend.call(this, options);
 
-    var name = options.channel;
+    var name = options.name;
 
     this.name = name;
     this.channel = null;
@@ -47,7 +47,7 @@
   };
   Electron.prototype = Object.assign(Object.create(ClientBackend.prototype), {
     destroy: function() {
-        ipcRenderer.send("awml-connect", [ "disconnect", name ]);
+        ipcRenderer.send("awml-connect", [ "disconnect", this.name ]);
         ipcRenderer.removeListener("awml-connect", this.connect_cb);
         ipcRenderer.removeListener(this.channel, this.message_cb);
         ClientBackend.prototype.destroy.call(this);
@@ -59,7 +59,7 @@
       return Object.assign(
         ClientBackend.prototype.arguments_from_node(node),
         {
-          channel: node.getAttribute("channel")||node.getAttribute("name"),
+          name: node.getAttribute("name"),
         }
       );
     },

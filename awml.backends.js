@@ -749,6 +749,7 @@ var f = (function(w, AWML) {
       this.changeset.push(id, value);
     }.bind(this);
     this._destroy_cb = function() {
+      this.backend = null;
       this.destroy();
     }.bind(this);
     this.subscriptions = new Set();

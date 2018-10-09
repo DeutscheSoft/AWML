@@ -159,6 +159,13 @@ var f = (function(w, AWML) {
   function aes70(options) {
     base.call(this, options);
 
+    this.close_cb = function() {
+      this.close();
+    }.bind(this);
+    this.error_cb = function(e) {
+      this.error(e);
+    }.bind(this);
+
     this.objects = new Map();
 
     if (options.url)
@@ -183,15 +190,23 @@ var f = (function(w, AWML) {
           this.device = new OCA.RemoteDevice(new OCA.WebSocketConnection(this.ws));
           this.open();
         }.bind(this);
-        ws.onclose = function() { ws.onerror = null; this.close(); }.bind(this);
-        ws.onerror = function(ev) { ws.onclose = null; this.error(ev); }.bind(this);
+        ws.onclose = this.close_cb;
+        ws.onerror = this.error_cb;
         this.ws = ws;
       } catch (e) {
         this.error(e);
       }
     },
     arguments_from_node: AWML.Backends.websocket.prototype.arguments_from_node,
+    destroy: function() {
+      proto.destroy.call(this);
+      if (this.device)
+      {
+        this.device.removeEventListener('close', this.close_cb);
+      }
+    },
     open: function() {
+      this.device.on('close', this.close_cb);
       resolve_object_tree(this, this.device.Root, "")
         .then(function() {
           proto.open.call(this);

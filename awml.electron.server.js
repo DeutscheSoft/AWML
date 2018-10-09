@@ -24,9 +24,12 @@ ElectronServerBackend.prototype = Object.assign(Object.create(ServerBackend.prot
     this.sender.send(this.channel, d);
   },
   destroy: function() {
-    this.sender.send("awml-connect", [ "disconnected", this.channel ]);
-    ipcMain.removeListener(this.channel, this.message_cb);
+    console.log("electron backend destroy", this.channel, channels.get(this.channel) == this);
     channels.delete(this.channel);
+    ipcMain.removeAllListeners(this.channel);
+    ServerBackend.prototype.destroy.call(this);
+    this.sender.send("awml-connect", [ "disconnected", this.channel ]);
+    console.log("electron backend destroyed.");
   },
 });
 
@@ -63,7 +66,7 @@ function export_backends(backends) {
         var backend = get_backend(name);
 
         if (!backend) {
-            event.sender.send(["error", "No such backend."]);
+            event.sender.send("awml-connect", ["error", "No such backend."]);
             return;
         }
         var channel;
