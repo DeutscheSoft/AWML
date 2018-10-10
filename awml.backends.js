@@ -18,7 +18,7 @@ var f = (function(w, AWML) {
       try {
         q[i]();
       } catch (e) {
-        console.log("Error in dispatched callback:", e);
+        AWML.error("Error in dispatched callback:", e);
       }
     }
     q.length = 0;
@@ -494,6 +494,7 @@ var f = (function(w, AWML) {
     Base.call(this, options);
     this.changeset = [];
     this.pending = null;
+    this.debounce = options.debounce || 0;
     this.send_changes = function() {
       if (this.state != "open") return;
       var m = this.pending;
@@ -507,6 +508,12 @@ var f = (function(w, AWML) {
     }.bind(this);
   }
   ClientBackend.prototype = Object.assign(Object.create(Base.prototype), {
+    dispatch: function() {
+      if (this.debounce > 0)
+        setTimeout(this.send_changes, this.debounce);
+      else
+        dispatch(this.send_changes);
+    },
     message: function(d) {
       var uri, id, i, tmp;
 
@@ -533,7 +540,7 @@ var f = (function(w, AWML) {
       } else AWML.warn('Unexpected message on WebSocket:', d);
     },
     low_subscribe: function(uri) {
-      if (this.changeset.length === 0 && this.pending === null) dispatch(this.send_changes);
+      if (this.changeset.length === 0 && this.pending === null) this.dispatch();
       var d = this.pending;
       if (d === null) this.pending = d = {};
       d[uri] = 1;
@@ -546,7 +553,7 @@ var f = (function(w, AWML) {
       this.send(d);
     },
     low_unsubscribe: function(uri) {
-      if (this.changeset.length === 0 && this.pending === null) dispatch(this.send_changes);
+      if (this.changeset.length === 0 && this.pending === null) this.dispatch();
       var d = this.pending;
       if (d === null) this.pending = d = {};
       d[uri] = 0;
@@ -559,11 +566,19 @@ var f = (function(w, AWML) {
       this.send(d);
     },
     set: function(id, value) {
-      if (this.changeset.length === 0 && this.pending === null) dispatch(this.send_changes);
+      if (this.changeset.length === 0 && this.pending === null) this.dispatch();
       this.changeset.push(id, value);
     },
     clear: function() {
       this.send(false);
+    },
+    arguments_from_node: function(node) {
+      return Object.assign(
+        Base.prototype.arguments_from_node(node),
+        {
+          debounce: parseInt(node.getAttribute("debounce")),
+        }
+      );
     },
   });
 
@@ -795,7 +810,6 @@ var f = (function(w, AWML) {
                   if (this.changeset.length === 0 && this.pending === null) dispatch(this.send_changes);
                   var d = this.pending;
                   if (d === null) this.pending = d = {};
-                  console.log("subscription failed", a);
                   d[a[0]] = 0;
                 }.bind(this));
           } else {
