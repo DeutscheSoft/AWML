@@ -3,9 +3,24 @@ var f = (function(w, AWML) {
   var proto = base.prototype;
 
   /* TODO: this backend is far from being optimized. */
+  function timeout(p, time)
+  {
+    return new Promise(function(resolve, reject) {
+      const id = setTimeout(function() { reject(new Error("timeout")); }, time);
+      p.then(
+        function(result) {
+          clearTimeout(id);
+          resolve(result);
+        },
+        function(err) {
+          clearTimeout(id);
+          reject(err);
+        });
+    });
+  }
 
   function get_members(o) {
-    return o.GetMembers().then(function(res) {
+    return timeout(o.GetMembers(), 5000).catch(function(){ return []; }).then(function(res) {
       return res.map(o.device.resolve_object.bind(o.device));
     });
   }
@@ -52,7 +67,9 @@ var f = (function(w, AWML) {
         throw new Error("Property is missing getter.");
       }
 
-      var ret = getter.call(o)
+      var ret = [];
+
+      ret.push(getter.call(o)
         .then(function(val) { 
             var path = this.full_path(name);
             this.backend.subscribe_success(path, id);
@@ -76,20 +93,20 @@ var f = (function(w, AWML) {
             } else {
               this.backend.receive(id, val);
             }
-          }.bind(this));
+          }.bind(this)));
 
       var event = p.event(o);
 
       if (event)
       {
-        event.subscribe((value, type, id) => {
+        ret.push(event.subscribe((value, type, id) => {
           // TODO: check that type is value changed
           var id = this.resolve(name);
           this.backend.receive(id, value);
-        });
+        }));
       }
 
-      return ret;
+      return Promise.all(ret);
     },
     unsubscribe: function(name) {
       this.subscribed.delete(name);
@@ -113,47 +130,87 @@ var f = (function(w, AWML) {
     },
   };
 
-  function resolve_object_tree(backend, o, path) {
-    return new Promise(function(resolve, reject) {
-      var n = 0;
-      var rec = function(o, path) {
-        if (o.GetMembers) { /* a block */
-          var prefix = path;
-          if (prefix.length) prefix += "/";
-          n++;
-          get_members(o)
-            .then(function(children) {
-              Promise.all(children.map(function(c) { return c.GetRole(); }))
-                .then(function(roles) {
-                  var tmp = {}, cnt = {};
+  function map_all_objects()
+  {
+    const roles = new Map();
 
-                  /* make paths locally unique */
-                  for (var i = 0; i < roles.length; i++) {
-                    tmp[roles[i]] = 1 + (tmp[roles[i]]|0);
-                  }
+    const get_all_roles = function(tree)
+    {
+      var ret = [];
 
-                  for (var i = 0; i < roles.length; i++) {
-                    if (tmp[roles[i]] > 1) {
-                      cnt[roles[i]] = 1;
-                    }
-                  }
-
-                  for (var i = 0; i < roles.length; i++) {
-                    var path_component = roles[i];
-                    if (cnt[path_component]) {
-                      path_component += cnt[path_component]++;
-                    }
-                    rec(children[i], prefix + path_component);
-                  }
-                  if (!--n) resolve();
-                }, reject);
-            }, reject);
-        } else {
-          backend.objects.set(path, new PropertySync(backend, o, path));
+      for (var i = 0 ; i < tree.length; i++)
+      {
+        var o = tree[i];
+        if (Array.isArray(o))
+        {
+          ret.push(get_all_roles(o));
         }
-      };
-      rec(o, path);
-    });
+        else
+        {
+          ret.push(timeout(o.GetRole(), 10000)
+              .catch(function() { return null; }.bind(this, o))
+              .then(function(o, role) { roles.set(o, role); }.bind(this, o)));
+        }
+      }
+
+      return Promise.all(ret);
+    }
+
+    return this.device.GetDeviceTree()
+      .then(function(tree) {
+        return get_all_roles(tree)
+          .then(
+            function() {
+              const rec = function(tree, path) {
+                const local_roles = new Map();
+                const children = new Map();
+
+                const prefix = (path.length) ? (path + "/") : path;
+
+                for (var i = 0; i < tree.length; i++)
+                {
+                  if (!Array.isArray(tree[i]))
+                  {
+                    let role = roles.get(tree[i]);
+
+                    if (role === null)
+                    {
+                      role = tree[i].ono.toString();
+                      //console.log("ignoring object", tree[i].ono);
+                      //continue;
+                    }
+
+                    if (local_roles.has(role))
+                    {
+                      let cnt = 1;
+
+                      while (local_roles.has(role + cnt)) cnt++;
+
+                      role += cnt;
+                    }
+
+                    local_roles.set(role, tree[i]);
+                  }
+                  else
+                  {
+                    children.set(tree[i-1], tree[i]);
+                  }
+                }
+
+                local_roles.forEach(
+                  function(o, role) {
+                    const path = prefix + role;
+                    this.objects.set(path, new PropertySync(this, o, path));
+                    if (children.has(o))
+                      rec(children.get(o), path);
+                  }.bind(this)
+                );
+              }.bind(this);
+              rec(tree, "");
+              this.objects.forEach((o, role) => o.o.get_properties().forEach((p) => console.log(role, p.name)));
+            }.bind(this)
+          );
+      }.bind(this));
   }
 
   function aes70(options) {
@@ -207,18 +264,20 @@ var f = (function(w, AWML) {
     },
     open: function() {
       this.device.on('close', this.close_cb);
-      resolve_object_tree(this, this.device.Root, "")
+      var m = OCA.Types.OcaManagerDefaultObjectNumbers;
+      for (var name in m) {
+        var ono = m[name];
+        var o = new OCA.RemoteControlClasses["Oca"+name](ono, this.device);
+        this.objects.set(name, new PropertySync(this, o, name));
+      }
+      map_all_objects.call(this)
         .then(function() {
           proto.open.call(this);
         }.bind(this),
         function(err) {
+          console.error(err);
           this.error(err);
         }.bind(this));
-      var m = OCA.Types.OcaManagerDefaultObjectNumbers;
-      for (var name in m) {
-        var ono = m[name];
-        resolve_object_tree(this, new OCA.RemoteControlClasses["Oca"+name](ono, this.device), name);
-      }
     },
     low_subscribe: function(path) {
       var meta;
@@ -255,6 +314,7 @@ var f = (function(w, AWML) {
             this.subscribe_fail(path, e.toString());
           }.bind(this));
       } catch (e) {
+        console.error(e);
         this.subscribe_fail(path, e.toString());
       }
     },
