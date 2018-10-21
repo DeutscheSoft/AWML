@@ -1,6 +1,8 @@
 "use strict";
 (function(w, TK, AWML){
 
+if (!TK.Select) return;
+
 function update_prefix() {
   var O = this.options;
   var p = this.find_prefix_parent();
