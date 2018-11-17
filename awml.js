@@ -474,7 +474,48 @@
     },
   };
 
-  function register_element(tagName, prototype) {
+  // we execute this at run-time to avoid
+  // syntax-errors in browsers which do not
+  // support ES6 classes
+  function create_class(tagName) {
+    var name = tagName.replace("-", "_");
+    var code = "";
+    code += "return class "+name+" extends HTMLElement {";
+    code += "constructor()";
+    code += "{";
+    code += "super();";
+    code += "this.created = false;";
+    code += "}";
+    code += "}";
+    return new Function(code)();
+  }
+
+  function register_element_v1(tagName, prototype) {
+    if (prototype.awml_update_prefix)
+      register_prefix_tag(tagName);
+
+    var cl = create_class(tagName);
+
+    prototype.connectedCallback = function() {
+      if (!this.created) {
+        this.created = true;
+        this.createdCallback();
+      }
+      this.attachedCallback();
+    };
+
+    prototype.disconnectedCallback = function() {
+      this.detachedCallback();
+    };
+
+    Object.assign(cl.prototype, prototype);
+
+    customElements.define(tagName, cl);
+
+    return true;
+  }
+
+  function register_element_v0(tagName, prototype) {
     if (prototype.awml_update_prefix)
       register_prefix_tag(tagName);
     prototype = Object.assign(Object.create(HTMLElement.prototype), prototype);
@@ -539,8 +580,23 @@
     return true;
   }
 
-  if (document.registerElement) {
-    AWML.register_element = register_element;
+  if ('customElements' in window) {
+    AWML.register_element = register_element_v1;
+    AWML.upgrade_element = function(node) {};
+    AWML.downgrade_element = function(node) {};
+    AWML.update_attribute = function(node, name, value) {
+      var old = node.getAttribute(name);
+
+      if (value === null)
+        node.removeAttribute(name);
+      else
+        node.setAttribute(name, value);
+
+      if (node.attributeChangedCallback)
+        node.attributeChangedCallback(name, old, node.getAttribute(name));
+    };
+  } else if (document.registerElement) {
+    AWML.register_element = register_element_v0;
     AWML.upgrade_element = function(node) {};
     AWML.downgrade_element = function(node) {};
     AWML.update_attribute = function(node, name, value) {
