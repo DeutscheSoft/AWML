@@ -386,6 +386,7 @@ var f = (function(w, AWML) {
       var tmp = node.getAttribute("transform-path");
       return {
         transform_path: tmp ? AWML.parse_format("js", tmp, null) : null,
+        node: node,
       };
     },
   };
@@ -395,12 +396,6 @@ var f = (function(w, AWML) {
     this.delay = options.delay;
     Base.call(this, options);
     this.open();
-
-    var values = options.values;
-
-    for (var uri in values) {
-      this.receive(uri, values[uri]);
-    }
 
     var src = options.src;
 
@@ -416,6 +411,20 @@ var f = (function(w, AWML) {
             error("Failed to load values from %o: %o", src, e);
           }
         );
+    }
+
+    if (options.node) {
+      // NOTE: this is _correctly_ done using mutation observers, however
+      // they are not widely supported. What we really want is to get a snapshot
+      // of the initial textContent and treat that as JSON.
+      TK.S.after_frame(function() {
+        var values = AWML.parse_format("json", options.node.textContent, {});
+
+        if (typeof(values) === 'object')
+          for (var uri in values) {
+            this.receive(uri, values[uri]);
+          }
+      }.bind(this));
     }
   }
   Local.prototype = Object.assign(Object.create(Base.prototype), {
@@ -438,7 +447,6 @@ var f = (function(w, AWML) {
           Base.prototype.arguments_from_node(node),
           {
             name: node.getAttribute("name"),
-            values: AWML.parse_format("json", node.textContent, {}),
             src: node.getAttribute("src"),
             delay: parseInt(node.getAttribute("delay")),
           }
