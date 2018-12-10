@@ -563,6 +563,7 @@
       node.removeAttribute(name);
     else
       node.setAttribute(name, value);
+
     if (node.attributeChangedCallback)
       node.attributeChangedCallback(name, old, node.getAttribute(name));
   }
@@ -584,17 +585,7 @@
     AWML.register_element = register_element_v1;
     AWML.upgrade_element = function(node) {};
     AWML.downgrade_element = function(node) {};
-    AWML.update_attribute = function(node, name, value) {
-      var old = node.getAttribute(name);
-
-      if (value === null)
-        node.removeAttribute(name);
-      else
-        node.setAttribute(name, value);
-
-      if (node.attributeChangedCallback)
-        node.attributeChangedCallback(name, old, node.getAttribute(name));
-    };
+    AWML.update_attribute = update_attribute;
   } else if (document.registerElement) {
     AWML.register_element = register_element_v0;
     AWML.upgrade_element = function(node) {};
