@@ -207,7 +207,6 @@ var f = (function(w, AWML) {
                 );
               }.bind(this);
               rec(tree, "");
-              this.objects.forEach((o, role) => o.o.get_properties().forEach((p) => console.log(role, p.name)));
             }.bind(this)
           );
       }.bind(this));
