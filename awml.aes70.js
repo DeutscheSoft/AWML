@@ -278,6 +278,9 @@ var f = (function(w, AWML) {
           this.error(err);
         }.bind(this));
     },
+    low_unsubscribe: function(id) {
+      // TODO: we do not care at the moment.
+    },
     low_subscribe: function(path) {
       var meta;
 
