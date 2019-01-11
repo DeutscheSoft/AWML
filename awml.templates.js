@@ -92,6 +92,8 @@
         if (e.tagName === 'link')
           e.addEventListener('load', onload);
       }
+
+      return elems;
   }
 
   AWML.fetch_template = fetch_template;
@@ -177,7 +179,11 @@
       if (O.cached) {
         deduplicate_to_head(node, "link[rel=stylesheet]", O);
       }
-      deduplicate_to_head(node, "template", O);
+
+      deduplicate_to_head(node, "template", O).forEach(function(template) {
+        template.url = url;
+      });
+
       this.appendChild(node);
       AWML.upgrade_element(this);
       pop_url();
