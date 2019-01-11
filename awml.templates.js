@@ -96,6 +96,13 @@
       return elems;
   }
 
+  function transform_template(node, O) {
+    if (O.transform_template)
+      node = O.transform_template(node);
+
+    return node;
+  }
+
   AWML.fetch_template = fetch_template;
   AWML.fetch_template_cached = fetch_template_cached;
 
@@ -110,6 +117,7 @@
         base_url: get_base(),
         num_permanent: this.children.length,
         generation: 0,
+        transform_template: null,
       };
       AWML.PrefixLogic.createdCallback.call(this);
       AWML.RedrawLogic.createdCallback.call(this);
@@ -133,6 +141,11 @@
 
       O.fetch = this.getAttribute("fetch") !== null;
       O.cached = this.getAttribute("nocache") === null;
+
+      var transform = this.getAttribute("transform-template");
+      if (transform)
+        transform = AWML.parse_format("js", transform);
+      O.transform_template = transform;
 
       if (!O.handle) return;
 
@@ -179,12 +192,11 @@
       if (O.cached) {
         deduplicate_to_head(node, "link[rel=stylesheet]", O);
       }
-
       deduplicate_to_head(node, "template", O).forEach(function(template) {
         template.url = url;
       });
 
-      this.appendChild(node);
+      this.appendChild(transform_template(node, O));
       AWML.upgrade_element(this);
       pop_url();
       if (this.getAttribute("trigger-resize") !== null)
