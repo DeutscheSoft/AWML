@@ -242,12 +242,12 @@ var f = (function(w, AWML) {
       try {
         var ws;
         ws = new WebSocket(this.url);
-        ws.onopen = function() {
+        ws.addEventListener('open', function() {
           this.device = new OCA.RemoteDevice(new OCA.WebSocketConnection(this.ws));
           this.open();
-        }.bind(this);
-        ws.onclose = this.close_cb;
-        ws.onerror = this.error_cb;
+        }.bind(this));
+        ws.addEventListener('close', this.close_cb);
+        ws.addEventListener('error', this.error_cb);
         this.ws = ws;
       } catch (e) {
         this.error(e);
@@ -259,6 +259,13 @@ var f = (function(w, AWML) {
       if (this.device)
       {
         this.device.removeEventListener('close', this.close_cb);
+      }
+      if (this.ws)
+      {
+        this.ws.removeEventListener('close', this.close_cb);
+        this.ws.removeEventListener('error', this.error_cb);
+        try { this.ws.close(); } catch(e) {}
+        this.ws = null;
       }
     },
     open: function() {
