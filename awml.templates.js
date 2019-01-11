@@ -49,6 +49,22 @@
     return p;
   }
 
+  function get_template(O) {
+    var p;
+
+    if (O.fetch)
+    {
+      p = (O.cached ? fetch_template_cached : fetch_template)(O.handle, O.base_url);
+    }
+    else
+    {
+      var el = document.getElementById(O.handle);
+      p = el ? Promise.resolve(el) : Promise.reject(new Error('Could not find TEMPLATE element.'));
+    }
+
+    return p;
+  }
+
   function find_tag(list, e) {
     var s;
     var to = e.outerHTML;
@@ -91,6 +107,7 @@
         cached: false,
         base_url: get_base(),
         num_permanent: this.children.length,
+        generation: 0,
       };
       AWML.PrefixLogic.createdCallback.call(this);
       AWML.RedrawLogic.createdCallback.call(this);
@@ -117,25 +134,20 @@
 
       if (!O.handle) return;
 
-      if (!O.fetch) {
-        O.template = document.getElementById(O.handle);
-        if (!O.template) {
-            AWML.error("Unknown template: ", O.handle);
-            return;
-        }
-        /* we are not fetching the template, simply reload it */
-        this.redraw();
-      } else {
-        var fetch = O.cached ? fetch_template_cached : fetch_template;
-        /* async template loading */
-        fetch(O.handle, O.base_url).then(function(template) {
+      var generation = ++O.generation;
+
+      get_template(O).then(
+        function(template) {
           var O = this.awml_data;
+          // the template has been updated again
+          if (O.generation !== generation) return;
           O.template = template;
           if (O.attached) this.redraw();
-        }.bind(this)).catch(function (e) {
+        }.bind(this),
+        function(e) {
           AWML.error("Could not load template", O.handle, ":", e);
-        });
-      }
+        }
+      );
     },
     redraw: function() {
       AWML.RedrawLogic.redraw.call(this);
@@ -180,12 +192,12 @@
       }
     },
     attributeChangedCallback: function(name, old_value, value) {
-      if (name === "template") {
-        this.detachedCallback();
-        this.attachedCallback();
-      } else if (name.startsWith("prefix")) {
+      if (name.startsWith("prefix")) {
         var handle = name.substr(7);
         AWML.update_prefix(this, handle);
+      } else {
+        this.detachedCallback();
+        this.attachedCallback();
       }
     },
   }));
