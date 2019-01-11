@@ -81,7 +81,7 @@
       unbind: function(src) {
         var O = this.awml_data;
         this.remove_redraw();
-        if (O.prev)
+        if (O.prev && this.parentNode)
           O.remove(this.parentNode, O.prev);
         AWML.PrefixLogic.unbind.call(this, src);
       },
