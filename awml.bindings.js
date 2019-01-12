@@ -351,6 +351,13 @@
   function BindingOption(node) {
     AWML.Option.call(this, node);
     this.connector = null;
+
+    var tmp = node.getAttribute('transform-src');
+
+    if (tmp)
+      this.transform_src = AWML.parse_format('js', tmp);
+    else
+      this.transform_src = null
   };
   BindingOption.prototype = Object.assign(Object.create(AWML.Option.prototype), {
     attach: function(node, widget) {
@@ -392,6 +399,9 @@
         if (prefix.search(':') === -1) return;
         src = src_apply_prefix(src, prefix);
       }
+
+      if (this.transform_src)
+        src = this.transform_src(src);
 
       var binding;
 
