@@ -146,6 +146,11 @@
         return;
       }
 
+      if (this.has_requested_value && value === this.requested_value)
+      {
+        this.has_requested_value = false;
+        this.requested_value = null;
+      }
       if (this.has_value && this.value === value) return;
 
       this.value = value;
