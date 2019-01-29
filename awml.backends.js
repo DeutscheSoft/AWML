@@ -395,6 +395,7 @@ var f = (function(w, AWML) {
     this.name = options.name;
     this.delay = options.delay;
     Base.call(this, options);
+
     this.open();
 
     var src = options.src;

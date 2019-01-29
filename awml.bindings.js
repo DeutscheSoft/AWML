@@ -104,17 +104,13 @@
         .then(
           function(a) {
             this.id = a[1];
-            var has_value = a.length === 3;
-            if (has_value) {
+            if (a.length === 3) {
+              // we received the initial value on subscription success
               this.update(a[1], a[2]);
+            }
 
-              if (this.requested_value !== null && this.requested_value !== a[2]) {
-                this.backend.set(a[1], this.requested_value);
-              }
-            } else {
-              if (this.has_requested_value) {
-                this.backend.set(a[1], this.requested_value);
-              }
+            if (this.has_requested_value) {
+              this.backend.set(a[1], this.requested_value);
             }
           }.bind(this),
           function(reason) {
@@ -128,6 +124,11 @@
       }
       this.id = false;
       this.backend = null;
+      if (this.has_requested_value)
+      {
+        this.has_requested_value = false;
+        this.requested_value = null;
+      }
     },
     set: function(value) {
       if (value === this.requested_value && value === this.value) return;
