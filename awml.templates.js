@@ -213,7 +213,7 @@
       if (name.startsWith("prefix")) {
         var handle = name.substr(7);
         AWML.update_prefix(this, handle);
-      } else {
+      } else if (old_value !== value) {
         this.detachedCallback();
         this.attachedCallback();
       }
