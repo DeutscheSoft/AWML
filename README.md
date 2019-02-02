@@ -6,6 +6,21 @@ This implementation uses HTML5 Custom Tags and is based on the [toolkit widget l
 
 The aim of AWML is to simplify the creation of professional user interfaces.
 
+## Contents
+
+* [Using Widgets](#widgets)
+* [Options](#options)
+  - [Static options](#awml-option-typestatic)
+  - [Media options](#awml-option-typemedia)
+  - [Bind options](#awml-option-typebind)
+* [Protocol Backends](#protocol-backends)
+  - [local](#awml-backend-typelocal)
+  - [websocket](#awml-backend-typewebsocket)
+  - [aes70](#awml-backend-typeaes70)
+* [Templates](#templates)
+* [Installation](#installation)
+* [License](#license)
+
 ## Widgets
 
 Using a toolkit widget in AWML is as easy as writing standard HTML.
@@ -65,7 +80,7 @@ When no format has been specified explicitly, AWML will try to interpret the val
 
 ### Option types
 
-### static
+### awml-option type=static
 
 `static` options are just that, static.
 Once set they do not change their value, unless the corresponding DOM node attributes are changed.
@@ -78,7 +93,7 @@ Additional attributes are
 * `format` - option format (defaults to `json` or `string`)
 * `value` - option value (optionally as container content)
 
-### media
+### awml-option type=media
 
 The media prefix is used to make options depend on [media queries](https://developer.mozilla.org/en-US/docs/Web/CSS/Media_Queries/Using_media_queries).
 The value of media type options depends on the result of the media query and their value is updated dynamically when the window size changes.
@@ -107,7 +122,7 @@ In the above example, the `min` option of the fader will have the value `0` if t
 
 The media type options are supposed to be used in conjunction with corresponding CSS definitions.
 
-### bind
+### awml-option type=bind
 
 The `bind` type option allows connecting widget options to values in a backend.
 Backends are essentially shared value stores using publish/subscribe semantics.
@@ -276,8 +291,14 @@ Example:
 In principle, protocol backends can be used without bindings, but usually they are used together with data bindings.
 Protocol backends are defined in `awml.backends.js`.
 
+### Common Attributes
 
-### local
+* `shared`
+* `transform-path`
+* `name`
+* `type`
+
+### `<awml-backend type=local>`
 
 The `local` backend is essentially a mapping of values and there is no 'real' backend which connects different clients.
 It can be a convenient way for connecting widgets without the additional roundtrip of a network connection.
@@ -298,36 +319,20 @@ Example:
       </awml-knob>
     </awml-root>
 
+#### Attributes
 
-### shared
+* `delay`: Artificially delays the setting of properties by a number of
+  milliseconds. This can be used to simulate the behavior of a user
+  interface with a specific network lag. 
 
-The `shared` backend connects to a second backend inside of a [Shared Worker](https://developer.mozilla.org/en/docs/Web/API/SharedWorker).
-Shared Workers are worker threads, which can be accessed from all browser tabs with the same origin (protocol, host and port).
-For example, if the backend inside of the worker thread is a `websocket` backend, all same origin tabs would automatically share the same websocket connection.
-
-In the AWML tag `shared` can be added as an attribute.
-It can be applied to all other backends.
-
-The following example uses a `local` backend inside of the Shared Worker, which is a convenient way of connecting widgets inside of several tabs without the need for any network connection.
-
-Example:
-
-    <awml-root>
-      <awml-backend shared type='local' name='local'></awml-backend>
-
-      <h1>All tabs will keep this knob in sync</h1>
-
-      <awml-knob min='0' max='10'>
-        <awml-option name='value' src='local:foo'></awml-option>
-      </awml-knob>
-    </awml-root>
-
-### websocket
+### `<awml-backend type=websocket>`
 
 The `websocket` connects to a server through a WebSocket.
 The current implementation uses a simple JSON-based protocol.
-This is going to change in the future.
-An example backend can be found in the source code repository.
+This backend is to be considered an example and the protocol used
+here is going to change without any backwards compatibility.
+A corresponding server example can be found in the source code repository
+in `bin/server.pike`.
 
 Example:
 
@@ -344,6 +349,54 @@ Example:
         <awml-option name='value' src='local:foo'></awml-option>
       </awml-knob>
     </awml-root>
+
+#### Attributes
+
+* `src`: WebSocket url to connect to.
+* `clear`: If set, a clear command will be send initially after connecting.
+
+### `<awml-backend type=aes70>`
+
+This backend uses [AES70.js](http://github.com/DeutscheSoft/AES70.js) to control
+a remote device. It is defined in the source file `awml.aes70.js`. All
+properties in the device will become available through path names built up from
+their [AES70](https://ocaalliance.com) Role names. The path name of an object
+consists of its role name and the role names of its parent objects, seperated by
+`/`. The root block is excluded from this naming scheme, which means that the
+children of the root block appear at the top level.
+
+For example, imagine a device with the following AES70 tree in its root block:
+        
+      OcaBlock("Channel1",
+        OcaGain("Volume")
+      )
+      OcaBlock("Channel2",
+        OcaGain("Volume")
+      )
+
+The resulting properties available from the backend would be
+
+      Channel1/Volume/Gain
+      Channel1/Volume/Gain/Min
+      Channel1/Volume/Gain/Max
+      Channel1/Volume/Role
+      Channel1/Volume/Label
+      Channel1/Volume/...
+      Channel2/Volume/Gain
+      Channel2/Volume/Gain/Min
+      Channel2/Volume/Gain/Max
+      Channel2/Volume/Role
+      Channel2/Volume/Label
+      Channel2/Volume/...
+
+The properties available within an object path are those defined by AES70.
+
+All AES70 Manager objects are available through their name, e.g. the
+`DeviceManager` and its properties is availble as `DeviceManager/<property>`.
+
+#### Attributes
+
+* `src`: WebSocket url to connect to.
 
 ## Templates
 
@@ -437,4 +490,4 @@ After starting it, you can access the tests using the url (http://localhost:8080
 This implementation of AWML is available under the terms of the GNU General Public License version 2.
 See the `COPYING` file for details.
 
-Copyright (c) 2015-2017 DeusO GmbH
+Copyright (c) 2015-2019 DeusO GmbH
