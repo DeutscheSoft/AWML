@@ -18,6 +18,7 @@ The aim of AWML is to simplify the creation of professional user interfaces.
   - [websocket](#awml-backend-typewebsocket)
   - [aes70](#awml-backend-typeaes70)
 * [Templates](#templates)
+* [Tree Mutation Tags](#mutation-tags)
 * [Installation](#installation)
 * [License](#license)
 
@@ -141,10 +142,13 @@ Additional attributes are:
 * `src` - the address of the backend value, of the form `<protocol>:<path>`
 * `transform-send` - transform function for sending values (optional)
 * `transform-receive` - transform function when receiving values (optional)
+* `transform-src` - transform function called with the path before creating the
+  binding
 * `prefix` - source address base handle (optional)
 * `sync` - sync flag (optional)
 * `value` - the default value, if none is set in the corresponding backend (optional)
 * `format` - option format for default value (optional)
+* `partial` - accept partial values for list bindings
 
 By default, bindings will only react to user interaction in the widget, as opposed to any modification.
 This behavior can be controlled using the `sync` flag.
@@ -466,6 +470,53 @@ This could then easily be implemented in the above template examples:
 The `awml-clone` tag will automatically propagate the correct prefix values to all `awml-option` tags.
 
 The `awml-clone` tag is defined in the src file `awml.templates.js`.
+
+## Mutation Tags
+
+The mutation tags described here can be used to modify the DOM tree based
+on backend data. The text content inside of these tags is, unless empty,
+interpreted as a transformation method which is called with the current backend
+value. The interpretation of its return value depends on the mutation tag.
+Alternatively, the `transform-receive` attribute can be used to set a
+transformation function.
+
+All of these tags are defined in the source file `awml.styles.js`.
+
+### Common Attributes
+
+* `src` - Path of the value(s) to be bound.
+* `src-prefix` - Prefix handle to use for this binding.
+* `transform-receive` - Optional transformation callback for received values.
+  Will be called in the context of the corresponding DOM node.
+
+### `<awml-show>` and `<awml-hide>`
+
+The parent widgets is either hidden or shown depending on whether the value
+received is true or false. Note that these tags do not (directly) change the CSS
+of their parent widgets, instead they try to hide or show the parent by calling
+`hide_child` or `show_child` in its parent widget. Note that for this to work,
+the widget needs to be a child of a `awml-container`.
+
+### `<awml-styles>`
+
+This tag sets style properties on its parent node. The return value of the
+transformation function is expected to be an object containing style properties.
+
+### `<awml-class>`
+
+This tag adds CSS classes to its parent node. The return value of the
+transformation function is expected to be either a class name or an array of
+class names.
+
+### `<awml-attributes>`
+
+This tag sets attributes on its parent node. The return value of the
+transformation function is expected to be an object of attributes.
+
+### `<awml-prefix>`
+
+This tag sets a prefix on its parent node. The prefix handle used can be
+chosen using the `handle` attribute.
 
 ## Installation
 
