@@ -234,7 +234,7 @@
 
       if (this.debounce > 0)
       {
-        if (this.debounce_id === void(0)) return;
+        if (this.debounce_id !== void(0)) return;
         if (this.debounce_cb === null)
           this.debounce_cb = function() {
             this.debounce_id = void(0);
