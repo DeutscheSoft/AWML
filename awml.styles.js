@@ -126,6 +126,11 @@
     var widget = AWML.get_widget(node);
     if (!widget || !widget.parent || !widget.parent.hide_child) {
       AWML.error("AWML-HIDE: widget has no parent container.");
+      return;
+    }
+    if (!(widget instanceof TK.Container))
+    {
+      AWML.warn("Using awml-hide or awml-show with non-container tag.");
     }
     if (state) {
       widget.parent.hide_child(widget);
