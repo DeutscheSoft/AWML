@@ -106,6 +106,8 @@
             this.id = a[1];
             if (a.length === 3) {
               // we received the initial value on subscription success
+              // set has_value to false to force value to be updated regardless
+              this.has_value = false;
               this.update(a[1], a[2]);
             }
 
