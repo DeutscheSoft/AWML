@@ -174,6 +174,9 @@
     this.partial = false;
     this.has_values = [];
     this.value = new Array(b.length);
+    this.debounce = 0;
+    this.debounce_id = void(0);
+    this.debounce_cb = null;
 
     var C = this.cbs = new Array(b.length),
         i, cb = this.receive;
@@ -229,7 +232,17 @@
         this.has_value = true;
       }
 
-      this.callListeners(v);
+      if (this.debounce > 0)
+      {
+        if (this.debounce_id === void(0)) return;
+        if (this.debounce_cb === null)
+          this.debounce_cb = function() {
+            this.debounce_id = void(0);
+            this.callListeners(this.value);
+          }.bind(this);
+        this.debounce_id = setTimeout(this.debounce_cb, this.debounce);
+      }
+      else this.callListeners(v);
     },
   });
 
