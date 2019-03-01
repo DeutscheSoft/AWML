@@ -912,11 +912,11 @@
 
   AWML.Tags.Page = create_tag("awml-page", {
      awml_createdCallback: function() {
-        this.label = this.getAttribute("label");
-        this.icon = this.getAttribute("icon");
-        var options = extract_options.call(this, TK.Container);
-        options.element = this;
-        this.widget = new TK.Container(options);
+        var button_opt = extract_options.call(this, TK.Button);
+        var container_opt = extract_options.call(this, TK.Container);
+        this.page_opt = TK.object_sub(button_opt, container_opt);
+        container_opt.element = this;
+        this.widget = new TK.Container(container_opt);
     },
     attributeChangedCallback: function(name, old_value, value) {
         if (this.widget && has_attribute(this.widget, name)) {
@@ -933,10 +933,7 @@
         AWML.error("awml-page needs to be inside of a awml-pager.");
         return;
       }
-      parent_node.widget.add_page({
-        "label": this.label,
-        "icon": this.icon
-      }, this.widget);
+      parent_node.widget.add_page(this.page_opt, this.widget);
     }
   });
   AWML.Tags.Filter = create_tag("awml-filter", {
