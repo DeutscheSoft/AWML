@@ -971,12 +971,13 @@
     awml_createdCallback: function() {
       this.style.display = "none";
       this.type = this.getAttribute("type");
-      this.fun = parse_format.call(this, "js", this.textContent);
+      this.fun = null;
+      var cb = this.getAttribute("callback");
+      if (cb) {
+        this.fun = parse_format.call(this, "js", cb);
+      }
       if (typeof(this.type) !== "string") {
         AWML.error("AWML-EVENT without type.");
-      }
-      if (typeof(this.fun) !== "function") {
-        AWML.error("AWML-EVENT without function.");
       }
     },
     awml_attributeChangedCallback: function(name, old_value, value) {
@@ -988,10 +989,17 @@
       for (var i = 0; i < types.length; i++) {
         type = types[i].trim();
         if (!type.length) continue;
-        parent_node.widget.remove_event(type, this.fun);
+        if (this.fun)
+          parent_node.widget.remove_event(type, this.fun);
       }
     },
     awml_attachedCallback: function(root, parent_node) {
+      if (!this.fun) {
+        this.fun = parse_format.call(this, "js", this.textContent);
+      }
+      if (typeof(this.fun) !== "function") {
+        AWML.error("AWML-EVENT without function.");
+      }
       var types = this.type.split(",");
       var type;
       var w = parent_node.widget;
