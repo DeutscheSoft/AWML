@@ -448,6 +448,8 @@
       if (O.will_redraw) return;
       if (!O._redraw) O._redraw = function() {
         try {
+          if (!O.will_redraw)
+            return;
           this.redraw();
         } catch (e) {
           TK.error("%o threw an error in redraw: %o", this, e);

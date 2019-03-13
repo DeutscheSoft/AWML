@@ -60,7 +60,6 @@
       redraw: function() {
         AWML.RedrawLogic.redraw.call(this);
         var O = this.awml_data;
-        if (!O.attached) return;
         var v = O.binding.value,
             transform = O.transform_receive,
             node = this.parentNode;
