@@ -967,6 +967,26 @@
       }
     }
   });
+  
+  function delayed_event_binding () {
+    var fun = parse_format.call(this, "js", this.textContent);
+    var w = this.parent_widget;
+    if (typeof(fun) !== "function") {
+      AWML.error("AWML-EVENT without function.");
+    } else {
+      var types = this.type.split(",");
+      var type;
+      for (var i = 0; i < types.length; i++) {
+        type = types[i].trim();
+        if (!type.length) continue;
+        w.remove_event(type, this.fun);
+        w.add_event(type, fun);
+      }
+      this.fun = fun;
+      this.fun.apply(w, arguments);
+    }
+  }
+  
   AWML.Tags.Event = create_tag("awml-event", {
     awml_createdCallback: function() {
       this.style.display = "none";
@@ -975,6 +995,8 @@
       var cb = this.getAttribute("callback");
       if (cb) {
         this.fun = parse_format.call(this, "js", cb);
+      } else {
+        this.fun = delayed_event_binding.bind(this);
       }
       if (typeof(this.type) !== "string") {
         AWML.error("AWML-EVENT without type.");
@@ -994,12 +1016,7 @@
       }
     },
     awml_attachedCallback: function(root, parent_node) {
-      if (!this.fun) {
-        this.fun = parse_format.call(this, "js", this.textContent);
-      }
-      if (typeof(this.fun) !== "function") {
-        AWML.error("AWML-EVENT without function.");
-      }
+      this.parent_widget = parent_node.widget;
       var types = this.type.split(",");
       var type;
       var w = parent_node.widget;
