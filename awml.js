@@ -667,6 +667,7 @@
 
     return AWML.register_element(tagName, prototype);
   };
+  AWML.create_tag = create_tag;
 
   function registerWidget(tagName, widget) {
     var update_prefix = null;
