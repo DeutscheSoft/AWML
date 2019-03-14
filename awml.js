@@ -78,12 +78,14 @@
         }
       }
   }
+  AWML.check_option = check_option;
   function check_options(widget, options) {
     for (var key in options) {
       check_option(widget, key, options[key]);
     }
     return options;
   }
+  AWML.check_options = check_options;
   function attach_option(node, widget, name, value, simple) {
       if (name === "@CLASSES") {
         TK.add_class.apply(TK, [ node ].concat(value));
@@ -94,11 +96,13 @@
           widget.set(name, value);
       }
   }
+  AWML.attach_option = attach_option;
   function attach_options(node, widget, options, simple) {
       for (var key in options) {
           attach_option(node, widget, key, options[key], simple);
       }
   }
+  AWML.attach_options = attach_options;
   function detach_option(node, widget, name, value) {
       if (name === "@CLASSES") {
         TK.remove_class.apply(TK, [ node ].concat(value));
@@ -112,19 +116,23 @@
       }
       */
   }
+  AWML.detach_option = detach_option;
   function detach_options(node, widget, options) {
       for (var key in options) {
           detach_option(node, widget, key, options[key]);
       }
   }
+  AWML.detach_options = detach_options;
   function update_option(node, widget, name, value_old, value_new) {
       detach_option(node, widget, name, value_old);
       attach_option(node, widget, name, value_new);
   }
+  AWML.update_option = update_option;
   function option_value(value) {
       if (value instanceof Option) return value.value;
       return value;
   }
+  AWML.option_value = option_value;
   function has_attribute(widget, name) {
       if (widget._options[name] || name.charCodeAt(0) === 95) {
           // If the widget does not internally use the awml element itself, we have to 
@@ -135,6 +143,7 @@
       }
       return false;
   }
+  AWML.has_attribute = has_attribute;
   function evaluate_options(options) {
       var ret = {};
       for (var key in options) {
@@ -143,6 +152,7 @@
       }
       return ret;
   }
+  AWML.evaluate_options = evaluate_options;
   function parse_format(type, x, fallback) {
       switch (type) {
       case "js":
@@ -342,6 +352,7 @@
     options = do_merge_options(AWML.options.defaults[this.tagName.toLowerCase()], options);
     return options;
   }
+  AWML.extract_options = extract_options;
 
   var TK = window.TK;
 
