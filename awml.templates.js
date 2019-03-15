@@ -52,7 +52,11 @@
   function get_template(O) {
     var p;
 
-    if (O.fetch)
+    if (O.notemplate)
+    {
+      p = Promise.resolve(O.template);
+    }
+    else if (O.fetch)
     {
       p = (O.cached ? fetch_template_cached : fetch_template)(O.handle, O.base_url);
     }
@@ -124,15 +128,23 @@
     },
     attachedCallback: function() {
       var O = this.awml_data;
-      AWML.PrefixLogic.attachedCallback.call(this);
       O.handle = this.getAttribute("template");
+      O.notemplate = this.getAttribute("notemplate") !== null;
+
+      if (O.notemplate)
+      {
+        O.template = document.createElement("template");
+        O.template.url = get_base();
+      }
+
+      AWML.PrefixLogic.attachedCallback.call(this);
       this.reload();
     },
     receive: function(v) {
       var O = this.awml_data;
       var transform = O.transform_receive;
       if (transform) v = transform(v);
-      if (O.handle === v) return;
+      if (O.handle === v && O.transform_template === null) return;
       O.handle = v;
       this.reload();
     },
