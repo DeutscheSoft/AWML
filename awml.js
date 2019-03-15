@@ -410,7 +410,16 @@
   }
 
   function set_prefix(node, prefix, handle) {
-    var attr = handle !== void 0 ? "prefix-"+handle : "prefix";
+    var attr;
+    if (handle === void(0))
+    {
+      handle = null;
+      attr = "prefix"
+    }
+    else
+    {
+      attr = "prefix-"+handle;
+    }
     if (node.getAttribute(attr) === prefix) return;
     node.setAttribute(attr, prefix);
     update_prefix(node, handle);

@@ -90,7 +90,7 @@
         var O = this.awml_data;
         this.remove_redraw();
         if (O.prev && this.parentNode)
-          O.remove(this.parentNode, O.prev);
+          O.remove(this.parentNode, O.prev, this);
         AWML.PrefixLogic.unbind.call(this, src);
       },
     }));

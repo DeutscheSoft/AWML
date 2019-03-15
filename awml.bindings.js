@@ -18,6 +18,10 @@
     this.listeners = null;
   }
   BaseBinding.prototype = {
+    is_equal: function(to)
+    {
+      return this === to;
+    },
     subscribe: function() {},
     unsubscribe: function() {},
     hasListener: function(callback) {
@@ -185,6 +189,17 @@
       if (b[i]) C[i] = cb.bind(this, i);
   }
   ListBinding.prototype = inherit(BaseBinding, {
+    is_equal: function(to)
+    {
+      if (to === this) return true;
+      var b = this.bindings;
+      if (to.bindings.length !== b.length) return false;
+      for (var i = 0; i < b.length; i++) {
+        if (!b[i].is_equal(to.bindings[i]))
+          return false;
+      }
+      return true;
+    },
     subscribe: function() {
       this.has_values = [];
       this.has_value = false;
@@ -301,7 +316,7 @@
       O.attached = true;
 
       /* update all prefixes */
-      this.awml_update_prefix(null);
+      this.awml_update_prefix(this.getAttribute("src-prefix"));
     },
     detachedCallback: function() {
       this.awml_data.attached = false;
@@ -318,13 +333,9 @@
       }
     },
     awml_update_prefix: function(handle) {
-      if (handle !== null) {
-        if (handle !== this.getAttribute("src-prefix")) return;
-      }
+      if (handle !== this.getAttribute("src-prefix")) return;
 
       var O = this.awml_data;
-
-      if (O.binding) this.unbind();
 
       var src = this.getAttribute("src");
 
@@ -337,6 +348,9 @@
         var prefix = AWML.collect_prefix(this, handle);
         if (prefix.search(':') === -1) return;
         src = src_apply_prefix(src, prefix);
+      } else if (O.binding) {
+        // there is nothing to do here.
+        return;
       }
 
       if (O.debug)
@@ -354,7 +368,16 @@
         AWML.error(this.tagName, "is missing src attribute");
         return;
       }
-      O.binding = Array.isArray(src) ? new ListBinding(src.map(get_binding)) : AWML.get_binding(src);
+      var b = Array.isArray(src) ? new ListBinding(src.map(get_binding)) : AWML.get_binding(src);
+
+      if (O.binding)
+      {
+        if (b === O.binding || b.is_equal(O.binding)) return;
+
+        this.unbind();
+      }
+
+      O.binding = b;
       O.binding.addListener(this);
 
       if (O.debug) {
