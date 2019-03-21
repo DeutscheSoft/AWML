@@ -133,7 +133,8 @@
   function hide(node, state) {
     var widget = AWML.get_widget(node);
     if (!widget || !widget.parent || !widget.parent.hide_child) {
-      AWML.error("AWML-HIDE: widget has no parent container.");
+      if (this.attached)
+        AWML.error("AWML-HIDE: widget has no parent container.");
       return;
     }
     if (!(widget instanceof TK.Container))
@@ -148,7 +149,7 @@
   }
 
   function show(node, state) {
-    hide(node, !state);
+    hide.call(this, node, !state);
   }
 
   AWML.Tags.Attributes = register_style_tag("awml-hide", hide, show);
