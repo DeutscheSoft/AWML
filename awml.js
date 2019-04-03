@@ -509,7 +509,7 @@
   // syntax-errors in browsers which do not
   // support ES6 classes
   function create_class(tagName) {
-    var name = tagName.replace("-", "_");
+    var name = tagName.replace(/-/g, "_");
     var code = "";
     code += "return class "+name+" extends HTMLElement {";
     code += "constructor()";
