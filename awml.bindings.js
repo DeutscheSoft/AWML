@@ -263,6 +263,8 @@
 
   function binding_set_handler(v) {
     this.send(v);
+    if (this.options["prevent-default"])
+      return false;
   }
   function binding_useraction_handler(name, k, v) {
     if (name !== k) return;

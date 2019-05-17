@@ -146,14 +146,34 @@ Additional attributes are:
   binding
 * `prefix` - source address base handle (optional)
 * `sync` - sync flag (optional)
+* `readonly` - readonly flag (optional)
+* `writeonly` - writeonly flag (optional)
 * `value` - the default value, if none is set in the corresponding backend (optional)
 * `format` - option format for default value (optional)
 * `partial` - accept partial values for list bindings
+* `prevent-default` - If set, the event handler of the toolkit event will return false. This will prevent
+  the default action of that event handler. What this default action is depends
+  on the widget.
+* `receive-delay` - Time in milliseconds for which value changes from the
+  backend are ignored for after the last user action. This prevents control
+  widgets to jump back while the user is controlling them. Defaults to 1000.
+* `debug` - If set, some debug information about the binding will be printed to
+  the JavaScript console. This can be helpful when bindings do not work for some
+  reason.
 
 By default, bindings will only react to user interaction in the widget, as opposed to any modification.
-This behavior can be controlled using the `sync` flag.
-If `sync` is set, the binding will trigger on any modification of the widget option and send the new value to the backend.
-This is useful when relaying values from one remote backend to another local one.
+This means it will bind the `useraction` event in the Toolkit widget. This
+behavior can be controlled using the following flags:
+* `readonly` - No event will be used. The binding will not react to changes of
+  the widget option at all and only set the option in the widget when values
+  change in the back-end.
+* `sync` - The `set` event handler will be used instead of the `useraction`
+  event. This means that this binding will react to *all* changes of the widget
+  option, even if done programmatically (e.g. by another binding).
+* `writeonly` - The `userset` event will be used and the default action
+  prevented. The default action of the `userset` event is the `useraction`
+  event. This means that option changes done by the user will not change the
+  widget at all, instead they will only be sent to the back end.
 
 Example:
 
