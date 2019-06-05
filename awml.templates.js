@@ -144,9 +144,21 @@
       var O = this.awml_data;
       var transform = O.transform_receive;
       if (transform) v = transform(v);
-      if (O.handle === v && O.transform_template === null) return;
-      O.handle = v;
-      this.reload();
+      if (v instanceof Promise)
+      {
+        v.then(function(v) {
+          if (O.handle === v && O.transform_template === null) return;
+          O.handle = v;
+          this.reload();
+        }.bind(this));
+        return;
+      }
+      else
+      {
+        if (O.handle === v && O.transform_template === null) return;
+        O.handle = v;
+        this.reload();
+      }
     },
     reload: function() {
       var O = this.awml_data;
