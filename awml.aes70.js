@@ -57,6 +57,7 @@ var f = (function(w, AWML) {
       var id = this.resolve(name);
 
       if (p.static) {
+        backend.subscribe_success(path, id);
         backend.receive(id, this.o[name]);
         return;
       }
@@ -313,8 +314,20 @@ var f = (function(w, AWML) {
       var id;
 
       if (!p || (id = p.resolve(property_name)) === void(0)) {
-        this.subscribe_fail(path, "No such property.");
-        return;
+
+        p = this.objects.get(path);
+
+        if (p)
+        {
+          this.subscribe_success(path, path);
+          this.receive(path, p.o);
+          return;
+        }
+        else
+        {
+          this.subscribe_fail(path, "No such property.");
+          return;
+        }
       }
 
       try {
