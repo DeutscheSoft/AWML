@@ -405,6 +405,7 @@ var f = (function(w, AWML) {
         .then(
           function(values) {
             for (var uri in values) {
+              if (this.values.has(this.uri2id.get(uri))) continue;
               this.receive(uri, values[uri]);
             }
           }.bind(this),
@@ -423,6 +424,7 @@ var f = (function(w, AWML) {
 
         if (typeof(values) === 'object')
           for (var uri in values) {
+            if (this.values.has(this.uri2id.get(uri))) continue;
             this.receive(uri, values[uri]);
           }
       }.bind(this));
@@ -703,14 +705,15 @@ var f = (function(w, AWML) {
   }
 
   function LocalStorage(options) {
-    var clear = options.clear;
-    Base.call(this, options);
+    var storage;
     try {
-      this.storage = w.localStorage;
-      if (clear) this.storage.clear();
+      storage = w.localStorage;
+      if (options.clear) storage.clear();
     } catch (e) {
       error("Cannot use LocalStorage backend. Probably because this page is accessed through a file:// URL.");
     }
+    Local.call(this, options);
+    this.storage = storage;
     this.encoded_values = new Map();
     w.addEventListener('storage', function(ev) {
       if (ev.storageArea !== this.storage) return;
@@ -722,20 +725,20 @@ var f = (function(w, AWML) {
         receive.call(this, key, JSON.parse(val));
       }
     }.bind(this));
-    to_open.call(this);
   }
-  LocalStorage.prototype = Object.assign(Object.create(Base.prototype), {
+  LocalStorage.prototype = Object.assign(Object.create(Local.prototype), {
     low_subscribe: function(uri) {
-      subscribe_success.call(this, uri, uri);
       var val = this.storage.getItem(uri);
+
+      Local.prototype.low_subscribe.call(this, uri);
 
       if (val !== null) {
         this.encoded_values.set(uri, val);
         receive.call(this, uri, JSON.parse(val));
       }
     },
-    low_unsubscribe: function(id) {},
     set: function(id, value) {
+      Local.prototype.set.call(this, id, value);
       var enc = JSON.stringify(value);
       if (typeof(enc) === "string") {
         if (enc === this.encoded_values.get(id)) return;
@@ -748,7 +751,7 @@ var f = (function(w, AWML) {
     },
     arguments_from_node: function(node) {
       return Object.assign(
-        Base.prototype.arguments_from_node(node),
+        Local.prototype.arguments_from_node(node),
         {
           clear: node.getAttribute("clear") !== null,
         }
