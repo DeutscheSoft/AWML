@@ -819,12 +819,12 @@
     detachedCallback: function() {
       var backend = this.backend;
       if (backend) {
+        this.backend = null;
         AWML.register_backend(this.name, null);
         backend.removeEventListener("error", this.error_cb);
         backend.removeEventListener("close", this.error_cb);
         backend.removeEventListener("destroy", this.error_cb);
         backend.destroy();
-        backend = null;
       }
     },
     attachedCallback: function() {

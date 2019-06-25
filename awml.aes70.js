@@ -260,6 +260,7 @@ var f = (function(w, AWML) {
       if (this.device)
       {
         this.device.removeEventListener('close', this.close_cb);
+        this.device = null;
       }
       if (this.ws)
       {
