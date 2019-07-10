@@ -242,15 +242,17 @@
 
     for (x in o1)
         ret[x] = o1[x];
-
     for (x in o2) {
         if (typeof ret[x] === "object" &&
             typeof o2[x] === "object" &&
-            Object.getPrototypeOf(ret[x]) == null &&
-            Object.getPrototypeOf(o2[x]) == null)
+            //Object.getPrototypeOf(ret[x]) == null &&
+            //Object.getPrototypeOf(o2[x]) == null) {
+            ret[x] instanceof Object &&
+            o2[x] instanceof Object) {
             ret[x] = do_merge_options(ret[x], o2[x]);
-        else
+        } else {
             ret[x] = o2[x];
+        }
     }
 
     return ret;
@@ -331,7 +333,8 @@
                 TK.warn("No such default options: %o", tmp[j]);
                 continue;
               }
-              Object.assign(merge_options, AWML.options[tmp[j]]);
+              //Object.assign(merge_options, AWML.options[tmp[j]]);
+              merge_options = do_merge_options(merge_options, AWML.options[tmp[j]]);
             }
             continue;
         }
