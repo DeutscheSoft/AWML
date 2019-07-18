@@ -1030,7 +1030,7 @@
       TK.warn("not implemented");
     },
     awml_detachedCallback: function(root, parent_node) {
-      var types = this.type.split(",");
+      var types = this.type.split(/[^a-zA-Z0-9\-_]/);
       var type;
       for (var i = 0; i < types.length; i++) {
         type = types[i].trim();
@@ -1041,7 +1041,7 @@
     },
     awml_attachedCallback: function(root, parent_node) {
       this.parent_widget = parent_node.widget;
-      var types = this.type.split(",");
+      var types = this.type.split(/[^a-zA-Z0-9\-_]/);
       var type;
       var w = parent_node.widget;
       for (var i = 0; i < types.length; i++) {
