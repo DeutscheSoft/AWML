@@ -399,11 +399,13 @@ var f = (function(w, AWML) {
     this.open();
 
     var src = options.src;
+    var transform = options.transform_data;
 
     if (src) {
       AWML.fetch_json(src)
         .then(
           function(values) {
+            if (transform) values = transform(values);
             for (var uri in values) {
               if (this.values.has(this.uri2id.get(uri))) continue;
               this.receive(uri, values[uri]);
@@ -421,6 +423,8 @@ var f = (function(w, AWML) {
       // of the initial textContent and treat that as JSON.
       TK.S.after_frame(function() {
         var values = AWML.parse_format("json", options.node.textContent, {});
+
+        if (transform) values = transform(values);
 
         if (typeof(values) === 'object')
           for (var uri in values) {
@@ -446,12 +450,14 @@ var f = (function(w, AWML) {
       }
     },
     arguments_from_node: function(node) {
+        var tmp = node.getAttribute("transform-data");
         return Object.assign(
           Base.prototype.arguments_from_node(node),
           {
             name: node.getAttribute("name"),
             src: node.getAttribute("src"),
             delay: parseInt(node.getAttribute("delay")),
+            transform_data: tmp ? AWML.parse_format("js", tmp, null) : null,
           }
         );
     },
