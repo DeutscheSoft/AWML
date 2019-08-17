@@ -713,7 +713,7 @@ var f = (function(w, AWML) {
   function LocalStorage(options) {
     var storage;
     try {
-      storage = w.localStorage;
+      storage = options.storage || w.localStorage;
       if (options.clear) storage.clear();
     } catch (e) {
       error("Cannot use LocalStorage backend. Probably because this page is accessed through a file:// URL.");
@@ -760,6 +760,7 @@ var f = (function(w, AWML) {
         Local.prototype.arguments_from_node(node),
         {
           clear: node.getAttribute("clear") !== null,
+          storage: AWML.parse_option("js", node.getAttribute("storage")),
         }
       );
     },
