@@ -760,7 +760,7 @@ var f = (function(w, AWML) {
         Local.prototype.arguments_from_node(node),
         {
           clear: node.getAttribute("clear") !== null,
-          storage: AWML.parse_option("js", node.getAttribute("storage")),
+          storage: node.hasAttribute("storage") && AWML.parse_option("js", node.getAttribute("storage")),
         }
       );
     },
