@@ -245,12 +245,8 @@
     for (x in o2) {
         if (typeof ret[x] === "object" &&
             typeof o2[x] === "object" &&
-            //Object.getPrototypeOf(ret[x]) == null &&
-            //Object.getPrototypeOf(o2[x]) == null) {
-            ret[x] instanceof Object &&
-            o2[x] instanceof Object &&
-            ret[x].constructor !== Array &&
-            o2[x].constructor !== Array) {
+            Object.getPrototypeOf(ret[x]) == Object.prototype &&
+            Object.getPrototypeOf(o2[x]) == Object.prototype) {
             ret[x] = do_merge_options(ret[x], o2[x]);
         } else if (x === "@CLASSES") {
             ret[x] = (ret[x] || []).concat(o2[x]);
