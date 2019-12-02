@@ -158,7 +158,6 @@
         this.has_requested_value = false;
         this.requested_value = null;
       }
-      if (this.has_value && this.value === value) return;
 
       this.value = value;
       this.has_value = true;
