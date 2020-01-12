@@ -13,7 +13,14 @@ module.exports = function(w, AWML) {
       this.message(JSON.parse(data));
     }.bind(this);
     this.close_cb = function() {
-      this.destroy();
+      try
+      {
+        this.destroy();
+      }
+      catch (err)
+      {
+        console.error(err);
+      }
     }.bind(this);
     ws.on("message", this.message_cb);
     ws.on("error", this.close_cb);
