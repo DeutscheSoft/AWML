@@ -586,7 +586,7 @@
 
     customElements.define(tagName, cl);
 
-    return true;
+    return cl;
   }
 
   function register_element_v0(tagName, prototype) {
