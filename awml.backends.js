@@ -419,7 +419,7 @@ var f = (function(w, AWML) {
       // NOTE: this is _correctly_ done using mutation observers, however
       // they are not widely supported. What we really want is to get a snapshot
       // of the initial textContent and treat that as JSON.
-      TK.S.after_frame(function() {
+      requestAnimationFrame(function() {
         var values = AWML.parse_format("json", options.node.textContent, {});
 
         if (transform) values = transform(values);
