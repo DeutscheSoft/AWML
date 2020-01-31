@@ -559,14 +559,32 @@
       if (o.debug) TK.log("Connector(%o) activated.", this.binding);
 
       if (!o.readonly)
-        this.widget.add_event(this.get_send_event(), this.get_send_cb());
+      {
+        if (this.widget.add_event) // toolkit
+        {
+          this.widget.add_event(this.get_send_event(), this.get_send_cb());
+        }
+        else // aux
+        {
+          this.widget.on(this.get_send_event(), this.get_send_cb());
+        }
+      }
       this.binding.addListener(this);
     },
     deactivate: function() {
       var o = this.options;
 
       if (!o.readonly)
-        this.widget.remove_event(this.get_send_event(), this.get_send_cb());
+      {
+        if (this.widget.remove_event) // toolkit
+        {
+          this.widget.remove_event(this.get_send_event(), this.get_send_cb());
+        }
+        else // aux
+        {
+          this.widget.off(this.get_send_event(), this.get_send_cb());
+        }
+      }
 
       this.binding.removeListener(this);
       if (this._delay_id) clearTimeout(this._delay_id);

@@ -305,8 +305,12 @@
           return null;
 
       do
+      {
           if (node.is_awml_node && node.widget)
-              return node;
+            return node;
+          if (node.isAuxWidget)
+            return node;
+      }
       while (node = node.parentNode);
 
       return null;
@@ -660,6 +664,7 @@
     AWML.upgrade_element = function(node) {};
     AWML.downgrade_element = function(node) {};
     AWML.update_attribute = update_attribute;
+    AWML.whenDefined = function(name) { return customElements.whenDefined(name); };
   } else if (document.registerElement) {
     AWML.register_element = register_element_v0;
     AWML.upgrade_element = function(node) {};
@@ -705,6 +710,19 @@
                 this.awml_created = true;
               }
               this.awml_attachedCallback(root, parent_node);
+            }
+            else if (root)
+            {
+              var tagName = this.parentNode.tagName;
+
+              if (AWML.whenDefined && tagName.search('-') !== -1)
+              {
+                tagName = tagName.toLowerCase();
+                AWML.whenDefined(tagName).then(function() {
+                  if (!this.isConnected) return;
+                  this.attachedCallback();
+                }.bind(this));
+              }
             }
           }
         },
@@ -950,6 +968,8 @@
         o.attach(parent_node, parent_node.widget);
       } else if (parent_node instanceof AWML.Tags.Options) {
         parent_node.data[o.name] = o;
+      } else if (parent_node.isAuxWidget) {
+        o.attach(parent_node, parent_node.auxWidget);
       } else {
         AWML.error("Attached awml-option tag to neither widget nor awml-options parent.");
         return;
@@ -966,6 +986,8 @@
         if (parent_node.data[o.name] === o) {
           delete parent_node.data[o.name];
         }
+      } else if (parent_node.isAuxWidget) {
+        o.detach(parent_node, parent_node.auxWidget);
       }
     },
     attributeChangedCallback: function(name, old_value, value) {
