@@ -1,0 +1,14 @@
+{
+  "name": "awml",
+  "version": "1.0.0",
+  "description": "A templating language for AUX and toolkit.",
+  "main": "index.js",
+  "directories": {},
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git@gitlab.deuso.de:WebUI/AWML.git"
+  },
+  "author": "Arne Goedeke",
+  "license": "GPLv2"
+}
