@@ -556,7 +556,7 @@
     activate: function() {
       var o = this.options;
 
-      if (o.debug) TK.log("Connector(%o) activated.", this.binding);
+      if (o.debug && TK) TK.log("Connector(%o) activated.", this.binding);
 
       if (!o.readonly)
       {
