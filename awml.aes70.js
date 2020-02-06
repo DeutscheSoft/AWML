@@ -2,25 +2,8 @@ var f = (function(w, AWML) {
   var base = AWML.Backends.base;
   var proto = base.prototype;
 
-  /* TODO: this backend is far from being optimized. */
-  function timeout(p, time)
-  {
-    return new Promise(function(resolve, reject) {
-      const id = setTimeout(function() { reject(new Error("timeout")); }, time);
-      p.then(
-        function(result) {
-          clearTimeout(id);
-          resolve(result);
-        },
-        function(err) {
-          clearTimeout(id);
-          reject(err);
-        });
-    });
-  }
-
   function get_members(o) {
-    return timeout(o.GetMembers(), 5000).catch(function(){ return []; }).then(function(res) {
+    return o.GetMembers().then(function(res) {
       return res.map(o.device.resolve_object.bind(o.device));
     });
   }
@@ -148,9 +131,7 @@ var f = (function(w, AWML) {
         }
         else
         {
-          ret.push(timeout(o.GetRole(), 10000)
-              .catch(function() { return null; }.bind(this, o))
-              .then(function(o, role) { roles.set(o, role); }.bind(this, o)));
+          ret.push(o.GetRole().then(function(o, role) { roles.set(o, role); }.bind(this, o)));
         }
       }
 
