@@ -196,6 +196,7 @@ var f = (function(w, AWML) {
 
   function aes70(options) {
     base.call(this, options);
+    this.options = options;
 
     this.close_cb = function() {
       this.close();
@@ -225,7 +226,12 @@ var f = (function(w, AWML) {
         var ws;
         ws = new WebSocket(this.url);
         ws.addEventListener('open', function() {
-          this.device = new OCA.RemoteDevice(new OCA.WebSocketConnection(this.ws));
+          var options = { };
+
+          if (this.options.batch)
+            options.batch = this.options.batch;
+
+          this.device = new OCA.RemoteDevice(new OCA.WebSocketConnection(this.ws, options));
           this.open();
         }.bind(this));
         ws.addEventListener('close', this.close_cb);
@@ -235,7 +241,19 @@ var f = (function(w, AWML) {
         this.error(e);
       }
     },
-    arguments_from_node: AWML.Backends.websocket.prototype.arguments_from_node,
+    arguments_from_node: function (node) {
+      var options = {};
+
+      var batch = node.getAttribute('batch');
+
+      if (batch !== null)
+        options.batch = parseInt(batch);
+
+      return Object.assign(
+        AWML.Backends.websocket.prototype.arguments_from_node(node),
+        options
+      );
+    },
     destroy: function() {
       proto.destroy.call(this);
       if (this.device)
