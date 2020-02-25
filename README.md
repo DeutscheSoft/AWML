@@ -10,9 +10,12 @@ The aim of AWML is to simplify the creation of professional user interfaces.
 
 * [Using Widgets](#widgets)
 * [Options](#options)
+  - [Option formats](#option-formats)
   - [Static options](#awml-option-typestatic)
   - [Media options](#awml-option-typemedia)
   - [Bind options](#awml-option-typebind)
+  - [Option inheritance](#options-and-inheritance)
+* [Events](#events)
 * [Protocol Backends](#protocol-backends)
   - [local](#awml-backend-typelocal)
   - [websocket](#awml-backend-typewebsocket)
