@@ -9,20 +9,21 @@
 
   function remove_styles(elem, styles) {
     var s = elem.style;
-    
+ 
     for (var name in styles) {
       s.removeProperty(name);
     }
   }
 
-  function id(v) { return v; }
+  function add_styles(elem, styles) {
+    var s = elem.style;
 
-  var TK = window.TK;
-
-  if (!TK || !TK.S) {
-    AWML.error('awml.styles.js depends on toolkit');
-    return;
+    for (var name in styles) {
+      s.setProperty(name, styles[name]);
+    }
   }
+
+  function id(v) { return v; }
 
   var C = 0;
 
@@ -96,21 +97,21 @@
     }));
   }
 
-  AWML.Tags.Styles = register_style_tag("awml-styles", TK.set_styles, remove_styles);
+  AWML.Tags.Styles = register_style_tag("awml-styles", add_styles, remove_styles);
 
   function remove_classes(node, c) {
     if (Array.isArray(c)) {
-      TK.remove_class.apply(TK, [ node ].concat(c));
+      c.forEach((cl) => node.classList.remove(cl));
     } else {
-      TK.remove_class(node, c);
+      node.classList.remove(c);
     }
   }
 
   function add_classes(node, c) {
     if (Array.isArray(c)) {
-      TK.add_class.apply(TK, [ node ].concat(c));
+      c.forEach((cl) => node.classList.add(cl));
     } else {
-      TK.add_class(node, c);
+      node.classList.add(c);
     }
   }
 
@@ -137,7 +138,7 @@
         AWML.error("AWML-HIDE: widget has no parent container.");
       return;
     }
-    if (!(widget instanceof TK.Container))
+    if ('TK' in window && !(widget instanceof window.TK.Container))
     {
       AWML.warn("Using awml-hide or awml-show with non-container tag.");
     }
