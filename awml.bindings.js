@@ -355,7 +355,7 @@
       }
 
       if (O.debug)
-        TK.log("Update prefix gives src %o", src);
+        AWML.log("Update prefix gives src %o", src);
 
       this.bind(src);
     },
@@ -382,7 +382,7 @@
       O.binding.addListener(this);
 
       if (O.debug) {
-        TK.log("Binding %o", O.binding);
+        AWML.log("Binding %o", O.binding);
       }
     },
     unbind: function() {
@@ -556,7 +556,7 @@
     activate: function() {
       var o = this.options;
 
-      if (o.debug && TK) TK.log("Connector(%o) activated.", this.binding);
+      if (o.debug) AWML.log("Connector(%o) activated.", this.binding);
 
       if (!o.readonly)
       {
@@ -638,7 +638,7 @@
       try {
         if (f !== void(0)) v = f.call(this.binding, v);
         if (v !== void(0)) w.set(o.name, v);
-        if (o.debug) TK.log("Connector(%o) received %o", this.binding, v);
+        if (o.debug) AWML.log("Connector(%o) received %o", this.binding, v);
         f = o["after-receive"];
         if (f !== void(0)) f.call(this, this.binding, w, v, o);
       } catch (e) {
@@ -666,7 +666,7 @@
       try {
         if (f !== void(0)) v = f.call(this.binding, v);
         if (v !== void(0)) this.binding.set(v);
-        if (o.debug) TK.log("Connector(%o) sent %o", this.binding, v);
+        if (o.debug) AWML.log("Connector(%o) sent %o", this.binding, v);
       } catch (e) {
         AWML.warn("Error when sending value:", e);
       } finally {

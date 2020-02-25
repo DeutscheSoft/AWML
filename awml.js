@@ -2,6 +2,16 @@
 "use strict";
 (function(w) {
 
+  function log()
+  {
+    try
+    {
+      console.log.apply(console, arguments);
+    }
+    catch (err)
+    {}
+  }
+
   function warn()
   {
     try
@@ -413,6 +423,7 @@
       AWML.warn.apply(this, arguments);
     error.apply(this, arguments);
   };
+  AWML.log = log;
   AWML.push_warn = function(f) {
     _warn_stack.push(f);
   };
