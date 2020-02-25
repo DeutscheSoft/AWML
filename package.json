@@ -1,6 +1,6 @@
 {
   "name": "@deuso/awml",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A templating language for AUX and toolkit.",
   "main": "index.js",
   "directories": {},
