@@ -343,7 +343,7 @@
   AWML.find_parent_widget = function(node) { return find_parent.call(node); }
   AWML.find_root_widget = function(node) { return find_root.call(node); }
   AWML.get_widget = function(node) {
-    return node.widget;
+    return node.widget || node.auxWidget;
   }
 
 
@@ -1083,7 +1083,10 @@
         type = types[i].trim();
         if (!type.length) continue;
         w.remove_event(type, this.fun);
-        w.add_event(type, fun);
+        if (this.widget.add_event)
+          w.add_event(type, fun);
+        else
+          w.on(type, fun);
       }
       this.fun = fun;
       this.fun.apply(w, arguments);
@@ -1122,11 +1125,14 @@
       this.parent_widget = parent_node.widget;
       var types = this.type.split(/[^a-zA-Z0-9\-_]/);
       var type;
-      var w = parent_node.widget;
+      var w = parent_node.widget || parent_node.auxWidget;
       for (var i = 0; i < types.length; i++) {
         type = types[i].trim();
         if (!type.length) continue;
-        w.add_event(type, this.fun);
+        if (w.add_event)
+          w.add_event(type, this.fun);
+        else
+          w.on(type, this.fun);
         if (type === 'initialized') {
           /* the initialization has already happened, 
            * so we call it manually */
