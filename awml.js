@@ -1117,8 +1117,10 @@
       for (var i = 0; i < types.length; i++) {
         type = types[i].trim();
         if (!type.length) continue;
-        if (this.fun)
-          parent_node.widget.remove_event(type, this.fun);
+        if (this.fun) {
+          var w = parent_node.widget || parent_node.auxWidget;
+          w.remove_event(type, this.fun);
+        }
       }
     },
     awml_attachedCallback: function(root, parent_node) {
