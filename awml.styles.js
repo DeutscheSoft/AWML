@@ -133,9 +133,10 @@
 
   function hide(node, state) {
     var widget = AWML.get_widget(node);
-    if (!widget || !widget.parent || !widget.parent.hide_child) {
+    if (!widget || !widget.parent) return;
+    if (!widget.parent.hide_child) {
       if (this.attached)
-        AWML.error("AWML-HIDE: widget has no parent container.");
+        AWML.error("AWML-HIDE: widget has no parent container.", widget);
       return;
     }
     if ('TK' in window && !(widget instanceof window.TK.Container))
