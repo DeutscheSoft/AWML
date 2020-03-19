@@ -744,7 +744,9 @@
           var parent_node = find_parent.call(this);
 
           if (parent_node !== this.awml_parent) {
-            this.awml_detachedCallback(this.awml_root, this.awml_parent);
+            if (this.awml_root && this.awml_parent) {
+              this.awml_detachedCallback(this.awml_root, this.awml_parent);
+            }
             this.awml_parent = null;
           }
         },
