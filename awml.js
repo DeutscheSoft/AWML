@@ -1084,8 +1084,11 @@
       for (var i = 0; i < types.length; i++) {
         type = types[i].trim();
         if (!type.length) continue;
-        w.remove_event(type, this.fun);
-        if (this.widget.add_event)
+        if (w.remove_event)
+          w.remove_event(type, this.fun);
+        else
+          w.off(type, this.fun);
+        if (w.add_event)
           w.add_event(type, fun);
         else
           w.on(type, fun);
@@ -1126,10 +1129,10 @@
       }
     },
     awml_attachedCallback: function(root, parent_node) {
-      this.parent_widget = parent_node.widget;
       var types = this.type.split(/[^a-zA-Z0-9\-_]/);
       var type;
       var w = parent_node.widget || parent_node.auxWidget;
+      this.parent_widget = w;
       for (var i = 0; i < types.length; i++) {
         type = types[i].trim();
         if (!type.length) continue;
