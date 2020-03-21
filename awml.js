@@ -333,8 +333,12 @@
           return null;
 
       do
+      {
           if (node.tagName === "AWML-ROOT")
               return node;
+          if (node.tagName === "AUX-ROOT")
+              return node;
+      }
       while (node = node.parentNode);
 
       return null;
@@ -1020,14 +1024,7 @@
   });
 
   AWML.Tags.Options = create_tag("awml-options", {
-     awml_createdCallback: function() {
-        var classes = [];
-
-        this.style.display = "none";
-
-        this.name = this.getAttribute("name");
-        this.widget = this.getAttribute("widget");
-
+     awml_extract_options: function() {
         if (this.widget) this.widget = this.widget.toLowerCase();
 
         var data = extract_options.call(this);
@@ -1039,12 +1036,25 @@
           data["@CLASSES"] = classes;
         }
         this.data = data;
+     },
+     awml_createdCallback: function() {
+        var classes = [];
+
+        this.style.display = "none";
+
+        this.name = this.getAttribute("name");
+        this.widget = this.getAttribute("widget");
+        this.data = null;
     },
     awml_attachedCallback: function(root, parent_node) {
-      if (parent_node.tagName !== "AWML-ROOT") {
+      if (parent_node.tagName !== "AWML-ROOT" &&
+          parent_node.tagName !== "AUX-ROOT") {
         AWML.error("awml-options tags must be direct children of awml-root.");
         return;
       }
+
+      this.awml_extract_options();
+
       if (this.name) {
         AWML.options[this.name] = this.data;
       } else if (this.widget) {
@@ -1054,7 +1064,8 @@
       }
     },
     awml_detachedCallback: function(root, parent_node) {
-      if (parent_node.tagName !== "AWML-ROOT") {
+      if (parent_node.tagName !== "AWML-ROOT" &&
+          parent_node.tagName !== "AUX-ROOT") {
         AWML.error("awml-options tags must be direct children of awml-root.");
         return;
       }
