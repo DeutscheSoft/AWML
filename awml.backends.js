@@ -405,7 +405,7 @@ var f = (function(w, AWML) {
           function(values) {
             if (transform) values = transform(values);
             for (var uri in values) {
-              if (this.values.has(this.uri2id.get(uri))) continue;
+              if (this.values.has(uri)) continue;
               this.receive(uri, values[uri]);
             }
           }.bind(this),
@@ -419,14 +419,14 @@ var f = (function(w, AWML) {
       // NOTE: this is _correctly_ done using mutation observers, however
       // they are not widely supported. What we really want is to get a snapshot
       // of the initial textContent and treat that as JSON.
-      requestAnimationFrame(function() {
+      setTimeout(function() {
         var values = AWML.parse_format("json", options.node.textContent, {});
 
         if (transform) values = transform(values);
 
         if (typeof(values) === 'object')
           for (var uri in values) {
-            if (this.values.has(this.uri2id.get(uri))) continue;
+            if (this.values.has(uri)) continue;
             this.receive(uri, values[uri]);
           }
       }.bind(this));
@@ -732,14 +732,23 @@ var f = (function(w, AWML) {
   }
   LocalStorage.prototype = Object.assign(Object.create(Local.prototype), {
     low_subscribe: function(uri) {
-      var val = this.storage.getItem(uri);
+      var encoded_value = this.storage.getItem(uri);
+
+      if (encoded_value !== null)
+      {
+        try
+        {
+          var value = JSON.parse(encoded_value);
+          this.encoded_values.set(uri, encoded_value);
+          this.values.set(uri, value);
+        }
+        catch (err)
+        {
+          // ignore malformed entries
+        }
+      }
 
       Local.prototype.low_subscribe.call(this, uri);
-
-      if (val !== null) {
-        this.encoded_values.set(uri, val);
-        receive.call(this, uri, JSON.parse(val));
-      }
     },
     set: function(id, value) {
       Local.prototype.set.call(this, id, value);
