@@ -369,7 +369,18 @@
         AWML.error(this.tagName, "is missing src attribute");
         return;
       }
-      var b = Array.isArray(src) ? new ListBinding(src.map(get_binding)) : AWML.get_binding(src);
+
+      var b;
+
+      if (Array.isArray(src))
+      {
+        b = new ListBinding(src.map(get_binding));
+        b.partial = this.getAttribute("partial") !== null;
+      }
+      else
+      {
+        b = AWML.get_binding(src);
+      }
 
       if (O.binding)
       {
