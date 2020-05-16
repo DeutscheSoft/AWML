@@ -1,5 +1,5 @@
 {
-  "name": "@deuso/awml",
+  "name": "@deutschesoft/awml",
   "version": "1.0.3",
   "description": "A templating language for AUX and toolkit.",
   "main": "index.js",
@@ -10,5 +10,5 @@
     "url": "git@gitlab.deuso.de:WebUI/AWML.git"
   },
   "author": "Arne Goedeke",
-  "license": "GPLv2"
+  "license": "GPL-2.0-only"
 }
