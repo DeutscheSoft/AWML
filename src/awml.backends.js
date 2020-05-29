@@ -1,5 +1,5 @@
 // vim:sw=2
-var f = (function(w, AWML) {
+var f = function (w, AWML) {
   if (!AWML.Backends) AWML.Backends = {};
 
   var q = [];
@@ -11,7 +11,7 @@ var f = (function(w, AWML) {
       try {
         q[i]();
       } catch (e) {
-        AWML.error("Error in dispatched callback:", e);
+        AWML.error('Error in dispatched callback:', e);
       }
     }
     q.length = 0;
@@ -26,37 +26,36 @@ var f = (function(w, AWML) {
     trigger_dispatch();
   }
 
-  if ("addEventListener" in w && "postMessage" in w) {
-    trigger_dispatch = function() {
-      w.postMessage(true, "*");
+  if ('addEventListener' in w && 'postMessage' in w) {
+    trigger_dispatch = function () {
+      w.postMessage(true, '*');
     };
-    w.addEventListener("message", function(ev) {
+    w.addEventListener('message', function (ev) {
       if (ev.source !== w) return;
       dispatch_loop();
     });
-  } else if (typeof setImmediate !== "undefined") {
-    trigger_dispatch = function() {
+  } else if (typeof setImmediate !== 'undefined') {
+    trigger_dispatch = function () {
       setImmediate(dispatch_loop);
     };
   } else {
-    trigger_dispatch = function() {
+    trigger_dispatch = function () {
       setTimeout(dispatch_loop, 0);
     };
   }
 
   function subscribe_fail(uri, error) {
-    if (this.pending_subscriptions == null)
-      return;
+    if (this.pending_subscriptions == null) return;
 
     var pending = this.pending_subscriptions.get(uri);
 
     this.pending_subscriptions.delete(uri);
-    
-    pending.forEach(function(a) {
-      a[2]([ uri, error ]);
+
+    pending.forEach(function (a) {
+      a[2]([uri, error]);
     });
 
-    this.fire('register_fail', [ uri, error ]);
+    this.fire('register_fail', [uri, error]);
   }
 
   function subscribe_success(uri, id) {
@@ -79,27 +78,27 @@ var f = (function(w, AWML) {
       this.subscriptions.set(key, s);
       var ret;
       if (this.values.has(id)) {
-        ret = [uri, id, this.values.get(id) ];
+        ret = [uri, id, this.values.get(id)];
       } else {
         ret = [uri, id];
       }
-      pending.forEach(function(a) {
+      pending.forEach(function (a) {
         a[1](ret);
         s.add(a[0]);
       }, this);
     }
 
-    this.fire('register_success', [ uri, id ]);
+    this.fire('register_success', [uri, id]);
   }
 
   function call_subscriber(cb, id, value) {
-    if (typeof(cb) === "function") {
+    if (typeof cb === 'function') {
       cb(id, value);
     } else cb.update(id, value);
   }
 
   function call_subscribers(cbs, id, value) {
-    cbs.forEach(function(cb) {
+    cbs.forEach(function (cb) {
       call_subscriber(cb, id, value);
     });
   }
@@ -117,7 +116,6 @@ var f = (function(w, AWML) {
   var error = AWML.error || (console && console.error);
 
   function invalid_transition(from, to) {
-
     error('Cannot transition backend %o from %o to %o.', this, from, to);
   }
 
@@ -161,7 +159,7 @@ var f = (function(w, AWML) {
     if (this.hasEventListener('error')) {
       this.fire('error', err);
     } else {
-      error("Backend error", err);
+      error('Backend error', err);
     }
     this.destroy();
   }
@@ -170,17 +168,17 @@ var f = (function(w, AWML) {
     if (this.state === state) return;
 
     switch (state) {
-    case 'open':
-      to_open.call(this);
-      break;
-    case 'closed':
-      to_closed.call(this);
-      break;
-    case 'error':
-      to_error.call(this);
-      break;
-    default:
-      throw new Error("No such state.");
+      case 'open':
+        to_open.call(this);
+        break;
+      case 'closed':
+        to_closed.call(this);
+        break;
+      case 'error':
+        to_error.call(this);
+        break;
+      default:
+        throw new Error('No such state.');
     }
   }
 
@@ -194,16 +192,16 @@ var f = (function(w, AWML) {
     this.values = new Map();
     this.subscriptions = new Map();
     this.pending_subscriptions = new Map();
-    
-    subscriptions.forEach(function(cbs, id) {
-        var uri = typeof(id) === "string" ? id : id2uri.get(id);
 
-        call_subscribers(cbs, false, uri);
+    subscriptions.forEach(function (cbs, id) {
+      var uri = typeof id === 'string' ? id : id2uri.get(id);
+
+      call_subscribers(cbs, false, uri);
     });
-    pending.forEach(function(cbs, uri) {
-        cbs.forEach(function(a) {
-          a[2](reason);
-        });
+    pending.forEach(function (cbs, uri) {
+      cbs.forEach(function (a) {
+        a[2](reason);
+      });
     });
   }
 
@@ -229,27 +227,28 @@ var f = (function(w, AWML) {
     close: to_closed,
     error: to_error,
     open: to_open,
-    is_open: function() { return this.state === "open"; },
+    is_open: function () {
+      return this.state === 'open';
+    },
     receive: receive,
-    low_subscribe_batch: function(uris) {
+    low_subscribe_batch: function (uris) {
       return Promise.all(uris.map(this.low_subscribe, this));
     },
-    clear: function() {
+    clear: function () {
       this.values = new Map();
     },
-    low_unsubscribe_batch: function(ids) {
+    low_unsubscribe_batch: function (ids) {
       return Promise.all(ids.map(this.low_unsubscribe, this));
     },
-    subscribe: function(uri, cb) {
+    subscribe: function (uri, cb) {
       var uri2id = this.uri2id;
       var subscriptions = this.subscriptions;
       var values = this.values;
 
-      if (this.transform_path !== null)
-        uri = this.transform_path(uri);
+      if (this.transform_path !== null) uri = this.transform_path(uri);
 
       if (uri2id.has(uri)) {
-        return new Promise(function(resolve, reject) {
+        return new Promise(function (resolve, reject) {
           var key;
           var id = uri2id.get(uri);
 
@@ -261,7 +260,7 @@ var f = (function(w, AWML) {
 
           var s = subscriptions.get(key);
 
-          if (!s) subscriptions.set(key, s = new Set());
+          if (!s) subscriptions.set(key, (s = new Set()));
 
           s.add(cb);
 
@@ -269,9 +268,9 @@ var f = (function(w, AWML) {
 
           if (has_value) {
             var val = values.get(key);
-            resolve([uri, key, val ]);
+            resolve([uri, key, val]);
           } else {
-            resolve([uri, key ]);
+            resolve([uri, key]);
           }
         });
       } else {
@@ -283,28 +282,27 @@ var f = (function(w, AWML) {
           pending.set(uri, s);
         }
         var p = new Promise(function (resolve, reject) {
-          s.add([ cb, resolve, reject ]);
+          s.add([cb, resolve, reject]);
         });
 
-        if (do_subscribe && this.state === 'open')
-          this.low_subscribe(uri);
+        if (do_subscribe && this.state === 'open') this.low_subscribe(uri);
 
         return p;
       }
     },
-    unsubscribe: function(id, cb) {
+    unsubscribe: function (id, cb) {
       var uri2id = this.uri2id;
       var id2uri = this.id2uri;
       var subscriptions = this.subscriptions;
       var values = this.values;
-      
-      if (!id2uri.has(id)) throw new Error("No such subscription.");
+
+      if (!id2uri.has(id)) throw new Error('No such subscription.');
 
       var uri = id2uri.get(id);
 
       var s = subscriptions.get(id);
 
-      if (!s.has(cb)) throw new Error("No such subscription.");
+      if (!s.has(cb)) throw new Error('No such subscription.');
 
       s.delete(cb);
 
@@ -314,18 +312,18 @@ var f = (function(w, AWML) {
         values.delete(id);
         id2uri.delete(id);
         uri2id.delete(uri);
-        this.fire("unregister", [ uri, id ]);
+        this.fire('unregister', [uri, id]);
       }
     },
-    addEventListener: function(event, cb) {
+    addEventListener: function (event, cb) {
       var e = this._event_handlers;
       var s;
-      if (!e.has(event)) e.set(event, s = new Set());
+      if (!e.has(event)) e.set(event, (s = new Set()));
       else s = e.get(event);
 
       s.add(cb);
     },
-    removeEventListener: function(event, cb) {
+    removeEventListener: function (event, cb) {
       var e = this._event_handlers;
       var s;
       if (!e.has(event)) return;
@@ -333,12 +331,12 @@ var f = (function(w, AWML) {
 
       s.delete(cb);
     },
-    hasEventListener: function(event) {
+    hasEventListener: function (event) {
       var e = this._event_handlers;
       var s;
       return e.has(event);
     },
-    dispatchEvent: function(ev) {
+    dispatchEvent: function (ev) {
       var e = this._event_handlers;
       var type = ev.type;
 
@@ -346,7 +344,7 @@ var f = (function(w, AWML) {
 
       var s = e.get(type);
 
-      s.forEach(function(cb) {
+      s.forEach(function (cb) {
         try {
           cb.call(this, ev);
         } catch (e) {
@@ -354,29 +352,29 @@ var f = (function(w, AWML) {
         }
       }, this);
     },
-    is_destructed: function() {
+    is_destructed: function () {
       return this.id2uri === null;
     },
-    destroy: function() {
+    destroy: function () {
       this.id2uri = null;
       this.uri2id = null;
       this.values = null;
       this.subscriptions = null;
       this.pending_subscriptions = null;
-      this.fire("destroy");
+      this.fire('destroy');
       this._event_handler = {};
     },
-    fire: function(type, data) {
+    fire: function (type, data) {
       var e = this._event_handlers;
 
       if (!e.has(type)) return;
 
       this.dispatchEvent(new w.CustomEvent(type, { detail: data }));
     },
-    arguments_from_node: function(node) {
-      var tmp = node.getAttribute("transform-path");
+    arguments_from_node: function (node) {
+      var tmp = node.getAttribute('transform-path');
       return {
-        transform_path: tmp ? AWML.parse_format("js", tmp, null) : null,
+        transform_path: tmp ? AWML.parse_format('js', tmp, null) : null,
         node: node,
       };
     },
@@ -393,92 +391,97 @@ var f = (function(w, AWML) {
     var transform = options.transform_data;
 
     if (src) {
-      AWML.fetch_json(src)
-        .then(
-          function(values) {
-            if (transform) values = transform(values);
-            for (var uri in values) {
-              if (this.values.has(this.uri2id.get(uri))) continue;
-              this.receive(uri, values[uri]);
-            }
-          }.bind(this),
-          function(e) {
-            error("Failed to load values from %o: %o", src, e);
+      AWML.fetch_json(src).then(
+        function (values) {
+          if (transform) values = transform(values);
+          for (var uri in values) {
+            if (this.values.has(this.uri2id.get(uri))) continue;
+            this.receive(uri, values[uri]);
           }
-        );
+        }.bind(this),
+        function (e) {
+          error('Failed to load values from %o: %o', src, e);
+        }
+      );
     }
 
     if (options.node) {
       // NOTE: this is _correctly_ done using mutation observers, however
       // they are not widely supported. What we really want is to get a snapshot
       // of the initial textContent and treat that as JSON.
-      requestAnimationFrame(function() {
-        var values = AWML.parse_format("json", options.node.textContent, {});
+      requestAnimationFrame(
+        function () {
+          var values = AWML.parse_format('json', options.node.textContent, {});
 
-        if (transform) values = transform(values);
+          if (transform) values = transform(values);
 
-        if (typeof(values) === 'object')
-          for (var uri in values) {
-            if (this.values.has(this.uri2id.get(uri))) continue;
-            this.receive(uri, values[uri]);
-          }
-      }.bind(this));
+          if (typeof values === 'object')
+            for (var uri in values) {
+              if (this.values.has(this.uri2id.get(uri))) continue;
+              this.receive(uri, values[uri]);
+            }
+        }.bind(this)
+      );
     }
   }
   Local.prototype = Object.assign(Object.create(Base.prototype), {
-    low_subscribe: function(uri) {
+    low_subscribe: function (uri) {
       subscribe_success.call(this, uri, uri);
     },
-    low_unsubscribe: function(id) { },
-    set: function(id, value) {
+    low_unsubscribe: function (id) {},
+    set: function (id, value) {
       var delay = this.delay;
       if (delay > 0) {
-        setTimeout(function() {
-          this.receive(id, value);
-        }.bind(this), delay);
+        setTimeout(
+          function () {
+            this.receive(id, value);
+          }.bind(this),
+          delay
+        );
       } else {
         this.receive(id, value);
       }
     },
-    arguments_from_node: function(node) {
-        var tmp = node.getAttribute("transform-data");
-        return Object.assign(
-          Base.prototype.arguments_from_node(node),
-          {
-            name: node.getAttribute("name"),
-            src: node.getAttribute("src"),
-            delay: parseInt(node.getAttribute("delay")),
-            transform_data: tmp ? AWML.parse_format("js", tmp, null) : null,
-          }
-        );
+    arguments_from_node: function (node) {
+      var tmp = node.getAttribute('transform-data');
+      return Object.assign(Base.prototype.arguments_from_node(node), {
+        name: node.getAttribute('name'),
+        src: node.getAttribute('src'),
+        delay: parseInt(node.getAttribute('delay')),
+        transform_data: tmp ? AWML.parse_format('js', tmp, null) : null,
+      });
     },
   });
 
   function Test(name, values, src) {
     Local.call(this, name, values, src);
-    setInterval(function() {
-      this.uri2id.forEach(function(id, uri) {
-        if (uri.search("random") !== -1) {
-          this.receive(id, Math.random()); 
-        }
-      }, this);
-    }.bind(this), 500);
+    setInterval(
+      function () {
+        this.uri2id.forEach(function (id, uri) {
+          if (uri.search('random') !== -1) {
+            this.receive(id, Math.random());
+          }
+        }, this);
+      }.bind(this),
+      500
+    );
   }
-  Test.prototype = Object.assign(Object.create(Local.prototype), {
-  });
+  Test.prototype = Object.assign(Object.create(Local.prototype), {});
 
   function Cache(backend) {
     this.backend = backend;
     Base.call(this);
   }
   Cache.prototype = Object.assign(Object.create(Base.prototype), {
-    set: function(id, value) {
+    set: function (id, value) {
       this.backend.set(id, value);
     },
-    low_subscribe: function(uri) {
-      this.backend.subscribe(uri, this._receive).then(this._subscribe_success, this._subscribe_fail);
+    low_subscribe: function (uri) {
+      this.backend
+        .subscribe(uri, this._receive)
+        .then(this._subscribe_success, this._subscribe_fail);
     },
-    low_unsubscribe: function(id) {
+    low_unsubscribe: function (id) {
       this.backend.unsubscribe(id, this_receive);
     },
   });
@@ -487,12 +490,12 @@ var f = (function(w, AWML) {
     var l = w.location;
     var r;
 
-    if (l.protocol == "http:") {
-      r = "ws://" + l.hostname;
-      if (l.port != 80) r += ":" + l.port;
-    } else if (l.protocol == "https:") {
-      r = "wss://" + l.hostname;
-      if (l.port != 443) r += ":" + l.port;
+    if (l.protocol == 'http:') {
+      r = 'ws://' + l.hostname;
+      if (l.port != 80) r += ':' + l.port;
+    } else if (l.protocol == 'https:') {
+      r = 'wss://' + l.hostname;
+      if (l.port != 443) r += ':' + l.port;
     }
 
     return r;
@@ -503,8 +506,8 @@ var f = (function(w, AWML) {
     this.changeset = [];
     this.pending = null;
     this.debounce = options.debounce || 0;
-    this.send_changes = function() {
-      if (this.state != "open") return;
+    this.send_changes = function () {
+      if (this.state != 'open') return;
       var m = this.pending;
       if (m) this.send(m);
       this.pending = null;
@@ -516,19 +519,17 @@ var f = (function(w, AWML) {
     }.bind(this);
   }
   ClientBackend.prototype = Object.assign(Object.create(Base.prototype), {
-    dispatch: function() {
-      if (this.debounce > 0)
-        setTimeout(this.send_changes, this.debounce);
-      else
-        dispatch(this.send_changes);
+    dispatch: function () {
+      if (this.debounce > 0) setTimeout(this.send_changes, this.debounce);
+      else dispatch(this.send_changes);
     },
-    message: function(d) {
+    message: function (d) {
       var uri, id, i, tmp;
 
-      if (typeof(d) === "object") {
+      if (typeof d === 'object') {
         if (d instanceof Array) {
-          for (i = 0; i < d.length; i+=2) {
-            this.receive(d[i], d[i+1]);
+          for (i = 0; i < d.length; i += 2) {
+            this.receive(d[i], d[i + 1]);
           }
         } else {
           for (uri in d) {
@@ -541,52 +542,50 @@ var f = (function(w, AWML) {
                 id = tmp;
               }
               subscribe_success.call(this, uri, id);
-            }
-            else subscribe_fail.call(this, uri, tmp);
+            } else subscribe_fail.call(this, uri, tmp);
           }
         }
       } else AWML.warn('Unexpected message on WebSocket:', d);
     },
-    low_subscribe: function(uri) {
+    low_subscribe: function (uri) {
       if (this.changeset.length === 0 && this.pending === null) this.dispatch();
       var d = this.pending;
       if (d === null) this.pending = d = {};
       d[uri] = 1;
     },
-    low_subscribe_batch: function(uris) {
-      var d = {}, i;
+    low_subscribe_batch: function (uris) {
+      var d = {},
+        i;
       for (i = 0; i < uris.length; i++) {
         d[uris[i]] = 1;
       }
       this.send(d);
     },
-    low_unsubscribe: function(uri) {
+    low_unsubscribe: function (uri) {
       if (this.changeset.length === 0 && this.pending === null) this.dispatch();
       var d = this.pending;
       if (d === null) this.pending = d = {};
       d[uri] = 0;
     },
-    low_unsubscribe_batch: function(uris) {
-      var d = {}, i;
+    low_unsubscribe_batch: function (uris) {
+      var d = {},
+        i;
       for (i = 0; i < uris.length; i++) {
         d[uris[i]] = 0;
       }
       this.send(d);
     },
-    set: function(id, value) {
+    set: function (id, value) {
       if (this.changeset.length === 0 && this.pending === null) this.dispatch();
       this.changeset.push(id, value);
     },
-    clear: function() {
+    clear: function () {
       this.send(false);
     },
-    arguments_from_node: function(node) {
-      return Object.assign(
-        Base.prototype.arguments_from_node(node),
-        {
-          debounce: parseInt(node.getAttribute("debounce")),
-        }
-      );
+    arguments_from_node: function (node) {
+      return Object.assign(Base.prototype.arguments_from_node(node), {
+        debounce: parseInt(node.getAttribute('debounce')),
+      });
     },
   });
 
@@ -595,11 +594,12 @@ var f = (function(w, AWML) {
   /* NOTE: due to a bug in the pike websocket implementation
    * we have to pad all outgoing frames so they are longer than
    * 125 bytes. */
-  var padding = function() {
-    var a = new Array(125), i;
-    for (i = 0; i < 125; i++) a[i] = " ";
-    return a.join("");
-  }();
+  var padding = (function () {
+    var a = new Array(125),
+      i;
+    for (i = 0; i < 125; i++) a[i] = ' ';
+    return a.join('');
+  })();
   function pad(s) {
     var d = 126 - s.length;
 
@@ -608,15 +608,17 @@ var f = (function(w, AWML) {
     return s;
   }
   function teardown() {
-      var ws = this.ws;
-      if (ws) {
-        this.ws = null;
-        ws.onopen = null;
-        ws.onclose = null;
-        ws.onerror = null;
-        ws.onmessage = null;
-        try { ws.close(); } catch(e) {}
-      }
+    var ws = this.ws;
+    if (ws) {
+      this.ws = null;
+      ws.onopen = null;
+      ws.onclose = null;
+      ws.onerror = null;
+      ws.onmessage = null;
+      try {
+        ws.close();
+      } catch (e) {}
+    }
   }
   function websocket(options) {
     this.url = options.url;
@@ -624,20 +626,24 @@ var f = (function(w, AWML) {
     this.connect(options.clear);
   }
   websocket.prototype = Object.assign(Object.create(ClientBackend.prototype), {
-    send: function(o) {
+    send: function (o) {
       this.ws.send(pad(JSON.stringify(o)));
     },
-    connect: function(clear) {
+    connect: function (clear) {
       try {
         var ws;
         ws = new WebSocket(this.url, 'json');
-        ws.onopen = function() {
-          if (clear) this.ws.send(pad("false"));
+        ws.onopen = function () {
+          if (clear) this.ws.send(pad('false'));
           this.open();
         }.bind(this);
-        ws.onclose = function() { this.close(); }.bind(this);
-        ws.onerror = function(ev) { this.error(ev); }.bind(this);
-        ws.onmessage = function(ev) {
+        ws.onclose = function () {
+          this.close();
+        }.bind(this);
+        ws.onerror = function (ev) {
+          this.error(ev);
+        }.bind(this);
+        ws.onmessage = function (ev) {
           this.message(JSON.parse(ev.data));
         }.bind(this);
         this.ws = ws;
@@ -645,56 +651,56 @@ var f = (function(w, AWML) {
         this.error(e);
       }
     },
-    destroy: function() {
+    destroy: function () {
       teardown.call(this);
       ClientBackend.prototype.destroy.call(this);
     },
-    close: function() {
+    close: function () {
       teardown.call(this);
       ClientBackend.prototype.close.call(this);
     },
-    error: function(reason) {
+    error: function (reason) {
       teardown.call(this);
       ClientBackend.prototype.error.call(this, reason);
     },
-    arguments_from_node: function(node) {
-      var src = node.getAttribute("src");
+    arguments_from_node: function (node) {
+      var src = node.getAttribute('src');
       if (!src) {
         src = get_relative_wsurl();
-      } else if (src[0] == "/"[0]) {
+      } else if (src[0] == '/'[0]) {
         /* relative url */
         src = get_relative_wsurl() + src;
       }
 
-      return Object.assign(
-        ClientBackend.prototype.arguments_from_node(node),
-        {
-          url: src,
-          clear: node.getAttribute("clear") !== null,
-        }
-      );
+      return Object.assign(ClientBackend.prototype.arguments_from_node(node), {
+        url: src,
+        clear: node.getAttribute('clear') !== null,
+      });
     },
   });
 
   if ('SharedWorker' in w) {
-    var url = document.currentScript.getAttribute("src");
-    url = url.replace(/awml\.backends\.js/, "awml.backends.sharedworker.js");
+    var url = document.currentScript.getAttribute('src');
+    url = url.replace(/awml\.backends\.js/, 'awml.backends.sharedworker.js');
 
-    var Shared = function(type) {
+    var Shared = function (type) {
       ClientBackend.call(this);
       var args = Array.prototype.slice.call(arguments, 1);
-      this.worker = new SharedWorker(url, JSON.stringify([ type, args ]));
-      this.worker.onerror = function(e) {
-        error("Shared Worker generated an error:", e);
+      this.worker = new SharedWorker(url, JSON.stringify([type, args]));
+      this.worker.onerror = function (e) {
+        error('Shared Worker generated an error:', e);
       };
-      this.worker.port.addEventListener('message', function (ev) {
+      this.worker.port.addEventListener(
+        'message',
+        function (ev) {
           this.message(ev.data);
-        }.bind(this));
+        }.bind(this)
+      );
       this.worker.port.start();
       to_open.call(this);
-    }
+    };
     Shared.prototype = Object.assign(Object.create(ClientBackend.prototype), {
-      send: function(d) {
+      send: function (d) {
         this.worker.port.postMessage(d);
       },
     });
@@ -707,24 +713,29 @@ var f = (function(w, AWML) {
       storage = options.storage || w.localStorage;
       if (options.clear) storage.clear();
     } catch (e) {
-      error("Cannot use LocalStorage backend. Probably because this page is accessed through a file:// URL.");
+      error(
+        'Cannot use LocalStorage backend. Probably because this page is accessed through a file:// URL.'
+      );
     }
     Local.call(this, options);
     this.storage = storage;
     this.encoded_values = new Map();
-    w.addEventListener('storage', function(ev) {
-      if (ev.storageArea !== this.storage) return;
-      var key = ev.key;
-      var old = ev.oldValue;
-      var val = ev.newValue;
-      if (this.uri2id.has(key)) {
-        this.encoded_values.set(key, val);
-        receive.call(this, key, JSON.parse(val));
-      }
-    }.bind(this));
+    w.addEventListener(
+      'storage',
+      function (ev) {
+        if (ev.storageArea !== this.storage) return;
+        var key = ev.key;
+        var old = ev.oldValue;
+        var val = ev.newValue;
+        if (this.uri2id.has(key)) {
+          this.encoded_values.set(key, val);
+          receive.call(this, key, JSON.parse(val));
+        }
+      }.bind(this)
+    );
   }
   LocalStorage.prototype = Object.assign(Object.create(Local.prototype), {
-    low_subscribe: function(uri) {
+    low_subscribe: function (uri) {
       var val = this.storage.getItem(uri);
 
       Local.prototype.low_subscribe.call(this, uri);
@@ -734,10 +745,10 @@ var f = (function(w, AWML) {
         receive.call(this, uri, JSON.parse(val));
       }
     },
-    set: function(id, value) {
+    set: function (id, value) {
       Local.prototype.set.call(this, id, value);
       var enc = JSON.stringify(value);
-      if (typeof(enc) === "string") {
+      if (typeof enc === 'string') {
         if (enc === this.encoded_values.get(id)) return;
         this.storage.setItem(id, enc);
         this.encoded_values.set(id, enc);
@@ -746,14 +757,13 @@ var f = (function(w, AWML) {
         AWML.warn('Cannot encode %o (key: %o)', value, id);
       }
     },
-    arguments_from_node: function(node) {
-      return Object.assign(
-        Local.prototype.arguments_from_node(node),
-        {
-          clear: node.getAttribute("clear") !== null,
-          storage: node.hasAttribute("storage") && AWML.parse_option("js", node.getAttribute("storage")),
-        }
-      );
+    arguments_from_node: function (node) {
+      return Object.assign(Local.prototype.arguments_from_node(node), {
+        clear: node.getAttribute('clear') !== null,
+        storage:
+          node.hasAttribute('storage') &&
+          AWML.parse_option('js', node.getAttribute('storage')),
+      });
     },
   });
 
@@ -761,7 +771,7 @@ var f = (function(w, AWML) {
     this.backend = backend;
     this.changeset = [];
     this.pending = null;
-    this.send_changes = function() {
+    this.send_changes = function () {
       var m = this.pending;
       if (m) this.send(m);
       this.pending = null;
@@ -772,11 +782,12 @@ var f = (function(w, AWML) {
       }
     }.bind(this);
 
-    this._change_cb = function(id, value) {
-      if (this.changeset.length === 0 && this.pending === null) dispatch(this.send_changes);
+    this._change_cb = function (id, value) {
+      if (this.changeset.length === 0 && this.pending === null)
+        dispatch(this.send_changes);
       this.changeset.push(id, value);
     }.bind(this);
-    this._destroy_cb = function() {
+    this._destroy_cb = function () {
       this.backend = null;
       this.destroy();
     }.bind(this);
@@ -784,44 +795,45 @@ var f = (function(w, AWML) {
     backend.addEventListener('destroy', this._destroy_cb);
   }
   ServerBackend.prototype = {
-    destroy: function() {
-      if (this.backend)
-      {
-        this.subscriptions.forEach(function(id) {
+    destroy: function () {
+      if (this.backend) {
+        this.subscriptions.forEach(function (id) {
           this.backend.unsubscribe(id, this._change_cb);
         }, this);
         this.backend.removeEventListener('destroy', this._destroy_cb);
       }
     },
-    message: function(d) {
+    message: function (d) {
       var backend = this.backend;
       if (Array.isArray(d)) {
-        if (d.length & 1) throw new Error("Bad message from client.\n");
-        for (var i = 0; i < d.length; i+=2) backend.set(d[i], d[i+1]);
+        if (d.length & 1) throw new Error('Bad message from client.\n');
+        for (var i = 0; i < d.length; i += 2) backend.set(d[i], d[i + 1]);
       } else if (d === false) {
-        backend.clear(); 
+        backend.clear();
       } else {
         for (var uri in d) {
           if (d[uri]) {
-            backend.subscribe(uri, this._change_cb)
-              .then(
-                function(a) {
-                  if (this.changeset.length === 0 && this.pending === null) dispatch(this.send_changes);
-                  var d = this.pending;
-                  if (d === null) this.pending = d = {};
-                  if (a.length === 3) {
-                    d[a[0]] = [ a[1], a[2] ];
-                  } else {
-                    d[a[0]] = a[1];
-                  }
-                  this.subscriptions.add(a[1]);
-                }.bind(this),
-                function(a) {
-                  if (this.changeset.length === 0 && this.pending === null) dispatch(this.send_changes);
-                  var d = this.pending;
-                  if (d === null) this.pending = d = {};
-                  d[a[0]] = 0;
-                }.bind(this));
+            backend.subscribe(uri, this._change_cb).then(
+              function (a) {
+                if (this.changeset.length === 0 && this.pending === null)
+                  dispatch(this.send_changes);
+                var d = this.pending;
+                if (d === null) this.pending = d = {};
+                if (a.length === 3) {
+                  d[a[0]] = [a[1], a[2]];
+                } else {
+                  d[a[0]] = a[1];
+                }
+                this.subscriptions.add(a[1]);
+              }.bind(this),
+              function (a) {
+                if (this.changeset.length === 0 && this.pending === null)
+                  dispatch(this.send_changes);
+                var d = this.pending;
+                if (d === null) this.pending = d = {};
+                d[a[0]] = 0;
+              }.bind(this)
+            );
           } else {
             /* unsubscribe happens per id */
             var id = parseInt(uri);
@@ -830,7 +842,7 @@ var f = (function(w, AWML) {
           }
         }
       }
-    }
+    },
   };
 
   AWML.ServerBackend = ServerBackend;
@@ -846,6 +858,6 @@ var f = (function(w, AWML) {
     websocket: websocket,
     localstorage: LocalStorage,
   });
-});
-if (typeof module !== "undefined" && !this.AWML) module.exports = f;
+};
+if (typeof module !== 'undefined' && !this.AWML) module.exports = f;
 else f(this, this.AWML || (this.AWML = {}));

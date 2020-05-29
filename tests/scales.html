@@ -1,58 +1,62 @@
 <html>
-    <head>
-        <link rel="stylesheet" type="text/css" href="../toolkit/toolkit/styles/css/toolkit.all.css">
-        <script src='../toolkit/toolkit/G.js'></script>
-        <script src='../toolkit/toolkit/toolkit.js'></script>
-        <script src='../toolkit/toolkit/implements/base.js'></script>
-        <script src='../toolkit/toolkit/implements/audiomath.js'></script>
-        <script src='../toolkit/toolkit/implements/ranged.js'></script>
-        <script src='../toolkit/toolkit/implements/warning.js'></script>
-        <script src='../toolkit/toolkit/implements/globalcursor.js'></script>
-        <script src='../toolkit/toolkit/widgets/widget.js'></script>
-        <script src='../toolkit/toolkit/modules/scale.js'></script>
-        <script src='../toolkit/toolkit/modules/dragcapture.js'></script>
-        <script src='../toolkit/toolkit/modules/dragvalue.js'></script>
-        <script src='../toolkit/toolkit/modules/scrollvalue.js'></script>
-        <script src='../toolkit/toolkit/widgets/container.js'></script>
-        <script src='../toolkit/toolkit/widgets/root.js'></script>
-        <script src='../toolkit/toolkit/widgets/value.js'></script>
-        <script src='../toolkit/toolkit/widgets/label.js'></script>
-        <script src='../toolkit/toolkit/widgets/fader.js'></script>
-        <script src='../awml.js'></script>
-        <script src='../awml.bindings.js'></script>
-        <script src='../awml.backends.js'></script>
-        <style type='text/css'>
-            awml-fader {
-                height: 95%;
-            }
-        </style>
-        <script>
-          document.addEventListener("AWMLContentLoaded", function() {
-            var f = document.querySelector("awml-fader");
-            var b = new AWML.Connectors.TKUser("local:foo", f.widget, "value");
-            b.activate();
-          });
-        </script>
-    </head>
-    <body>
-        <awml-root>
-            <awml-backend type=local name=local delay=200></awml-backend>
+  <head>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="../toolkit/toolkit/styles/css/toolkit.all.css"
+    />
+    <script src="../toolkit/toolkit/G.js"></script>
+    <script src="../toolkit/toolkit/toolkit.js"></script>
+    <script src="../toolkit/toolkit/implements/base.js"></script>
+    <script src="../toolkit/toolkit/implements/audiomath.js"></script>
+    <script src="../toolkit/toolkit/implements/ranged.js"></script>
+    <script src="../toolkit/toolkit/implements/warning.js"></script>
+    <script src="../toolkit/toolkit/implements/globalcursor.js"></script>
+    <script src="../toolkit/toolkit/widgets/widget.js"></script>
+    <script src="../toolkit/toolkit/modules/scale.js"></script>
+    <script src="../toolkit/toolkit/modules/dragcapture.js"></script>
+    <script src="../toolkit/toolkit/modules/dragvalue.js"></script>
+    <script src="../toolkit/toolkit/modules/scrollvalue.js"></script>
+    <script src="../toolkit/toolkit/widgets/container.js"></script>
+    <script src="../toolkit/toolkit/widgets/root.js"></script>
+    <script src="../toolkit/toolkit/widgets/value.js"></script>
+    <script src="../toolkit/toolkit/widgets/label.js"></script>
+    <script src="../toolkit/toolkit/widgets/fader.js"></script>
+    <script src="../awml.js"></script>
+    <script src="../awml.bindings.js"></script>
+    <script src="../awml.backends.js"></script>
+    <style type="text/css">
+      awml-fader {
+        height: 95%;
+      }
+    </style>
+    <script>
+      document.addEventListener('AWMLContentLoaded', function () {
+        var f = document.querySelector('awml-fader');
+        var b = new AWML.Connectors.TKUser('local:foo', f.widget, 'value');
+        b.activate();
+      });
+    </script>
+  </head>
+  <body>
+    <awml-root>
+      <awml-backend type="local" name="local" delay="200"></awml-backend>
 
-            <awml-fader min=-96 max=0 scale='decibel' show_scale='true'>
-                <!--<awml-option type=bind src='local:foo' name='value'></awml-option>-->
-            </awml-fader>
-            <awml-fader min=-96 max=0 scale='log2' show_scale='true'>
-                <awml-option type=bind src='local:foo' name='value'></awml-option>
-            </awml-fader>
-            <awml-fader min=-96 max=0 show_scale='true'>
-                <awml-option type=bind src='local:foo' name='value'></awml-option>
-            </awml-fader>
-            <awml-fader min=-96 max=0 scale='decibel' show_scale='true'>
-                <awml-option type=bind src='local:foo' name='min'></awml-option>
-            </awml-fader>
-            <awml-fader min=-96 max=0 scale='decibel' show_scale='true'>
-                <awml-option type=bind src='local:foo' name='max'></awml-option>
-            </awml-fader>
-        </awml-root>
-    </body>
+      <awml-fader min="-96" max="0" scale="decibel" show_scale="true">
+        <!--<awml-option type=bind src='local:foo' name='value'></awml-option>-->
+      </awml-fader>
+      <awml-fader min="-96" max="0" scale="log2" show_scale="true">
+        <awml-option type="bind" src="local:foo" name="value"></awml-option>
+      </awml-fader>
+      <awml-fader min="-96" max="0" show_scale="true">
+        <awml-option type="bind" src="local:foo" name="value"></awml-option>
+      </awml-fader>
+      <awml-fader min="-96" max="0" scale="decibel" show_scale="true">
+        <awml-option type="bind" src="local:foo" name="min"></awml-option>
+      </awml-fader>
+      <awml-fader min="-96" max="0" scale="decibel" show_scale="true">
+        <awml-option type="bind" src="local:foo" name="max"></awml-option>
+      </awml-fader>
+    </awml-root>
+  </body>
 </html>

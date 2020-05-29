@@ -1,31 +1,36 @@
-(function(w, AWML) {
+(function (w, AWML) {
   var base = AWML.Backends.base;
   var proto = base.prototype;
 
   /* TODO: this backend is far from being optimized. */
 
   function get_members(o) {
-    return o.GetMembers().then(function(res) {
+    return o.GetMembers().then(function (res) {
       return res.map(o.device.resolve_object.bind(o.device));
     });
   }
 
-  var property_event_data_signature = new SP.signature(OCA.OcaPropertyID, SP.REST);
+  var property_event_data_signature = new SP.signature(
+    OCA.OcaPropertyID,
+    SP.REST
+  );
 
   function find_method(prefix, name, property, o) {
     var f = o[prefix + name];
 
     if (f) return f;
 
-    var tmp = [ name ];
+    var tmp = [name];
 
     if (property.aliases) tmp = tmp.concat(property.aliases);
 
-    tmp = tmp.map(function(s) { return (prefix+s).toLowerCase(); });
+    tmp = tmp.map(function (s) {
+      return (prefix + s).toLowerCase();
+    });
 
     for (var name in o) {
       if (tmp.indexOf(name.toLowerCase()) != -1) {
-        if (typeof(o[name]) === "function") {
+        if (typeof o[name] === 'function') {
           return o[name];
         }
       }
@@ -54,8 +59,8 @@
     return m[name];
   }
 
-  var get_getter = get_method.bind(this, new Map(), "Get");
-  var get_setter = get_method.bind(this, new Map(), "Set");
+  var get_getter = get_method.bind(this, new Map(), 'Get');
+  var get_setter = get_method.bind(this, new Map(), 'Set');
 
   function PropertySync(backend, o, path) {
     this.o = o;
@@ -63,7 +68,7 @@
     this.path = path;
     this.subscribed = new Set();
 
-    this._property_changed_cb = function(n) {
+    this._property_changed_cb = function (n) {
       var a = property_event_data_signature.decode(new DataView(n.parameters));
       var o = this.o.__oca_properties__;
       var property_id = a.item(0);
@@ -76,27 +81,27 @@
     }.bind(this);
   }
   PropertySync.prototype = {
-    resolve: function(name) {
+    resolve: function (name) {
       /* returns the ID. This is used for the subscription step. */
       var o = this.o;
       var properties = o.__oca_properties__.properties;
       var p = properties[name];
 
-      if (!p) return void(0);
+      if (!p) return void 0;
 
       var id = p.index | (p.level << 16);
 
-      return o.ObjectNumber + ":" + id;
+      return o.ObjectNumber + ':' + id;
     },
-    full_path: function(name) {
-      return this.path + "/" + name;
+    full_path: function (name) {
+      return this.path + '/' + name;
     },
-    subscribe: function(name) {
+    subscribe: function (name) {
       var o = this.o;
       var properties = o.__oca_properties__.properties;
       var p = properties[name];
 
-      if (!p) throw new Error("No such property: "+name);
+      if (!p) throw new Error('No such property: ' + name);
 
       var id = this.resolve(name);
 
@@ -105,101 +110,105 @@
         return;
       }
 
-      if (!this.subscribed.size)
-        o.onPropertyChanged(this._property_changed_cb);
+      if (!this.subscribed.size) o.onPropertyChanged(this._property_changed_cb);
 
       this.subscribed.add(name);
 
       var getter = get_getter(o, name);
 
       if (!getter) {
-        throw new Error("Property is missing getter.");
+        throw new Error('Property is missing getter.');
       }
 
-      return getter.call(o)
-        .then(function(val) { 
-            var path = this.full_path(name);
-            this.backend.subscribe_success(path, id);
+      return getter.call(o).then(
+        function (val) {
+          var path = this.full_path(name);
+          this.backend.subscribe_success(path, id);
 
-            if (val instanceof SP.Arguments) {
-              // Assume that [1] is Min and [2] is Max
+          if (val instanceof SP.Arguments) {
+            // Assume that [1] is Min and [2] is Max
 
-              var tmp = val.item(1);
-              if (tmp !== void(0)) {
-                this.backend.subscribe_success(path + "/Min", false);
-                this.backend.receive(path + "/Min", tmp);
-              }
-
-              tmp = val.item(2);
-              if (tmp !== void(0)) {
-                this.backend.subscribe_success(path + "/Max", false);
-                this.backend.receive(path + "/Max", tmp);
-              }
-
-              this.backend.receive(id, val.item(0));
-            } else {
-              this.backend.receive(id, val);
+            var tmp = val.item(1);
+            if (tmp !== void 0) {
+              this.backend.subscribe_success(path + '/Min', false);
+              this.backend.receive(path + '/Min', tmp);
             }
-          }.bind(this));
+
+            tmp = val.item(2);
+            if (tmp !== void 0) {
+              this.backend.subscribe_success(path + '/Max', false);
+              this.backend.receive(path + '/Max', tmp);
+            }
+
+            this.backend.receive(id, val.item(0));
+          } else {
+            this.backend.receive(id, val);
+          }
+        }.bind(this)
+      );
     },
-    unsubscribe: function(name) {
+    unsubscribe: function (name) {
       this.subscribed.delete(name);
 
       if (!this.subscribed.size) {
         /* FIXME: unsubscribe event handler */
       }
     },
-    set: function(name, value) {
+    set: function (name, value) {
       var o = this.o;
       var properties = o.__oca_properties__.properties;
       var p = properties[name];
 
-      if (!p) throw new Error("No such property: "+name);
+      if (!p) throw new Error('No such property: ' + name);
 
       var setter = get_setter(o, name);
 
       if (p.static || p.readonly || !setter)
-            throw new Error("Trying to modify readonly property.");
+        throw new Error('Trying to modify readonly property.');
 
       setter.call(o, value);
     },
   };
 
   function resolve_object_tree(backend, o, path) {
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
       var n = 0;
-      var rec = function(o, path) {
-        if (o.GetMembers) { /* a block */
+      var rec = function (o, path) {
+        if (o.GetMembers) {
+          /* a block */
           var prefix = path;
-          if (prefix.length) prefix += "/";
+          if (prefix.length) prefix += '/';
           n++;
-          get_members(o)
-            .then(function(children) {
-              Promise.all(children.map(function(c) { return c.GetRole(); }))
-                .then(function(roles) {
-                  var tmp = {}, cnt = {};
+          get_members(o).then(function (children) {
+            Promise.all(
+              children.map(function (c) {
+                return c.GetRole();
+              })
+            ).then(function (roles) {
+              var tmp = {},
+                cnt = {};
 
-                  /* make paths locally unique */
-                  for (var i = 0; i < roles.length; i++) {
-                    tmp[roles[i]] = 1 + (tmp[roles[i]]|0);
-                  }
+              /* make paths locally unique */
+              for (var i = 0; i < roles.length; i++) {
+                tmp[roles[i]] = 1 + (tmp[roles[i]] | 0);
+              }
 
-                  for (var i = 0; i < roles.length; i++) {
-                    if (tmp[roles[i]] > 1) {
-                      cnt[roles[i]] = 1;
-                    }
-                  }
+              for (var i = 0; i < roles.length; i++) {
+                if (tmp[roles[i]] > 1) {
+                  cnt[roles[i]] = 1;
+                }
+              }
 
-                  for (var i = 0; i < roles.length; i++) {
-                    var path_component = roles[i];
-                    if (cnt[path_component]) {
-                      path_component += cnt[path_component]++;
-                    }
-                    rec(children[i], prefix + path_component);
-                  }
-                  if (!--n) resolve();
-                }, reject);
+              for (var i = 0; i < roles.length; i++) {
+                var path_component = roles[i];
+                if (cnt[path_component]) {
+                  path_component += cnt[path_component]++;
+                }
+                rec(children[i], prefix + path_component);
+              }
+              if (!--n) resolve();
             }, reject);
+          }, reject);
         } else {
           backend.objects.set(path, new PropertySync(backend, o, path));
         }
@@ -217,77 +226,91 @@
     this.connect();
   }
   oca.prototype = Object.assign(Object.create(proto), {
-    connect: function() {
+    connect: function () {
       try {
         var ws;
         ws = new WebSocket(this.url);
-        ws.onopen = function() { this.open(); }.bind(this);
-        ws.onclose = function() { ws.onerror = null; this.close(); }.bind(this);
-        ws.onerror = function(ev) { ws.onclose = null; this.error(ev); }.bind(this);
+        ws.onopen = function () {
+          this.open();
+        }.bind(this);
+        ws.onclose = function () {
+          ws.onerror = null;
+          this.close();
+        }.bind(this);
+        ws.onerror = function (ev) {
+          ws.onclose = null;
+          this.error(ev);
+        }.bind(this);
         this.ws = ws;
       } catch (e) {
         this.error(e);
       }
     },
     arguments_from_node: AWML.Backends.websocket.prototype.arguments_from_node,
-    open: function() {
+    open: function () {
       this.device = new OCA.RemoteDevice(new OCA.WebSocketConnection(this.ws));
-      resolve_object_tree(this, this.device.root, "")
-        .then(function() {
+      resolve_object_tree(this, this.device.root, '').then(
+        function () {
           proto.open.call(this);
         }.bind(this),
-        function(err) {
+        function (err) {
           this.error(err);
-        }.bind(this));
+        }.bind(this)
+      );
       var m = OCA.OcaManagerDefaultObjectNumbers.prototype.names;
       for (var ono in m) {
         var name = m[ono];
-        resolve_object_tree(this, new OCA.ControlClasses["Oca"+name](ono, this.device), name);
+        resolve_object_tree(
+          this,
+          new OCA.ControlClasses['Oca' + name](ono, this.device),
+          name
+        );
       }
     },
-    low_subscribe: function(path) {
+    low_subscribe: function (path) {
       var meta;
 
-      if (path.endsWith("/Min")) {
-        meta = "Min";
-      } else if (path.endsWith("/Max")) {
-        meta = "Max";
+      if (path.endsWith('/Min')) {
+        meta = 'Min';
+      } else if (path.endsWith('/Max')) {
+        meta = 'Max';
       }
 
-      var tmp = path.split("/");
+      var tmp = path.split('/');
       var object_path;
       var property_name;
 
       if (meta) {
-        object_path = tmp.slice(0, -2).join("/");
-        property_name = tmp[tmp.length-2];
+        object_path = tmp.slice(0, -2).join('/');
+        property_name = tmp[tmp.length - 2];
       } else {
-        object_path = tmp.slice(0, -1).join("/");
-        property_name = tmp[tmp.length-1];
+        object_path = tmp.slice(0, -1).join('/');
+        property_name = tmp[tmp.length - 1];
       }
 
       var p = this.objects.get(object_path);
       var id;
 
-      if (!p || (id = p.resolve(property_name)) === void(0)) {
-        this.subscribe_fail(path, "No such property.");
+      if (!p || (id = p.resolve(property_name)) === void 0) {
+        this.subscribe_fail(path, 'No such property.');
         return;
       }
 
       try {
-        p.subscribe(property_name)
-          .catch(function(e) {
+        p.subscribe(property_name).catch(
+          function (e) {
             this.subscribe_fail(path, e.toString());
-          }.bind(this));
+          }.bind(this)
+        );
       } catch (e) {
         this.subscribe_fail(path, e.toString());
       }
     },
-    set: function(id, value) {
+    set: function (id, value) {
       var path = this.id2uri.get(id);
-      var tmp = path.split("/");
-      var object_path = tmp.slice(0, -1).join("/");
-      var property_name = tmp[tmp.length-1];
+      var tmp = path.split('/');
+      var object_path = tmp.slice(0, -1).join('/');
+      var property_name = tmp[tmp.length - 1];
       var p = this.objects.get(object_path);
 
       p.set(property_name, value);
@@ -295,4 +318,4 @@
   });
 
   AWML.Backends.oca = oca;
- })(this, this.AWML);
+})(this, this.AWML);
