@@ -1,0 +1,12 @@
+*package.json
+*package-lock.json
+*node_modules
+*Makefile
+*.pike
+
+*.svg
+*.in
+*.png
+*.py
+../.git
+../prettier
