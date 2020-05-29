@@ -1,0 +1,28 @@
+<html>
+  <head>
+    <script type="module" src="../src/index.js"></script>
+    <script>
+      let clickEvent = null;
+
+      function clicked(ev) {
+        clickEvent = ev;
+      }
+      window.addEventListener('load', () => {
+        const button = document.querySelector('button');
+        const event = new CustomEvent('click');
+        button.dispatchEvent(event);
+        if (event !== clickEvent) {
+          console.error('failed');
+        }
+      });
+
+      const foo = 'bar';
+    </script>
+  </head>
+  <body>
+    <button>
+      hello
+      <awml-event type="click" callback="clicked"></awml-event>
+    </button>
+  </body>
+</html>

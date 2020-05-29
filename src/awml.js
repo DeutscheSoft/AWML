@@ -593,49 +593,6 @@
     },
   });
 
-  AWML.Tags.Event = create_tag('awml-event', {
-    awml_createdCallback: function () {
-      this.style.display = 'none';
-      this.type = this.getAttribute('type');
-      this.fun = null;
-      var cb = this.getAttribute('callback');
-      this.fun = parse_format.call(this, 'js', cb);
-      if (typeof this.type !== 'string') {
-        AWML.error('AWML-EVENT without type.');
-      }
-    },
-    awml_attributeChangedCallback: function (name, old_value, value) {
-      warn('not implemented');
-    },
-    awml_detachedCallback: function (root, parent_node) {
-      var types = this.type.split(/[^a-zA-Z0-9\-_]/);
-      var type;
-      for (var i = 0; i < types.length; i++) {
-        type = types[i].trim();
-        if (!type.length) continue;
-        if (this.fun) {
-          parent_node.auxWidget.off(type, this.fun);
-        }
-      }
-    },
-    awml_attachedCallback: function (root, parent_node) {
-      var types = this.type.split(/[^a-zA-Z0-9\-_]/);
-      var type;
-      var w = parent_node.auxWidget;
-      this.parent_widget = w;
-      for (var i = 0; i < types.length; i++) {
-        type = types[i].trim();
-        if (!type.length) continue;
-        w.on(type, this.fun);
-        if (type === 'initialized') {
-          /* the initialization has already happened,
-           * so we call it manually */
-          this.fun.call(w);
-        }
-      }
-    },
-  });
-
   AWML.Option = Option;
 
   AWML.Options = {
