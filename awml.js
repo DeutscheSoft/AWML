@@ -462,48 +462,6 @@
     return cl;
   }
 
-  function register_element_v0(tagName, prototype) {
-    if (prototype.awml_update_prefix)
-      register_prefix_tag(tagName);
-    prototype = Object.assign(Object.create(HTMLElement.prototype), prototype);
-    return document.registerElement(tagName, { prototype: prototype });
-  }
-
-  var custom_elements;
-
-  function upgrade_element(node) {
-    var prototype;
-    var tagName = node.tagName;
-    var i;
-    if (custom_elements.hasOwnProperty(tagName)) {
-      if (!node.is_awml_node) {
-        prototype = custom_elements[tagName];
-        Object.assign(node, prototype);
-        node.createdCallback();
-        node.attachedCallback();
-      }
-    }
-    var children = node.childNodes||node.children;
-    for (i = 0; i < children.length; i++) {
-      upgrade_element(children[i]);
-    }
-  }
-
-  function downgrade_element(node) {
-    var prototype;
-    var tagName = node.tagName;
-    var i;
-    if (custom_elements.hasOwnProperty(tagName)) {
-      if (node.is_awml_node) {
-        node.detachedCallback();
-      }
-    }
-    var children = node.childNodes||node.children;
-    for (i = 0; i < children.length; i++) {
-      downgrade_element(children[i]);
-    }
-  }
-
   function update_attribute(node, name, value) {
     var old = node.getAttribute(name);
     if (value === null)
@@ -515,43 +473,10 @@
       node.attributeChangedCallback(name, old, node.getAttribute(name));
   }
 
-  function register_element_polyfill(tagName, prototype) {
-    if (prototype.awml_update_prefix)
-      register_prefix_tag(tagName);
-    custom_elements[tagName.toUpperCase()] =
-      Object.assign({
-        attachedCallback: function() {},
-        createdCallback: function() {},
-        detachedCallback: function() {},
-        attributeChangedCallback: function() {},
-      }, prototype);
-    return true;
-  }
-
-  if ('customElements' in window) {
-    AWML.register_element = register_element_v1;
-    AWML.upgrade_element = function(node) {};
-    AWML.downgrade_element = function(node) {};
-    AWML.update_attribute = update_attribute;
-    AWML.whenDefined = function(name) { return customElements.whenDefined(name); };
-  } else if (document.registerElement) {
-    AWML.register_element = register_element_v0;
-    AWML.upgrade_element = function(node) {};
-    AWML.downgrade_element = function(node) {};
-    AWML.update_attribute = function(node, name, value) {
-      if (value === null)
-        node.removeAttribute(name);
-      else
-        node.setAttribute(name, value);
-    };
-  } else {
-    custom_elements = {};
-    AWML.register_element = register_element_polyfill;
-    AWML.upgrade_element = upgrade_element;
-    AWML.downgrade_element = downgrade_element;
-    AWML.update_attribute = update_attribute;
-    AWML.warn('Running with simple polyfill. Only static AWML is supported.');
-  }
+  AWML.register_element = register_element_v1;
+  AWML.downgrade_element = function(node) {};
+  AWML.update_attribute = update_attribute;
+  AWML.whenDefined = function(name) { return customElements.whenDefined(name); };
 
   function create_tag(tagName, prototype) {
     prototype = Object.assign({
@@ -701,15 +626,14 @@
         type = types[i].trim();
         if (!type.length) continue;
         if (this.fun) {
-          var w = parent_node.widget || parent_node.auxWidget;
-          w.remove_event(type, this.fun);
+          parent_node.auxWidget.off(type, this.fun);
         }
       }
     },
     awml_attachedCallback: function(root, parent_node) {
       var types = this.type.split(/[^a-zA-Z0-9\-_]/);
       var type;
-      var w = parent_node.widget || parent_node.auxWidget;
+      var w = parent_node.auxWidget;
       this.parent_widget = w;
       for (var i = 0; i < types.length; i++) {
         type = types[i].trim();
@@ -748,12 +672,6 @@
   };
 
   AWML.unregister_loading = unregister_loading;
-
-  if (!document.registerElement)
-    document.addEventListener('DOMContentLoaded', function() {
-      AWML.upgrade_element(this.head);
-      AWML.upgrade_element(this.body);
-    });
 
   window.addEventListener("load", unregister_loading);
 
