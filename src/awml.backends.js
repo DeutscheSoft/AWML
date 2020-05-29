@@ -2,13 +2,6 @@
 var f = (function(w, AWML) {
   if (!AWML.Backends) AWML.Backends = {};
 
-  if (!('CustomEvent' in w)) {
-    w.CustomEvent = function(type, o) {
-      this.type = type;
-      this.detail = o ? o.detail : null;
-    };
-  }
-
   var q = [];
   var dispatched = false;
 
