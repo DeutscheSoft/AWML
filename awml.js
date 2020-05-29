@@ -39,14 +39,7 @@
 
   function after_frame(cb)
   {
-    if (TK)
-    {
-      TK.S.after_frame(cb);
-    }
-    else
-    {
-      window.requestAnimationFrame(cb);
-    }
+    window.requestAnimationFrame(cb);
   }
 
   function Option(node) {
@@ -181,26 +174,6 @@
       return value;
   }
   AWML.option_value = option_value;
-  function has_attribute(widget, name) {
-      if (widget._options[name] || name.charCodeAt(0) === 95) {
-          // If the widget does not internally use the awml element itself, we have to 
-          // actually use id/class. This is buggy because the 'wrong' element ends
-          // up with the same class/id. We need to fix this somehow, but its not really
-          // possible without renaming the option. FIXME
-          return name !== "id" && name !== "class" || !widget._options.element;
-      }
-      return false;
-  }
-  AWML.has_attribute = has_attribute;
-  function evaluate_options(options) {
-      var ret = {};
-      for (var key in options) {
-          var v = option_value(options[key]);
-          if (v !== undefined) ret[key] = v;
-      }
-      return ret;
-  }
-  AWML.evaluate_options = evaluate_options;
   function parse_format(type, x, fallback) {
       switch (type) {
       case "js":
@@ -223,18 +196,12 @@
           }
         }
         return fallback;
-      case "html":
-        return TK.html(x);
       case "string":
         return x;
       case "number":
         return parseFloat(x);
       case "int":
         return parseInt(x);
-      case "sprintf":
-        if (!TK)
-          throw new Error('sprintf is only supported when running with toolkit.');
-        return TK.FORMAT(x);
       case "regexp":
         return new RegExp(x);
       case "bool":
@@ -268,45 +235,6 @@
     return value;
   }
   AWML.parse_option = parse_option;
-  function parse_attribute(x) {
-    var match;
-
-    if (typeof x !== "string") return undefined;
-
-    if (-1 !== (match = x.search(':'))) {
-      x = parse_format.call(this, x.substr(0, match), x.substr(match+1));
-    } else {
-      x = parse_option(false, x);
-    }
-
-    return x;
-  }
-  function do_merge_options(o1, o2) {
-    var x;
-    var ret = {};
-
-    if (!o1)
-        return o2;
-    if (!o2)
-        return o1;
-
-    for (x in o1)
-        ret[x] = o1[x];
-    for (x in o2) {
-        if (typeof ret[x] === "object" &&
-            typeof o2[x] === "object" &&
-            Object.getPrototypeOf(ret[x]) == Object.prototype &&
-            Object.getPrototypeOf(o2[x]) == Object.prototype) {
-            ret[x] = do_merge_options(ret[x], o2[x]);
-        } else if (x === "@CLASSES") {
-            ret[x] = (ret[x] || []).concat(o2[x]);
-        } else {
-            ret[x] = o2[x];
-        }
-    }
-
-    return ret;
-  }
 
   function find_parent() {
       var node = this.parentNode;
@@ -316,8 +244,6 @@
 
       do
       {
-          if (node.is_awml_node && node.widget)
-            return node;
           if (node.isAuxWidget)
             return node;
       }
@@ -347,75 +273,9 @@
   AWML.find_parent_widget = function(node) { return find_parent.call(node); }
   AWML.find_root_widget = function(node) { return find_root.call(node); }
   AWML.get_widget = function(node) {
-    return node.widget || node.auxWidget;
+    return node.auxWidget;
   }
 
-
-  function extract_options(widget) {
-    var O = widget ? widget.prototype._options : null;
-    var attr = this.attributes;
-    var merge_options;
-    var options = {};
-
-    var options_blacklist = {
-      'id' : true,
-      'class' : true,
-      'style' : true,
-    };
-
-    for (var i = 0; i < attr.length; i++) {
-        var name = attr[i].name;
-
-        if (options_blacklist[name]) continue;
-
-        var value = attr[i].value;
-
-        /* NOTE: it is unfortunate that this attribute collides,
-         * should be introduce something like 'visible-if-expanded' ? */
-        if (name === "expanded" && !O && !("expanded" in O)) {
-            options._expanded = parse_attribute(value);
-            if (typeof options._expanded === "string")
-                options._expanded = true;
-            continue;
-        } else if (name === "collapsed") {
-            options._collapsed = parse_attribute(value);
-            if (typeof options._collapsed === "string")
-                options._collapsed = true;
-            continue;
-        } else if (name === "options") {
-            merge_options = {};
-            var tmp = value.split(" ");
-            for (var j = 0; j < tmp.length; j++) {
-              if (!tmp[j].length) continue;
-              if (!AWML.options[tmp[j]]) {
-                console.warn("No such default options: %o", tmp[j]);
-                continue;
-              }
-              //Object.assign(merge_options, AWML.options[tmp[j]]);
-              merge_options = do_merge_options(merge_options, AWML.options[tmp[j]]);
-            }
-            continue;
-        }
-
-        if (!O || O[name] || name.charCodeAt(0) === 95) {
-            if (O && !O.element) {
-                // TODO: we should really remove the id, to avoid collisions, but
-                // this does not currently work
-                /*
-                    if (name === "id")
-                        this.removeAttribute("id");
-                */
-                options[name] = parse_attribute(value);
-            } else options[name] = parse_attribute(value);
-        }
-    }
-    options = do_merge_options(merge_options, options);
-    options = do_merge_options(AWML.options.defaults[this.tagName.toLowerCase()], options);
-    return options;
-  }
-  AWML.extract_options = extract_options;
-
-  var TK = window.TK;
 
   var _warn_stack = [ warn ];
 
@@ -435,12 +295,6 @@
     if (_warn_stack.length > 1) {
       _warn_stack.length--;
     }
-  };
-  AWML.options = { defaults: {} };
-  AWML.set_default = function (tag, name, value) {
-    var d = this.options.defaults;
-    if (!d.hasOwnProperty(tag)) d[tag] = {};
-    d[tag][name] = value;
   };
 
   var prefix_tags = "";
@@ -767,198 +621,7 @@
   };
   AWML.create_tag = create_tag;
 
-  function registerWidget(tagName, widget) {
-    var update_prefix = null;
-
-    if (widget.prototype.update_prefix) {
-      update_prefix = function(handle) {
-        var w = this.widget;
-        if (w) w.update_prefix(handle);
-      };
-    }
-
-    return create_tag(tagName, {
-      awml_createdCallback: function() {
-        this.widget = null;
-      },
-      awml_attachedCallback: function(root, parent_node) {
-        if (!this.widget) {
-          var options = this.options = extract_options.call(this, widget);
-          if (widget.prototype._options.element)
-              options.element = this;
-          this.widget = new widget(check_options(widget.prototype, evaluate_options(options)));
-          attach_options(this, this.widget, options, false);
-        }
-        parent_node.widget.add_child(this.widget);
-      },
-      awml_detachedCallback: function(root, parent_node) {
-        parent_node.widget.remove_child(this.widget);
-      },
-      awml_attributeChangedCallback: function(name, old_value, value) {
-          if (this.widget && has_attribute(this.widget, name)) {
-              value = parse_attribute(value);
-
-              update_option(this, this.widget, name, this.options[name], value);
-          }
-      },
-      awml_update_prefix: update_prefix,
-    });
-  }
-
-  AWML.create_tag = create_tag;
-  AWML.registerWidget = registerWidget;
-
   if (!AWML.Tags) AWML.Tags = {};
-
-  if (TK)
-  {
-    // handle toolkit widgets
-
-    // awml-root is somewhat custom, because it has no awml parents
-    if (TK && TK.Root) AWML.Tags.Root = AWML.register_element("awml-root", {
-      is_awml_node: true,
-      createdCallback: function() {
-        this.widget = null;
-      },
-      attachedCallback: function() {
-        this.widget = new TK.Root({ element: this });
-      },
-      detachedCallback: function() {
-        this.widget.destroy();
-        this.widget = null;
-      },
-    });
-
-    if (TK && TK.Window) AWML.Tags.Window = create_tag("awml-window", {
-      is_awml_node: true,
-      awml_createdCallback: function () {
-        if (!this.widget) {
-          var parent_node = find_parent.call(this);
-          var options = extract_options.call(this, TK.Window);
-          options.element = this;
-          if (this.childNodes.length) {
-            var dummy = document.createDocumentFragment();
-            while (this.childNodes.length > 0) {
-              dummy.appendChild(this.childNodes[0]);
-            }
-            options.content = dummy;
-          }
-          this.widget = new TK.Window(options);
-          attach_options(this, this.widget, options, false);
-          parent_node.widget.add_child(this.widget);
-        }
-      },
-      awml_attachedCallback: function () {
-        this.widget.enable_draw()
-      },
-      awml_detachedCallback: function () {
-        this.widget.disable_draw()
-      },
-      attributeChangedCallback: function(name, old_value, value) {
-        if (this.widget && has_attribute(this.widget, name)) {
-          value = parse_attribute(value);
-          update_option(this, this.widget, name, this.options[name], value);
-        }
-      },
-    });
-
-    AWML.Tags.ResponseHandle = create_tag("awml-responsehandle", {
-      awml_createdCallback: function() {
-        this.style.display = "none";
-        this.options = extract_options.call(this, TK.ResponseHandle);
-      },
-      awml_attachedCallback: function(root, parent_node) {
-        if (!(parent_node.widget instanceof TK.Chart)) {
-          AWML.error("awml-responsehandle needs to be inside of a awml-chart.");
-          return;
-        }
-        if (this.widget) {
-          detach_options(this, this.widget, this.options);
-          parent_node.widget.remove_handle(this.widget);
-        }
-        var options = check_options(TK.ResponseHandle.prototype, evaluate_options(this.options));
-        this.widget = parent_node.widget.add_handle(options);
-        attach_options(this, this.widget, this.options, false);
-      },
-      awml_detachedCallback: function(root, parent_node) {
-        detach_options(this, this.widget, this.options);
-        parent_node.widget.remove_handle(this.widget);
-        this.widget = null;
-      },
-      attributeChangedCallback: function(name, old_value, value) {
-        if (this.widget && has_attribute(this.widget, name)) {
-            value = parse_attribute(value);
-            update_option(this, this.widget, name, this.options[name], value);
-            this.options[name] = value;
-        }
-      }
-    });
-
-    AWML.Tags.Page = create_tag("awml-page", {
-       awml_createdCallback: function() {
-          var button_opt = extract_options.call(this, TK.Button);
-          var container_opt = extract_options.call(this, TK.Container);
-          this.page_opt = TK.object_sub(button_opt, container_opt);
-          container_opt.element = this;
-          this.widget = new TK.Container(container_opt);
-      },
-      attributeChangedCallback: function(name, old_value, value) {
-          if (this.widget && has_attribute(this.widget, name)) {
-              value = parse_attribute(value);
-
-              update_option(this, this.widget, name, this.options[name], value);
-          }
-      },
-      awml_detachedCallback: function(root, parent_node) {
-          parent_node.widget.remove_page(this.widget);
-      },
-      awml_attachedCallback: function(root, parent_node) {
-        if (!(parent_node.widget instanceof TK.Pager)) {
-          AWML.error("awml-page needs to be inside of a awml-pager.");
-          return;
-        }
-        parent_node.widget.add_page(this.page_opt, this.widget);
-      }
-    });
-    AWML.Tags.Filter = create_tag("awml-filter", {
-      awml_createdCallback: function() {
-        this.style.display = "none";
-        this.options = extract_options.call(this, TK.EqBand);
-      },
-      awml_attachedCallback: function(root, parent_node) {
-        if (this.widget) {
-          detach_options(this, this.widget, this.options);
-          parent_node.widget.remove_band(this.widget);
-        }
-        var options = check_options(TK.EqBand.prototype, evaluate_options(this.options));
-        this.widget = parent_node.widget.add_band(options);
-        attach_options(this, this.widget, this.options, false);
-      },
-      awml_detachedCallback: function(root, parent_node) {
-        detach_options(this, this.widget, this.options);
-        parent_node.widget.remove_band(this.widget);
-        this.widget = null;
-      },
-      attributeChangedCallback: function(name, old_value, value) {
-        if (this.widget && has_attribute(this.widget, name)) {
-            value = parse_attribute(value);
-
-            update_option(this, this.widget, name, this.options[name], value);
-
-            this.options[name] = value;
-        }
-      }
-    });
-
-
-    if (TK && TK.Widget) for (var key in TK) {
-        var f = TK[key];
-        if (AWML.Tags[key]) continue;
-        if (typeof f === "function" && f.prototype && TK.Widget.prototype.isPrototypeOf(f.prototype)) {
-            AWML.Tags[key] = registerWidget("awml-"+key.toLowerCase(), f);
-        }
-    }
-  } // if TK
 
   AWML.Tags.Option = create_tag("awml-option", {
     awml_createdCallback: function() {
@@ -979,11 +642,7 @@
 
       if (!o) return;
 
-      if (parent_node.widget) {
-        if (o.name.charCodeAt(0) !== 95 && !parent_node.widget._options[o.name] && this.getAttribute("force") === null)
-          AWML.warn("%o has no option called %o.\n", parent_node.widget._class, o.name);
-        o.attach(parent_node, parent_node.widget);
-      } else if (parent_node instanceof AWML.Tags.Options) {
+      if (parent_node instanceof AWML.Tags.Options) {
         parent_node.data[o.name] = o;
       } else if (parent_node.isAuxWidget) {
         o.attach(parent_node, parent_node.auxWidget);
@@ -997,9 +656,7 @@
 
       if (!o) return;
 
-      if (parent_node.widget) {
-        o.detach(parent_node, parent_node.widget);
-      } else if (parent_node instanceof AWML.Tags.Options) {
+      if (parent_node instanceof AWML.Tags.Options) {
         if (parent_node.data[o.name] === o) {
           delete parent_node.data[o.name];
         }
@@ -1023,103 +680,13 @@
     },
   });
 
-  AWML.Tags.Options = create_tag("awml-options", {
-     awml_extract_options: function() {
-        if (this.widget) this.widget = this.widget.toLowerCase();
-
-        var data = extract_options.call(this);
-        delete data.name;
-        delete data.widget;
-        if (this.classList.length) {
-          var classes = (data["@CLASSES"] || []).slice(0);
-          this.classList.forEach(function(cl) { classes.push(cl); });
-          data["@CLASSES"] = classes;
-        }
-        this.data = data;
-     },
-     awml_createdCallback: function() {
-        var classes = [];
-
-        this.style.display = "none";
-
-        this.name = this.getAttribute("name");
-        this.widget = this.getAttribute("widget");
-        this.data = null;
-    },
-    awml_attachedCallback: function(root, parent_node) {
-      if (parent_node.tagName !== "AWML-ROOT" &&
-          parent_node.tagName !== "AUX-ROOT") {
-        AWML.error("awml-options tags must be direct children of awml-root.");
-        return;
-      }
-
-      this.awml_extract_options();
-
-      if (this.name) {
-        AWML.options[this.name] = this.data;
-      } else if (this.widget) {
-        AWML.options.defaults[this.widget] = this.data;
-      } else {
-        AWML.error("awml-options without name or widget.");
-      }
-    },
-    awml_detachedCallback: function(root, parent_node) {
-      if (parent_node.tagName !== "AWML-ROOT" &&
-          parent_node.tagName !== "AUX-ROOT") {
-        AWML.error("awml-options tags must be direct children of awml-root.");
-        return;
-      }
-      if (this.name) {
-        if (AWML.options[this.name] === this.data) {
-          AWML.options[this.name] = null;
-        }
-      } else if (this.widget) {
-        if (AWML.options.defaults[this.widget] === this.data) {
-          AWML.options.defaults[this.widget] = null;
-        }
-      }
-    },
-    attributeChangedCallback: function(name, old_value, value) {
-      AWML.warn("Attribute changes in awml-options tags are not supported, yet.");
-    },
-  });
-
-  function delayed_event_binding () {
-    var fun = parse_format.call(this, "js", this.textContent);
-    var w = this.parent_widget;
-    if (typeof(fun) !== "function") {
-      AWML.error("AWML-EVENT without function.");
-    } else {
-      var types = this.type.split(",");
-      var type;
-      for (var i = 0; i < types.length; i++) {
-        type = types[i].trim();
-        if (!type.length) continue;
-        if (w.remove_event)
-          w.remove_event(type, this.fun);
-        else
-          w.off(type, this.fun);
-        if (w.add_event)
-          w.add_event(type, fun);
-        else
-          w.on(type, fun);
-      }
-      this.fun = fun;
-      this.fun.apply(w, arguments);
-    }
-  }
-
   AWML.Tags.Event = create_tag("awml-event", {
     awml_createdCallback: function() {
       this.style.display = "none";
       this.type = this.getAttribute("type");
       this.fun = null;
       var cb = this.getAttribute("callback");
-      if (cb) {
-        this.fun = parse_format.call(this, "js", cb);
-      } else {
-        this.fun = delayed_event_binding.bind(this);
-      }
+      this.fun = parse_format.call(this, "js", cb);
       if (typeof(this.type) !== "string") {
         AWML.error("AWML-EVENT without type.");
       }
@@ -1147,10 +714,7 @@
       for (var i = 0; i < types.length; i++) {
         type = types[i].trim();
         if (!type.length) continue;
-        if (w.add_event)
-          w.add_event(type, this.fun);
-        else
-          w.on(type, this.fun);
+        w.on(type, this.fun);
         if (type === 'initialized') {
           /* the initialization has already happened, 
            * so we call it manually */

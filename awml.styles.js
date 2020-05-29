@@ -135,25 +135,15 @@
     var widget = AWML.get_widget(node);
     if (!widget || !widget.parent) return;
     var parent = widget.parent;
-    if (!parent.hide_child && !parent.hideChild) {
+    if (!parent.hideChild) {
       if (this.attached)
         AWML.error("AWML-HIDE: widget has no parent container.", widget);
       return;
     }
-    if ('TK' in window && !(widget instanceof window.TK.Container))
-    {
-      AWML.warn("Using awml-hide or awml-show with non-container tag.");
-    }
     if (state) {
-      if (parent.hideChild)
-        parent.hideChild(widget);
-      else
-        parent.hide_child(widget);
+      parent.hideChild(widget);
     } else {
-      if (parent.showChild)
-        parent.showChild(widget);
-      else
-        parent.show_child(widget);
+      parent.showChild(widget);
     }
   }
 
