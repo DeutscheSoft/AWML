@@ -1,8 +1,8 @@
 {
   "name": "@deutschesoft/awml",
   "version": "1.1.0",
-  "description": "A templating language for AUX and toolkit.",
-  "main": "index.js",
+  "description": "A templating language for AUX.",
+  "main": "src/index.js",
   "directories": {},
   "scripts": {},
   "repository": {
