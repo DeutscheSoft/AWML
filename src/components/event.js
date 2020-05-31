@@ -5,10 +5,11 @@ import {
   getAuxWidget,
   subscribeAuxWidget,
 } from '../utils/aux.js';
+import { BaseComponent } from './base.js';
 
-class AWMLEvent extends HTMLElement {
+class EventComponent extends BaseComponent {
   static get observedAttributes() {
-    return ['type', 'callback', 'debug'];
+    return BaseComponent.observedAttributes.concat(['type', 'callback']);
   }
 
   get type() {
@@ -37,31 +38,13 @@ class AWMLEvent extends HTMLElement {
     super();
     this._type = null;
     this._callback = null;
-    this._subscription = null;
-    this.debug = false;
-  }
-
-  connectedCallback() {
-    this.style.display = 'none';
-
-    // we only want to subscribe here if we are not yet subscribed
-    // and if we are connected to the dom
-    if (this.isConnected && this._subscription === null) {
-      this._subscription = this._subscribe();
-    }
-  }
-
-  _unsubscribe() {
-    const sub = this._subscription;
-    this._subscription = null;
-    if (sub) sub();
   }
 
   _subscribe() {
     const type = this._type;
     const callback = this._callback;
 
-    if (type === null || callback === null) return;
+    if (type === null || callback === null) return null;
 
     const parent = this.parentNode;
 
@@ -79,15 +62,6 @@ class AWMLEvent extends HTMLElement {
     }
   }
 
-  _resubscribe() {
-    this._unsubscribe();
-    this._subscription = this._subscribe();
-  }
-
-  disconnectedCallback() {
-    this._unsubscribe();
-  }
-
   attributeChangedCallback(name, oldValue, newValue) {
     switch (name) {
       case 'type':
@@ -96,11 +70,11 @@ class AWMLEvent extends HTMLElement {
       case 'callback':
         this.callback = parseAttribute('javascript', newValue, null);
         break;
-      case 'debug':
-        this.debug = newValue !== null;
+      default:
+        super.attributeChangedCallback(name, oldValue, newValue);
         break;
     }
   }
 }
 
-customElements.define('awml-event', AWMLEvent);
+customElements.define('awml-event', EventComponent);
