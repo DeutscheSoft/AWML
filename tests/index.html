@@ -1,0 +1,63 @@
+<html>
+  <head>
+    <script type="module">
+      const tests = ['awml-backend.html', 'awml-class.html', 'awml-event.html'];
+
+      function log(msg) {
+        const node = document.createTextNode(msg + '\n');
+        const log = document.querySelector('#log');
+
+        log.appendChild(node);
+      }
+
+      async function runTest(url, timeout) {
+        if (!timeout) timeout = 2000;
+
+        log('Running test ' + url);
+
+        const iframe = document.querySelector('iframe');
+
+        await new Promise((resolve, reject) => {
+          const onmessage = (ev) => {
+            const data = ev.data;
+            window.removeEventListener('message', onmessage);
+
+            if (data.ok) {
+              resolve();
+            } else {
+              reject(new Error(data.error));
+            }
+          };
+
+          window.addEventListener('message', onmessage);
+          iframe.src = url;
+        });
+
+        iframe.src = 'about:blank';
+      }
+
+      window.addEventListener('load', async () => {
+        log('Running ' + tests.length + ' tests');
+
+        for (let i = 0; i < tests.length; i++) {
+          await runTest(tests[i]);
+        }
+      });
+    </script>
+    <style>
+      iframe {
+        visibility: hidden;
+        position: fixed;
+      }
+      #log {
+        width: 100%;
+        font-family: monospace;
+        white-space: pre;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="log"></div>
+    <iframe loading="eager" src="awml-backend.html"></iframe>
+  </body>
+</html>

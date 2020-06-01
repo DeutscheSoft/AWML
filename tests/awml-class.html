@@ -2,12 +2,14 @@
   <head>
     <script type="module" src="../src/index.js"></script>
     <script type="module">
-      import { assertEqual } from './testing.js';
+      import { assertEqual, define, waitForFrame } from './testing.js';
       window.addEventListener('load', () => {
-        const div = document.querySelector('div');
-        const awmlClass = div.querySelector('awml-class');
+        define(async () => {
+          const div = document.querySelector('div');
+          const awmlClass = div.querySelector('awml-class');
 
-        requestAnimationFrame(() => {
+          await waitForFrame();
+
           assertEqual(div.classList.contains('bar'), true);
           awmlClass.remove();
           assertEqual(div.classList.contains('bar'), false);

@@ -1,23 +1,22 @@
 <html>
   <head>
-    <script type=module src='../src/index.js'></script>
-    <script>
+    <script type="module">
+      import { define, assertEqual } from './testing.js';
       let clickEvent = null;
 
-      function clicked(ev) {
+      window.clicked = function (ev) {
         clickEvent = ev;
-      }
+      };
       window.addEventListener('load', () => {
-        const button = document.querySelector('button');
-        const event = new CustomEvent('click');
-        button.dispatchEvent(event);
-        if (event !== clickEvent) {
-          console.error('failed');
-        }
+        define(() => {
+          const button = document.querySelector('button');
+          const event = new CustomEvent('click');
+          button.dispatchEvent(event);
+          assertEqual(event, clickEvent);
+        });
       });
-
-      const foo = 'bar';
     </script>
+    <script type="module" src="../src/index.js"></script>
   </head>
   <body>
     <button>
