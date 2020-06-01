@@ -3,19 +3,18 @@
     <script type="module" src="../src/index.js"></script>
     <script type="module">
       import { define, assertEqual } from './testing.js';
-      window.addEventListener('load', () => {
-        define(() => {
-          const b = document.querySelector('awml-backend');
 
-          // check that attributes and properties work correctly
-          assertEqual(b.name, 'foo');
-          assertEqual(b.type, 'local');
-          assertEqual(b._backend.name, 'foo');
-          b.name = 'bar';
-          assertEqual(b._backend.name, 'bar');
-          b.setAttribute('name', 'flupp');
-          assertEqual(b._backend.name, 'flupp');
-        });
+      define(() => {
+        const b = document.querySelector('awml-backend');
+
+        // check that attributes and properties work correctly
+        assertEqual(b.name, 'foo');
+        assertEqual(b.type, 'local');
+        assertEqual(b._backend.name, 'foo');
+        b.name = 'bar';
+        assertEqual(b._backend.name, 'bar');
+        b.setAttribute('name', 'flupp');
+        assertEqual(b._backend.name, 'flupp');
       });
     </script>
     <awml-backend name="foo" type="local"></awml-backend>

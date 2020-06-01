@@ -11,27 +11,29 @@ export function failure(err) {
 }
 
 export function define(callback) {
-  try {
-    let called = false;
-    const p = callback(() => {
-      called = true;
-    });
+  window.addEventListener('load', () => {
+    try {
+      let called = false;
+      const p = callback(() => {
+        called = true;
+      });
 
-    if (typeof p === 'object' && typeof p.then === 'function') {
-      p.then(
-        () => {
-          done();
-        },
-        (error) => {
-          failure(error);
-        }
-      );
-    } else if (!called) {
-      done();
+      if (typeof p === 'object' && typeof p.then === 'function') {
+        p.then(
+          () => {
+            done();
+          },
+          (error) => {
+            failure(error);
+          }
+        );
+      } else if (!called) {
+        done();
+      }
+    } catch (error) {
+      failure(error);
     }
-  } catch (error) {
-    failure(error);
-  }
+  });
 }
 
 export function waitForFrame() {

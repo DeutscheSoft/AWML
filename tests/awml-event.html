@@ -7,13 +7,11 @@
       window.clicked = function (ev) {
         clickEvent = ev;
       };
-      window.addEventListener('load', () => {
-        define(() => {
-          const button = document.querySelector('button');
-          const event = new CustomEvent('click');
-          button.dispatchEvent(event);
-          assertEqual(event, clickEvent);
-        });
+      define(() => {
+        const button = document.querySelector('button');
+        const event = new CustomEvent('click');
+        button.dispatchEvent(event);
+        assertEqual(event, clickEvent);
       });
     </script>
     <script type="module" src="../src/index.js"></script>

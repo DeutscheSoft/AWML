@@ -3,17 +3,15 @@
     <script type="module" src="../src/index.js"></script>
     <script type="module">
       import { assertEqual, define, waitForFrame } from './testing.js';
-      window.addEventListener('load', () => {
-        define(async () => {
-          const div = document.querySelector('div');
-          const awmlClass = div.querySelector('awml-class');
+      define(async () => {
+        const div = document.querySelector('div');
+        const awmlClass = div.querySelector('awml-class');
 
-          await waitForFrame();
+        await waitForFrame();
 
-          assertEqual(div.classList.contains('bar'), true);
-          awmlClass.remove();
-          assertEqual(div.classList.contains('bar'), false);
-        });
+        assertEqual(div.classList.contains('bar'), true);
+        awmlClass.remove();
+        assertEqual(div.classList.contains('bar'), false);
       });
     </script>
     <awml-backend name="test" type="local">
