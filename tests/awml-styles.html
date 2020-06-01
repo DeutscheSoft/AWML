@@ -1,0 +1,30 @@
+<html>
+  <head>
+    <script type="module" src="../src/index.js"></script>
+    <script type="module">
+      import { assertEqual, define, waitForFrame } from './testing.js';
+      window.addEventListener('load', () => {
+        define(async () => {
+          const div = document.querySelector('div');
+          const awmlStyles = div.querySelector('awml-styles');
+
+          await waitForFrame();
+
+          assertEqual(div.style.display, 'none');
+          awmlStyles.remove();
+          assertEqual(div.style.display, '');
+        });
+      });
+    </script>
+    <awml-backend name="test" type="local">
+      { "foo" : true }
+    </awml-backend>
+  </head>
+  <body>
+    <div>
+      <awml-styles src="test:foo">
+        function (v) { return { display: 'none' }; }
+      </awml-styles>
+    </div>
+  </body>
+</html>

@@ -1,7 +1,12 @@
 <html>
   <head>
     <script type="module">
-      const tests = ['awml-backend.html', 'awml-class.html', 'awml-event.html'];
+      const tests = [
+        'awml-backend.html',
+        'awml-class.html',
+        'awml-event.html',
+        'awml-styles.html',
+      ];
 
       function log(msg) {
         const node = document.createTextNode(msg + '\n');
@@ -10,14 +15,14 @@
         log.appendChild(node);
       }
 
-      async function runTest(url, timeout) {
+      function runTest(url, timeout) {
         if (!timeout) timeout = 2000;
 
         log('Running test ' + url);
 
         const iframe = document.querySelector('iframe');
 
-        await new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => {
           const onmessage = (ev) => {
             const data = ev.data;
             window.removeEventListener('message', onmessage);
@@ -32,15 +37,18 @@
           window.addEventListener('message', onmessage);
           iframe.src = url;
         });
-
-        iframe.src = 'about:blank';
       }
 
       window.addEventListener('load', async () => {
         log('Running ' + tests.length + ' tests');
 
         for (let i = 0; i < tests.length; i++) {
-          await runTest(tests[i]);
+          try {
+            await runTest(tests[i]);
+            log('OK');
+          } catch (err) {
+            log('Failed: ' + err.toString());
+          }
         }
       });
     </script>
