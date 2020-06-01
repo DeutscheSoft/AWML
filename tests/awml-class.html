@@ -1,7 +1,7 @@
 <html>
   <head>
-    <script type=module src="../src/index.js"></script>
-    <script type=module>
+    <script type="module" src="../src/index.js"></script>
+    <script type="module">
       import { assertEqual } from './testing.js';
       window.addEventListener('load', () => {
         const div = document.querySelector('div');
@@ -15,14 +15,12 @@
       });
     </script>
     <awml-backend name="test" type="local">
-      {
-        "foo" : "bar"
-      }
+      { "foo" : "bar" }
     </awml-backend>
   </head>
   <body>
     <div>
-      <awml-class src=test:foo></awml-class>
+      <awml-class src="test:foo"></awml-class>
     </div>
   </body>
 </html>

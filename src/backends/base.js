@@ -164,7 +164,7 @@ export class Base extends EventTarget {
     this._idToPath.delete(id);
     this._pathToId.delete(path);
 
-    this.emit('unsubscribe', [ path, id ]);
+    this.emit('unsubscribe', [path, id]);
 
     // emit unregister event
   }
@@ -273,7 +273,7 @@ export class Base extends EventTarget {
       resolvers[i](result);
     }
 
-    this.emit('register_success', [ path, id ]);
+    this.emit('register_success', [path, id]);
   }
 
   _subscribeFailure(path, error) {
@@ -289,6 +289,6 @@ export class Base extends EventTarget {
       rejecters[i](error);
     }
 
-    this.emit('register_fail', [ path, error ]);
+    this.emit('register_fail', [path, error]);
   }
 }

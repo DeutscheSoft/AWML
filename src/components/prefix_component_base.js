@@ -133,20 +133,20 @@ export class PrefixComponentBase extends BaseComponent {
 
   attributeChangedCallback(name, oldValue, newValue) {
     switch (name) {
-    case 'src-prefix':
-      this.srcPrefix = newValue;
-      break;
-    case 'src':
-      this.src = newValue;
-      break;
-    case 'transform-receive':
-      this.transformReceive = parseAttribute('javascript', newValue, null);
-      break;
-    case 'transform-src':
-      this.transformSrc = parseAttribute('javascript', newValue, null);
-      break;
-    default:
-      super.attributeChangedCallback(name, oldValue, newValue);
+      case 'src-prefix':
+        this.srcPrefix = newValue;
+        break;
+      case 'src':
+        this.src = newValue;
+        break;
+      case 'transform-receive':
+        this.transformReceive = parseAttribute('javascript', newValue, null);
+        break;
+      case 'transform-src':
+        this.transformSrc = parseAttribute('javascript', newValue, null);
+        break;
+      default:
+        super.attributeChangedCallback(name, oldValue, newValue);
     }
   }
 }

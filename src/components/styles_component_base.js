@@ -36,11 +36,9 @@ export class StylesComponentBase extends RedrawComponentBase {
   }
 
   updateState(oldState, newState) {
-    if (oldState !== null)
-      this.removeState(oldState);
+    if (oldState !== null) this.removeState(oldState);
     this._state = null;
-    if (newState !== null)
-      this.applyState(newState);
+    if (newState !== null) this.applyState(newState);
   }
 
   connectedCallback() {

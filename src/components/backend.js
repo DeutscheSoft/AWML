@@ -107,19 +107,19 @@ export class BackendComponent extends BaseComponent {
       registerBackend(name, backend);
       registered = true;
     } else {
-      subscriptions.add(backend.once('open', () => {
-        registerBackend(name, backend);
-        registered = true;
-      }));
+      subscriptions.add(
+        backend.once('open', () => {
+          registerBackend(name, backend);
+          registered = true;
+        })
+      );
     }
 
     const retry = () => {
       subscriptions.add(
-        timeout(
-          () => {
-            this._resubscribe();
-          }, 400
-        )
+        timeout(() => {
+          this._resubscribe();
+        }, 400)
       );
     };
 
@@ -127,10 +127,8 @@ export class BackendComponent extends BaseComponent {
       backend.subscribeEvent('error', retry),
       backend.subscribeEvent('close', retry),
       () => {
-        if (backend.isOpen || backend.isInit)
-          backend.close();
-        if (registered)
-          unregisterBackend(name, backend);
+        if (backend.isOpen || backend.isInit) backend.close();
+        if (registered) unregisterBackend(name, backend);
         this._backend = null;
       }
     );

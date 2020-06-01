@@ -6,11 +6,9 @@ export class EventTarget {
   }
 
   on(name, cb) {
-    if (typeof name !== 'string')
-      throw new TypeError('Expected string.');
+    if (typeof name !== 'string') throw new TypeError('Expected string.');
 
-    if (typeof cb !== 'function')
-      throw new TypeError('Expected function.');
+    if (typeof cb !== 'function') throw new TypeError('Expected function.');
 
     const eventHandlers = this._eventHandlers;
 
@@ -21,8 +19,7 @@ export class EventTarget {
       eventHandlers.set(name, handlers);
     }
 
-    if (handlers.has(cb))
-      throw new Error('Cannot subscribe twice.');
+    if (handlers.has(cb)) throw new Error('Cannot subscribe twice.');
 
     handlers.add(cb);
   }
@@ -62,8 +59,7 @@ export class EventTarget {
     return sub;
   }
 
-  emit(name, ...args)
-  {
+  emit(name, ...args) {
     const eventHandlers = this._eventHandlers;
 
     const handlers = eventHandlers.get(name);

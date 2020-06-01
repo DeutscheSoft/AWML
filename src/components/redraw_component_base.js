@@ -18,8 +18,7 @@ function runDraw() {
 }
 
 function scheduleDraw(cb) {
-  if (drawQueue.length === 0)
-    requestAnimationFrame(runDraw);
+  if (drawQueue.length === 0) requestAnimationFrame(runDraw);
 
   drawQueue.push(cb);
 }

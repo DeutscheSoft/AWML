@@ -27,7 +27,7 @@ class BaseValue {
     if (a === null) {
       this._subscribers = subscriber;
     } else if (typeof a === 'function') {
-      this._subscribers = [ a, subscriber];
+      this._subscribers = [a, subscriber];
     } else {
       this._subscribers.push(subscriber);
     }

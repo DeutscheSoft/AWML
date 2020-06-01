@@ -11,8 +11,7 @@ export class ClassComponent extends StylesComponentBase {
     if (typeof v === 'string') {
       classList.add(v);
     } else if (Array.isArray(v)) {
-      for (let i = 0; i < v.length; i++)
-        classList.add(v[i]);
+      for (let i = 0; i < v.length; i++) classList.add(v[i]);
     } else {
       throw new TypeError('Expected string or string[].');
     }
@@ -24,8 +23,7 @@ export class ClassComponent extends StylesComponentBase {
     if (typeof v === 'string') {
       classList.remove(v);
     } else if (Array.isArray(v)) {
-      for (let i = 0; i < v.length; i++)
-        classList.remove(v[i]);
+      for (let i = 0; i < v.length; i++) classList.remove(v[i]);
     } else {
       throw new TypeError('Expected string or string[].');
     }

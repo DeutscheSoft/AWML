@@ -8,7 +8,7 @@ export class Subscriptions {
   unsubscribe() {
     const subs = this.subscriptions;
     if (subs === null) return;
-    this.subscriptions = null
+    this.subscriptions = null;
 
     for (let i = 0; i < subs.length; i++) {
       try {
@@ -25,8 +25,7 @@ export class Subscriptions {
     for (let i = 0; i < callbacks.length; i++) {
       const cb = callbacks[i];
 
-      if (typeof cb !== 'function')
-        throw new TypeError('Expected function.');
+      if (typeof cb !== 'function') throw new TypeError('Expected function.');
 
       subs.push(cb);
     }
