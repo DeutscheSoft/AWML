@@ -1,4 +1,4 @@
-import { BackendValue } from './backends/backend_value.js';
+import { BackendValue } from './backend_value.js';
 
 const backendValues = new Map();
 const backends = new Map();

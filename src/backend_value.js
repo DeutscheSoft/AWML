@@ -1,4 +1,4 @@
-import { error, warn } from '../utils/log.js';
+import { error, warn } from './utils/log.js';
 
 function callSubscriber(cb, value) {
   try {
