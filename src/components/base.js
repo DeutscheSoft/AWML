@@ -11,9 +11,9 @@ export class BaseComponent extends HTMLElement {
     this._subscription = null;
   }
 
-  log(...args) {
+  log(fmt, ...args) {
     if (!this.debug) return;
-    log(...args);
+    log('%o ' + fmt, this, ...args);
   }
 
   connectedCallback() {
