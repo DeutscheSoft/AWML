@@ -7,6 +7,7 @@ export function done() {
 }
 
 export function failure(err) {
+  console.error(err);
   window.parent.postMessage({ ok: false, error: err.toString() });
 }
 

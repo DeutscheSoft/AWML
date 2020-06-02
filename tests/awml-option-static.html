@@ -1,0 +1,23 @@
+<html>
+  <head>
+    <script type="module">
+      import { define, assertEqual } from './testing.js';
+
+      define(() => {
+        const widget = document.querySelector('test-component').auxWidget;
+        const awmlOption = document.querySelector('awml-option');
+
+        assertEqual(widget.get('foo'), 'bar');
+        awmlOption.remove();
+        assertEqual(widget.get('foo'), void 0);
+      });
+    </script>
+    <script type="module" src="../src/index.js"></script>
+    <script type="module" src="./test-component.js"></script>
+  </head>
+  <body>
+    <test-component>
+      <awml-option type="static" name="foo" value='"bar"'></awml-option>
+    </test-component>
+  </body>
+</html>

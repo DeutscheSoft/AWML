@@ -1,7 +1,15 @@
 import { error } from './log.js';
 
-export function isAuxComponent(node) {
-  return node.tagName.startsWith('AUX-');
+export function isCustomElement(node) {
+  return node.tagName.includes('-');
+}
+
+export function maybeAuxElement(node) {
+  if (!isCustomElement(node)) return false;
+
+  return (
+    node.auxWidget !== void 0 || !customElements.get(node.tagName.toLowerCase())
+  );
 }
 
 export function getAuxWidget(node) {
@@ -24,7 +32,7 @@ const _subscribers = new Map();
  * Calls callback once when the corresponding Custom Element
  * has been defined.
  */
-export function subscribeAuxWidget(node, callback) {
+export function subscribeCustomElement(node, callback) {
   const name = node.tagName.toLowerCase();
 
   let subscribers = _subscribers.get(name);

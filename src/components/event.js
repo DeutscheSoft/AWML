@@ -1,9 +1,9 @@
 import { parseAttribute } from '../utils/parse_attribute.js';
 import { subscribeDOMEvent } from '../utils/subscribe_dom_event.js';
 import {
-  isAuxComponent,
+  isCustomElement,
   getAuxWidget,
-  subscribeAuxWidget,
+  subscribeCustomElement,
 } from '../utils/aux.js';
 import { BaseComponent } from './base.js';
 
@@ -48,12 +48,12 @@ class EventComponent extends BaseComponent {
 
     const parent = this.parentNode;
 
-    if (isAuxComponent(parent)) {
+    if (isCustomElement(parent)) {
       const widget = getAuxWidget(parent);
 
       // try again when the component has been defined
       if (widget === null)
-        return subscribeAuxWidget(parent, () => this._resubscribe());
+        return subscribeCustomElement(parent, () => this._resubscribe());
 
       return widget.subscribe(type, callback);
     } else {
