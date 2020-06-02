@@ -1,6 +1,7 @@
 import { error } from './log.js';
 
 export function parseAttribute(type, x, fallback) {
+  if (x === null) return fallback;
   switch (type) {
     case 'javascript':
     case 'js':

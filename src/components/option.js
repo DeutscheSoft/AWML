@@ -106,6 +106,15 @@ class OptionComponent extends PrefixComponentBase {
     if (widget === null)
       return subscribeCustomElement(parentNode, () => this._resubscribe());
 
+    let sub = null;
+
+    if (constructor.needsBackendValue === true) {
+      sub = super._subscribe();
+
+      // backend value not found, yet.
+      if (sub === null) return null;
+    }
+
     const options = constructor.optionsFromNode(this);
 
     options.name = name;
@@ -117,8 +126,17 @@ class OptionComponent extends PrefixComponentBase {
 
     return () => {
       option.destroy();
-      this._option = option;
+      this._option = null;
+
+      if (sub !== null) {
+        sub();
+        sub = null;
+      }
     };
+  }
+
+  _valueReceived(value) {
+    this._option.valueReceived(value);
   }
 
   attributeChangedCallback(name, oldValue, newValue) {

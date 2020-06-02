@@ -6,8 +6,9 @@
         'awml-backend.html',
         'awml-class.html',
         'awml-event.html',
-        'awml-option-static.html',
+        'awml-option-bind.html',
         'awml-option-media.html',
+        'awml-option-static.html',
         'awml-styles.html',
       ];
 
@@ -65,10 +66,12 @@
 
         for (let i = 0; i < tests.length; i++) {
           const url = tests[i];
+          const t1 = performance.now();
           try {
             _log('Running test ' + url + ' ... ');
             await runTest(url);
-            log('OK');
+            const time = performance.now() - t1;
+            log('OK ( ' + time.toFixed(0) + 'ms )');
           } catch (err) {
             error('Failed: ' + err.toString());
           }
