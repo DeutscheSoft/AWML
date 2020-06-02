@@ -11,17 +11,35 @@
         'awml-styles.html',
       ];
 
-      function log(msg) {
-        const node = document.createTextNode(msg + '\n');
+      function _log(msg) {
+        const span = document.createElement('span');
+        const text = document.createTextNode(msg);
         const log = document.querySelector('#log');
 
-        log.appendChild(node);
+        span.appendChild(text);
+        log.appendChild(span);
+
+        return span;
+      }
+
+      function log(msg) {
+        return _log(msg + '\n');
+      }
+
+      function error(msg) {
+        const span = log(msg);
+        span.className = 'error';
+        return span;
+      }
+
+      function warn(msg) {
+        const span = log(msg);
+        span.className = 'warn';
+        return span;
       }
 
       function runTest(url, timeout) {
         if (!timeout) timeout = 2000;
-
-        log('Running test ' + url);
 
         const iframe = document.querySelector('iframe');
 
@@ -33,7 +51,7 @@
             if (data.ok) {
               resolve();
             } else {
-              reject(new Error(data.error));
+              reject(data.error);
             }
           };
 
@@ -46,13 +64,17 @@
         log('Running ' + tests.length + ' tests');
 
         for (let i = 0; i < tests.length; i++) {
+          const url = tests[i];
           try {
-            await runTest(tests[i]);
+            _log('Running test ' + url + ' ... ');
+            await runTest(url);
             log('OK');
           } catch (err) {
-            log('Failed: ' + err.toString());
+            error('Failed: ' + err.toString());
           }
         }
+
+        log('Done.');
       });
     </script>
     <style>
@@ -64,6 +86,10 @@
         width: 100%;
         font-family: monospace;
         white-space: pre;
+      }
+
+      #log > .error {
+        color: red;
       }
     </style>
   </head>
