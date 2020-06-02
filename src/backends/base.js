@@ -1,5 +1,6 @@
 import { parseAttribute } from '../utils/parse_attribute.js';
 import { EventTarget } from '../utils/event_target.js';
+import { warn } from '../utils/log.js';
 
 export class Base extends EventTarget {
   get transformPath() {
@@ -194,6 +195,7 @@ export class Base extends EventTarget {
     if (subscribers === void 0) return;
 
     for (let i = 0; i < subscribers.length; i++) {
+      const callback = subscribers[i];
       try {
         callback(id, value);
       } catch (err) {
