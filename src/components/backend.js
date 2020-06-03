@@ -2,6 +2,7 @@ import { error } from '../utils/log.js';
 import { BaseComponent } from './base.js';
 import { registerBackend, unregisterBackend } from '../backends.js';
 import { Subscriptions } from '../utils/subscriptions.js';
+import { timeout } from '../utils/timeout.js';
 
 const backendTypes = new Map();
 const backendTypeSubscribers = new Map();
@@ -47,7 +48,11 @@ export function subscribeBackendType(type, callback) {
 
 export class BackendComponent extends BaseComponent {
   static get observedAttributes() {
-    return BaseComponent.observedAttributes.concat(['name', 'type']);
+    return BaseComponent.observedAttributes.concat([
+      'name',
+      'type',
+      'retry-interval',
+    ]);
   }
 
   get name() {
@@ -72,11 +77,31 @@ export class BackendComponent extends BaseComponent {
     this._resubscribe();
   }
 
+  get retryInterval() {
+    return this._retryInterval || 500;
+  }
+
+  set retryInterval(v) {
+    if (typeof v === 'number') {
+      if (!(v > 0)) v = null;
+    } else if (v !== null) {
+      throw new TypeError('Expected integer.');
+    }
+    this._retryInterval = v;
+  }
+
+  get isOpen() {
+    const backend = this._backend;
+
+    return backend !== null && backend.isOpen;
+  }
+
   constructor() {
     super();
     this._name = null;
     this._type = null;
     this._backend = null;
+    this._retryInterval = null;
   }
 
   _subscribe() {
@@ -109,26 +134,63 @@ export class BackendComponent extends BaseComponent {
     } else {
       subscriptions.add(
         backend.once('open', () => {
+          this.log('is open.');
+          this.dispatchEvent(
+            new CustomEvent('open', {
+              detail: {
+                backend: backend,
+              },
+            })
+          );
           registerBackend(name, backend);
           registered = true;
         })
       );
     }
 
+    const unregister = () => {
+      if (registered) {
+        registered = false;
+        unregisterBackend(name, backend);
+      }
+    };
+
     const retry = () => {
+      unregister();
       subscriptions.add(
         timeout(() => {
           this._resubscribe();
-        }, 400)
+        }, this.retryInterval)
       );
     };
 
     subscriptions.add(
-      backend.subscribeEvent('error', retry),
-      backend.subscribeEvent('close', retry),
+      backend.subscribeEvent('error', (err) => {
+        this.log('Backend closed with error %o. Retry.', err);
+        this.dispatchEvent(
+          new CustomEvent('error', {
+            detail: {
+              backend: backend,
+              error: err,
+            },
+          })
+        );
+        retry();
+      }),
+      backend.subscribeEvent('close', () => {
+        this.log('Backend closed. Retry.');
+        this.dispatchEvent(
+          new CustomEvent('close', {
+            detail: {
+              backend: backend,
+            },
+          })
+        );
+        retry();
+      }),
       () => {
         if (backend.isOpen || backend.isInit) backend.close();
-        if (registered) unregisterBackend(name, backend);
+        unregister();
         this._backend = null;
       }
     );
@@ -143,6 +205,9 @@ export class BackendComponent extends BaseComponent {
         break;
       case 'name':
         this.name = newValue;
+        break;
+      case 'retry-interval':
+        this.retryInterval = newValue !== null ? parseInt(newValue) : null;
         break;
       default:
         super.attributeChangedCallback(name, oldValue, newValue);
