@@ -3,7 +3,9 @@ import { EventTarget } from '../src/utils/event_target.js';
 class TestWidget extends EventTarget {
   constructor() {
     super();
-    this.options = {};
+    this.options = {
+      visbility: true,
+    };
   }
 
   set(name, value) {
@@ -27,6 +29,14 @@ class TestWidget extends EventTarget {
 
   subscribe(...args) {
     return super.subscribeEvent(...args);
+  }
+
+  hide() {
+    this.set('visbility', false);
+  }
+
+  show() {
+    this.set('visbility', true);
   }
 }
 

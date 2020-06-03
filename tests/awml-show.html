@@ -1,0 +1,40 @@
+<html>
+  <head>
+    <script type="module" src="../src/index.js"></script>
+    <script type="module" src="test-component.js"></script>
+    <script type="module">
+      import { assertEqual, define, waitForFrame } from './testing.js';
+      define(async () => {
+        await waitForFrame();
+
+        {
+          const div = document.querySelector('div');
+          const awmlHide = div.querySelector('awml-show');
+          assertEqual(div.style.display, 'none');
+          awmlHide.remove();
+          assertEqual(div.style.display, '');
+        }
+
+        {
+          const component = document.querySelector('test-component');
+          const widget = component.auxWidget;
+          const awmlHide = component.querySelector('awml-show');
+          assertEqual(widget.get('visbility'), false);
+          awmlHide.remove();
+          assertEqual(widget.get('visbility'), true);
+        }
+      });
+    </script>
+    <awml-backend name="test" type="local">
+      { "foo" : false }
+    </awml-backend>
+  </head>
+  <body>
+    <div>
+      <awml-show src="test:foo"></awml-show>
+    </div>
+    <test-component>
+      <awml-show src="test:foo"></awml-show>
+    </test-component>
+  </body>
+</html>
