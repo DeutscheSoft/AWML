@@ -1,0 +1,65 @@
+<html>
+  <head>
+    <script type="module" src="../src/index.js"></script>
+    <script type="module" src="test-component.js"></script>
+    <script type="module">
+      import { define, failure, assertEqual } from './testing.js';
+      import { getBackendValue } from '../src/index.js';
+
+      define(async () => {
+        const backend = document.querySelector('awml-backend');
+        const b = getBackendValue('test:foo');
+
+        backend.addEventListener('error', (ev) => {
+          const msg = ev.detail.error.toString();
+          failure(new Error(msg));
+        });
+
+        if (!backend.isOpen) {
+          await new Promise((resolve) => {
+            backend.addEventListener('open', resolve);
+          });
+        }
+
+        b.set('bar');
+
+        const wait = () => {
+          return new Promise((resolve) => {
+            setTimeout(resolve, 100);
+          });
+        };
+
+        await wait();
+
+        const widgets = Array.from(
+          document.querySelectorAll('test-component')
+        ).map((comp) => comp.auxWidget);
+
+        assertEqual(widgets.length, 2);
+
+        widgets.forEach((w) => {
+          assertEqual(w.get('foo'), 'bar');
+        });
+
+        widgets[0].userset('foo', 'flupp');
+
+        await wait();
+
+        widgets.forEach((w) => {
+          assertEqual(w.get('foo'), 'flupp');
+        });
+      });
+    </script>
+    <awml-backend debug name="test" type="websocket"></awml-backend>
+  </head>
+  <body>
+    <test-component>
+      <awml-option type="bind" name="foo" src="test:foo"></awml-option>
+      <awml-option type="bind" name="bar" src="test:bar"></awml-option>
+    </test-component>
+    <test-component>
+      <awml-option type="bind" name="foo" src="test:foo"></awml-option>
+      <awml-option type="bind" name="bar" src="test:bar"></awml-option>
+    </test-component>
+  </body>
+</html>

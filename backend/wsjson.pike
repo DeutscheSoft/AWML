@@ -125,7 +125,12 @@ class Backend {
     }
 
     void accept(array(string) protocols, object request) {
-        object con = request->websocket_accept("json");
+        string protocol;
+
+        if (sizeof(protocols))
+          protocol = protocols[0];
+
+        object con = request->websocket_accept(protocol);
 
         add_websocket(con);
     }
