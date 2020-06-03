@@ -1,12 +1,16 @@
+let tests = 0;
+
 export function assertEqual(a, b) {
   if (a !== b) {
     console.error('assertEqual(%o, %o) failed.', a, b);
     throw new Error('Assertion failed.');
   }
+
+  tests++;
 }
 
 export function done() {
-  window.parent.postMessage({ ok: true });
+  window.parent.postMessage({ ok: true, count: tests });
 }
 
 export function failure(err) {

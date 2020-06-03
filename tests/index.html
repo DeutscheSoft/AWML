@@ -54,7 +54,7 @@
             window.removeEventListener('message', onmessage);
 
             if (data.ok) {
-              resolve();
+              resolve(data.count);
             } else {
               reject(data.error);
             }
@@ -66,22 +66,25 @@
       }
 
       window.addEventListener('load', async () => {
-        log('Running ' + tests.length + ' tests');
+        log('Running ' + tests.length + ' test files.');
+
+        let count = 0;
 
         for (let i = 0; i < tests.length; i++) {
           const url = tests[i];
           const t1 = performance.now();
           try {
             _log('Running test ' + url + ' ... ');
-            await runTest(url);
+            const n = await runTest(url);
             const time = performance.now() - t1;
-            log('OK ( ' + time.toFixed(0) + 'ms )');
+            log(['OK ( ', n, ' tests, ', time.toFixed(0), 'ms )'].join(''));
+            count += n;
           } catch (err) {
             error('Failed: ' + err.toString());
           }
         }
 
-        log('Done.');
+        log('Done ' + count + ' tests.');
       });
     </script>
     <style>
