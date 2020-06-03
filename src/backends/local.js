@@ -22,56 +22,59 @@ export class LocalBackend extends Base {
     return this._transformData;
   }
 
+  _maybeOpen() {
+    if (--this._pending === 0) this.open();
+  }
+
+  _importData(data, overwrite) {
+    if (this._transformData !== null) data = this._transformData(data);
+
+    // Note: this works because id == path in this backend.
+    const values = this._values;
+
+    for (let path in data) {
+      if (!overwrite && values.has(path)) continue;
+      this.receive(path, data[path]);
+    }
+  }
+
   constructor(options) {
     super(options);
     this.delay = options.delay;
     this._src = options.src || null;
     this._transformData = options.transformData || null;
-
-    let pending = 1;
-    const maybeOpen = () => {
-      if (--pending === 0) this.open();
-    };
-
-    const importData = (data) => {
-      if (!this.isInit) return;
-
-      if (this._transformData !== null) data = this._transformData(data);
-
-      // Note: this works because id == path in this backend.
-      const values = this._values;
-
-      for (let path in data) {
-        // do not overwrite values which came from the textContent
-        if (values.has(path)) continue;
-        this.receive(path, data[path]);
-      }
-
-      maybeOpen();
-    };
+    this._pending = 1;
 
     if (this._src !== null) {
-      pending++;
+      this._pending++;
       fetchJSON(this._src).then(
         (data) => {
-          importData(data);
+          if (!this.isInit) return;
+          this._importData(data, false);
+          this._maybeOpen();
         },
         (err) => {
+          if (!this.isInit) return;
           error('Failed to load values from %o: %o', src, e);
-          maybeOpen();
+          this._maybeOpen();
         }
       );
     }
 
     if (this.node !== null) {
-      pending++;
+      this._pending++;
       setTimeout(() => {
+        if (!this.isInit) return;
         const data = parseAttribute('json', this.node.textContent, {});
-        importData(data);
+        this._importData(data, false);
+        this._maybeOpen();
       }, 0);
     }
 
-    maybeOpen();
+    setTimeout(() => {
+      if (!this.isInit) return;
+      this._maybeOpen();
+    }, 0);
   }
 
   set(id, value) {

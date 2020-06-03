@@ -1,6 +1,7 @@
 import { parseAttribute } from '../utils/parse_attribute.js';
 import { EventTarget } from '../utils/event_target.js';
 import { warn } from '../utils/log.js';
+import { Subscriptions } from '../utils/subscriptions.js';
 
 export class Base extends EventTarget {
   get transformPath() {
@@ -56,6 +57,11 @@ export class Base extends EventTarget {
     this._transformPath = options.transformPath || null;
     this._name = name;
     this._node = options.node || null;
+    this._eventSubscriptions = new Subscriptions();
+  }
+
+  addSubscription(...args) {
+    this._eventSubscriptions.add(...args);
   }
 
   open() {
@@ -178,6 +184,7 @@ export class Base extends EventTarget {
 
   destroy() {
     this.emit('destroy');
+    this._eventSubscriptions.unsubscribe();
     this._pathToId = null;
     this._idToPath = null;
     this._values = null;
