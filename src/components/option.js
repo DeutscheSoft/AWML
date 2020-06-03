@@ -97,7 +97,7 @@ class OptionComponent extends PrefixComponentBase {
 
     if (!maybeAuxElement(parentNode))
       throw new Error(
-        '�WML-OPTION needs to be the direct child of an AUX Widget.'
+        'AWML-OPTION needs to be the direct child of an AUX Widget.'
       );
 
     const widget = getAuxWidget(parentNode);
@@ -124,6 +124,14 @@ class OptionComponent extends PrefixComponentBase {
 
     this._option = option;
 
+    this.log('Constructed option implementation %o', option);
+
+    const backendValue = this._backendValue;
+
+    if (backendValue !== null && backendValue.hasValue) {
+      option.valueReceived(backendValue.value);
+    }
+
     return () => {
       option.destroy();
       this._option = null;
@@ -132,11 +140,17 @@ class OptionComponent extends PrefixComponentBase {
         sub();
         sub = null;
       }
+      this.log('Destructed option implementation.');
     };
   }
 
   _valueReceived(value) {
-    this._option.valueReceived(value);
+    const option = this._option;
+    // this happens if the backendValue already has a value and calls
+    // the subscriber in super._subscribe(). We handle this by calling
+    // option.valueReceived() above.
+    if (option === null) return;
+    option.valueReceived(value);
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
