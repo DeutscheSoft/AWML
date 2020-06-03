@@ -1,5 +1,8 @@
 export function assertEqual(a, b) {
-  if (a !== b) throw new Error('Assertion failed.');
+  if (a !== b) {
+    console.error('assertEqual(%o, %o) failed.', a, b);
+    throw new Error('Assertion failed.');
+  }
 }
 
 export function done() {

@@ -22,7 +22,7 @@ export function registerPrefixTagName(tagName) {
   prefixTagSelector = Array.from(prefixTags).join(',');
 }
 
-export function updatePrefix(node, handle) {
+export function triggerUpdatePrefix(node, handle) {
   if (node._updatePrefix) node._updatePrefix(handle);
 
   const list = node.querySelectorAll(prefixTagSelector);
@@ -31,4 +31,25 @@ export function updatePrefix(node, handle) {
     const node = list.item(i);
     if (node._updatePrefix) node._updatePrefix(handle);
   }
+}
+
+export function setPrefix(node, prefix, handle) {
+  if (handle === void 0) {
+    handle = null;
+  } else if (typeof handle === 'string') {
+    throw new TypeError('Expected string.');
+  }
+
+  if (typeof prefix !== 'string') throw new TypeError('Expected string.');
+
+  let attribute = handle === null ? 'prefix' : 'prefix-' + handle;
+
+  if (node.getAttribute(attribute) === prefix) return;
+  node.setAttribute(attribute, prefix);
+
+  triggerUpdatePrefix(node, handle);
+}
+
+export function setPrefixBlock(node, handle) {
+  setPrefix(node, ':noprefix:', handle);
 }
