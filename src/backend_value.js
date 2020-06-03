@@ -116,7 +116,7 @@ export class BackendValue extends BaseValue {
         this._backendId = id;
 
         if (this._hasRequestedValue) {
-          this.backend.set(id, this._requestedValue);
+          this._backend.set(id, this._requestedValue);
         }
 
         if (result.length === 3) {
@@ -191,8 +191,8 @@ export class BackendValue extends BaseValue {
   }
 
   set(value) {
-    this.requestedValue = value;
-    this.hasRequestedValue = true;
+    this._requestedValue = value;
+    this._hasRequestedValue = true;
 
     const backend = this._backend;
     const backendId = this._backendId;
