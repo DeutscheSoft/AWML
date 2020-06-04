@@ -10,7 +10,9 @@ export class MediaOption extends BaseOption {
     this.query = options.query;
     this._handler = () => {
       const matches = this.query.matches;
-      const value = this.values[matches ? 1 : 0];
+      const value = Array.isArray(this.values)
+        ? this.values[matches ? 1 : 0]
+        : matches;
       this.widget.set(this.name, value);
     };
 
@@ -22,7 +24,7 @@ export class MediaOption extends BaseOption {
     const options = BaseOption.optionsFromNode(node);
     const format = node.getAttribute('format') || 'json';
 
-    options.values = parseAttribute(format, node.getAttribute('values'));
+    options.values = parseAttribute(format, node.getAttribute('values'), null);
 
     const media = node.getAttribute('media');
 
