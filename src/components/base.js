@@ -34,6 +34,7 @@ export class BaseComponent extends HTMLElement {
 
   _resubscribe() {
     this._unsubscribe();
+    if (!this.isConnected) return;
     this._subscription = this._subscribe();
   }
 
