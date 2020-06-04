@@ -1,0 +1,107 @@
+<html>
+  <head>
+    <script type="module" src="../src/index.js"></script>
+    <script type="module">
+      import { getBackendValue } from '../src/index.js';
+      import {
+        assertEqual,
+        define,
+        waitForFrame,
+        waitForDOMEvent,
+      } from './testing.js';
+      define(async () => {
+        const clones = Array.from(
+          document.querySelectorAll('awml-clone')
+        ).filter((clone) => clone.parentNode === document.body);
+
+        assertEqual(clones.length, 6);
+
+        await waitForFrame();
+
+        {
+          const clone = clones[0];
+          assertEqual(clone.innerText, 'foo');
+          clone.template = 't2';
+          await waitForFrame();
+          assertEqual(clone.innerText, 'bar');
+          // check that the div is still in there
+          assertEqual(clone.firstChild.tagName, 'DIV');
+        }
+
+        {
+          const clone = clones[1];
+          assertEqual(clone.innerText, 'foo');
+          clone.template = 'templates/t2.html';
+          await waitForDOMEvent(clone, 'load');
+          assertEqual(clone.innerText, 'bar');
+          clone.template = 'templates/t3.html';
+          await waitForDOMEvent(clone, 'load');
+          assertEqual(clone.innerText, 'foo');
+          // check that the div is still in there
+          assertEqual(clone.firstChild.tagName, 'DIV');
+        }
+
+        {
+          const clone = clones[2];
+          assertEqual(clone.innerText, '');
+          clone.fetch = true;
+          clone.template = 'templates/this_template_does_not_exist.html';
+          await waitForDOMEvent(clone, 'error');
+          clone.template = null;
+          clone.fetch = false;
+        }
+
+        {
+          const clone = clones[2];
+          assertEqual(clone.template, null);
+          assertEqual(clone._value, null);
+          assertEqual(clone.innerText, '');
+          clone.src = 'test:template';
+          const bv = getBackendValue('test:template');
+
+          bv.set('t1');
+
+          await waitForDOMEvent(clone, 'load');
+          assertEqual(clone.innerText, 'foo');
+          bv.set(null);
+          await waitForDOMEvent(clone, 'load');
+          clone.fetch = true;
+          bv.set('templates/t3.html');
+          await waitForDOMEvent(clone, 'load');
+          assertEqual(clone.innerText, 'foo');
+        }
+
+        {
+          const clone = clones[4];
+          assertEqual(clone.innerText, 'FOO');
+        }
+
+        {
+          const clone = clones[5];
+          assertEqual(clone.innerText, 'foo');
+        }
+      });
+    </script>
+    <script>
+      function replaceFoo(node) {
+        node.textContent = node.textContent.replace('foo', 'FOO');
+
+        return node;
+      }
+    </script>
+    <awml-backend name="test" type="local"></awml-backend>
+    <template id="t1">foo</template>
+    <template id="t2">bar</template>
+  </head>
+  <body>
+    <awml-clone template="t1"><div></div></awml-clone><br />
+    <awml-clone fetch template="templates/t1.html"><div></div></awml-clone
+    ><br />
+    <awml-clone></awml-clone><br />
+    <awml-clone fetch template="templates/t4.html"></awml-clone><br />
+    <awml-clone template="t1" transform-template="replaceFoo"
+      ><div></div></awml-clone
+    ><br />
+    <awml-clone fetch template="templates/t5.html"></awml-clone><br />
+  </body>
+</html>

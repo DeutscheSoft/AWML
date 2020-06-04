@@ -10,6 +10,7 @@ export function assertEqual(a, b) {
 }
 
 export function done() {
+  console.log('done');
   window.parent.postMessage({ ok: true, count: tests });
 }
 
@@ -47,5 +48,13 @@ export function define(callback) {
 export function waitForFrame() {
   return new Promise((resolve) => {
     requestAnimationFrame(resolve);
+  });
+}
+
+import { subscribeDOMEventOnce } from '../src/utils/subscribe_dom_event.js';
+
+export function waitForDOMEvent(node, name) {
+  return new Promise((resolve) => {
+    subscribeDOMEventOnce(node, name, resolve);
   });
 }
