@@ -14,7 +14,7 @@
           document.querySelectorAll('awml-clone')
         ).filter((clone) => clone.parentNode === document.body);
 
-        assertEqual(clones.length, 6);
+        assertEqual(clones.length, 8);
 
         await waitForFrame();
 
@@ -29,6 +29,7 @@
         }
 
         {
+          await waitForFrame();
           const clone = clones[1];
           assertEqual(clone.innerText, 'foo');
           clone.template = 'templates/t2.html';
@@ -36,6 +37,7 @@
           assertEqual(clone.innerText, 'bar');
           clone.template = 'templates/t3.html';
           await waitForDOMEvent(clone, 'load');
+          await waitForFrame();
           assertEqual(clone.innerText, 'foo');
           // check that the div is still in there
           assertEqual(clone.firstChild.tagName, 'DIV');
@@ -68,6 +70,7 @@
           clone.fetch = true;
           bv.set('templates/t3.html');
           await waitForDOMEvent(clone, 'load');
+          await waitForFrame();
           assertEqual(clone.innerText, 'foo');
         }
 
@@ -79,6 +82,16 @@
         {
           const clone = clones[5];
           assertEqual(clone.innerText, 'foo');
+        }
+
+        {
+          const clone = clones[6];
+          assertEqual(clone.innerText, 'hello');
+        }
+
+        {
+          const clone = clones[7];
+          assertEqual(clone.innerText, '');
         }
       });
     </script>
@@ -103,5 +116,8 @@
       ><div></div></awml-clone
     ><br />
     <awml-clone fetch template="templates/t5.html"></awml-clone><br />
+    <awml-clone import-scripts fetch template="templates/t6.html"></awml-clone
+    ><br />
+    <awml-clone fetch template="templates/t7.html"></awml-clone><br />
   </body>
 </html>

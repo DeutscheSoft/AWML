@@ -2,6 +2,7 @@ import { PrefixComponentBase } from './prefix_component_base.js';
 import { parseAttribute } from '../utils/parse_attribute.js';
 import { Subscriptions } from '../utils/subscriptions.js';
 import { fetchText } from '../utils/fetch.js';
+import { subscribeDOMEventOnce } from '../utils/subscribe_dom_event.js';
 
 // this
 const urlStack = [window.location.href];
@@ -44,6 +45,7 @@ class Template {
     this.node = node;
     this.url = url;
     this._needsDeinline = typeof deInline === 'boolean' ? deInline : true;
+    this._inlining = null;
     this._refs = 0;
     this._inlines = [];
   }
@@ -54,28 +56,71 @@ class Template {
     return new URL(path, base).href;
   }
 
-  importNode() {
-    if (this._needsDeinline) {
-      this._needsDeinline = false;
+  deinline(importScripts) {
+    if (this._inlining !== null) return this._inlining;
 
-      const fragment = this.node.content;
+    if (!this._needsDeinline) return Promise.resolve(this);
 
-      const styles = fragment.querySelectorAll('link[rel=stylesheet]');
+    this._needsDeinline = false;
 
-      styles.forEach((style) => {
-        style.href = this.getUrl(style.getAttribute('href'));
-        document.head.appendChild(style);
-        this._inlines.push(style);
+    const fragment = this.node.content;
+
+    const styles = fragment.querySelectorAll('link[rel=stylesheet]');
+
+    const tasks = [];
+
+    styles.forEach((style) => {
+      style.href = this.getUrl(style.getAttribute('href'));
+      document.head.appendChild(style);
+      this._inlines.push(style);
+      tasks.push(onLoad(style));
+    });
+
+    const templates = fragment.querySelectorAll('template');
+
+    templates.forEach((template) => {
+      document.head.appendChild(template);
+      this._inlines.push(template);
+    });
+
+    const scripts = fragment.querySelectorAll('script');
+
+    scripts.forEach((_script) => {
+      _script.remove();
+
+      if (!importScripts) return;
+
+      const script = document.createElement('script');
+      const attributes = _script.attributes;
+
+      for (let i = 0; i < attributes.length; i++) {
+        const name = attributes[i].name;
+        let value = attributes[i].value;
+
+        if (name === 'src') {
+          value = this.getUrl(value);
+          tasks.push(onLoad(script));
+        }
+
+        script.setAttribute(name, value);
+      }
+      script.textContent = _script.textContent;
+      document.head.appendChild(script);
+      this._inlines.push(script);
+    });
+
+    if (tasks.length) {
+      this._inlining = Promise.all(tasks).then(() => {
+        this._inlining = null;
+        return this;
       });
-
-      const templates = fragment.querySelectorAll('template');
-
-      templates.forEach((template) => {
-        document.head.appendChild(template);
-        this._inlines.push(template);
-      });
+      return this._inlining;
     }
 
+    return Promise.resolve(this);
+  }
+
+  importNode() {
     const node = withUrl(this.url, () => {
       return document.importNode(this.node.content, true);
     });
@@ -103,6 +148,22 @@ function fetchTemplateCached(url) {
   templateCache.set(url, p);
 
   return p;
+}
+
+function onLoad(node) {
+  return new Promise((resolve, reject) => {
+    let errorsub, loadsub;
+
+    errorsub = subscribeDOMEventOnce(node, 'error', (err) => {
+      loadsub();
+      reject(new Error('Failed to load inline.'));
+    });
+
+    loadsub = subscribeDOMEventOnce(node, 'load', () => {
+      errorsub();
+      resolve();
+    });
+  });
 }
 
 export class CloneComponent extends PrefixComponentBase {
@@ -164,6 +225,15 @@ export class CloneComponent extends PrefixComponentBase {
   set triggerResize(v) {
     if (typeof v !== 'boolean') throw new TypeError('Expected boolean.');
     this._triggerResize = v;
+  }
+
+  get importScripts() {
+    return this._importScripts;
+  }
+
+  set importScripts(v) {
+    if (typeof v !== 'boolean') throw new TypeError('Expected boolean.');
+    this._importScripts = v;
   }
 
   _subscribe() {
@@ -237,7 +307,9 @@ export class CloneComponent extends PrefixComponentBase {
 
         this.log('Fetching template %o', path);
 
-        return fetcher(this._getUrl(path));
+        return fetcher(this._getUrl(path)).then((template) => {
+          return template.deinline(this.importScripts);
+        });
       } else {
         this.log('Finding template by id %o', path);
         const templateNode = document.getElementById(path);
@@ -260,13 +332,18 @@ export class CloneComponent extends PrefixComponentBase {
     let stop = false;
     let addedNodes = null;
 
-    this._fetchTemplate().then(
-      (template) => {
+    this._fetchTemplate()
+      .then((template) => {
         if (stop) return;
         if (template !== null) {
           let node = template.importNode();
 
-          if (this._transformTemplate) node = this._transformTemplate(node);
+          if (this._transformTemplate) {
+            const value = this._backendValue !== null ? this._backendValue.value : void 0;
+            node = withUrl(this._baseUrl, () => {
+              return this._transformTemplate(node, value);
+            });
+          }
 
           let length = this.childNodes.length;
           this.appendChild(node);
@@ -281,8 +358,8 @@ export class CloneComponent extends PrefixComponentBase {
         this.dispatchEvent(new Event('load'));
 
         if (this._triggerResize) window.dispatchEvent(new UIEvent('resize'));
-      },
-      (err) => {
+      })
+      .catch((err) => {
         if (stop) return;
         this.log('Failed to load template: %o', err);
         this.dispatchEvent(
@@ -290,8 +367,7 @@ export class CloneComponent extends PrefixComponentBase {
             message: err.toString(),
           })
         );
-      }
-    );
+      });
 
     return () => {
       if (addedNodes) addedNodes.forEach((node) => node.remove());
@@ -307,6 +383,7 @@ export class CloneComponent extends PrefixComponentBase {
     this._nocache = false;
     this._transformTemplate = null;
     this._triggerResize = false;
+    this._importScripts = false;
     this._baseUrl = getBaseUrl();
     this._templateElement = null;
     this._templateSubscription = null;
@@ -321,6 +398,7 @@ export class CloneComponent extends PrefixComponentBase {
       'nocache',
       'transform-template',
       'trigger-resize',
+      'import-scripts',
     ]);
   }
 
@@ -343,6 +421,9 @@ export class CloneComponent extends PrefixComponentBase {
         break;
       case 'trigger-resize':
         this.triggerResize = newValue !== null;
+        break;
+      case 'import-scripts':
+        this.importScripts = newValue !== null;
         break;
       default:
         super.attributeChangedCallback(name, oldValue, newValue);
