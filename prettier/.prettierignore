@@ -10,3 +10,4 @@
 *.py
 ../.git
 ../prettier
+../doc/out/
