@@ -97,9 +97,11 @@ export class LocalBackend extends Base {
 
   static argumentsFromNode(node) {
     const options = Base.argumentsFromNode(node);
-
+    const tmp = node.getAttribute('transform-data');
+    
     options.delay = parseInt(node.getAttribute('delay')) || 0;
     options.src = node.getAttribute('src');
+    options.transformData = parseAttribute('javascript', tmp, null)
 
     return options;
   }
