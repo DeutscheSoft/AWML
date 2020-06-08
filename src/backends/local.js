@@ -56,7 +56,7 @@ export class LocalBackend extends Base {
         },
         (err) => {
           if (!this.isInit) return;
-          error('Failed to load values from %o: %o', src, e);
+          error('Failed to load values from %o: %o', this._src, this._node);
           this._maybeOpen();
         }
       );
