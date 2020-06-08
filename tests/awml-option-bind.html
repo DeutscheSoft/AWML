@@ -5,7 +5,9 @@
       import { getBackendValue } from '../src/index.js';
 
       define(async () => {
-        const components = Array.from(document.querySelectorAll('test-component'));
+        const components = Array.from(
+          document.querySelectorAll('test-component')
+        );
         const widgets = components.map((c) => c.auxWidget);
 
         {
@@ -47,10 +49,7 @@
     <script type="module" src="../src/index.js"></script>
     <script type="module" src="./test-component.js"></script>
     <awml-backend type="local" name="test">
-      {
-        "foo" : "bar",
-        "bar" : "bar"
-      }
+      { "foo" : "bar", "bar" : "bar" }
     </awml-backend>
   </head>
   <body>
@@ -58,7 +57,12 @@
       <awml-option type="bind" name="foo" src="test:foo"></awml-option>
     </test-component>
     <test-component>
-      <awml-option type="bind" name="foo" src="test:bar" transform-receive='double'></awml-option>
+      <awml-option
+        type="bind"
+        name="foo"
+        src="test:bar"
+        transform-receive="double"
+      ></awml-option>
     </test-component>
   </body>
 </html>

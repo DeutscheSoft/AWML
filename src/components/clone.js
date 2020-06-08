@@ -339,7 +339,8 @@ export class CloneComponent extends PrefixComponentBase {
           let node = template.importNode();
 
           if (this._transformTemplate) {
-            const value = this._backendValue !== null ? this._backendValue.value : void 0;
+            const value =
+              this._backendValue !== null ? this._backendValue.value : void 0;
             node = withUrl(this._baseUrl, () => {
               return this._transformTemplate(node, value);
             });
