@@ -1,3 +1,4 @@
+/** @ignore */
 export function timeout(cb, n) {
   let id;
 

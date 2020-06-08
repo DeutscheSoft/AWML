@@ -1,5 +1,8 @@
 import { log } from '../utils/log.js';
 
+/**
+ * Component base class for all AWML components.
+ */
 export class BaseComponent extends HTMLElement {
   static get observedAttributes() {
     return ['debug'];
@@ -7,15 +10,25 @@ export class BaseComponent extends HTMLElement {
 
   constructor() {
     super();
+    /**
+     * If true, this component will output warnings
+     * and log messages to the developer console. Useful for debugging. This
+     * property is available as the `debug` attribute.
+     * @type {boolean}
+     */
     this.debug = false;
     this._subscription = null;
   }
 
+  /**
+   * @protected
+   */
   log(fmt, ...args) {
     if (!this.debug) return;
     log('%o ' + fmt, this, ...args);
   }
 
+  /** @ignore */
   connectedCallback() {
     this.style.display = 'none';
 
@@ -26,26 +39,31 @@ export class BaseComponent extends HTMLElement {
     }
   }
 
+  /** @ignore */
   _unsubscribe() {
     const sub = this._subscription;
     this._subscription = null;
     if (sub) sub();
   }
 
+  /** @ignore */
   _resubscribe() {
     this._unsubscribe();
     if (!this.isConnected) return;
     this._subscription = this._subscribe();
   }
 
+  /** @ignore */
   _subscribe() {
     throw new Error('Not implemented.');
   }
 
+  /** @ignore */
   disconnectedCallback() {
     this._unsubscribe();
   }
 
+  /** @ignore */
   attributeChangedCallback(name, oldValue, newValue) {
     if (name === 'debug') {
       this.debug = newValue !== null;

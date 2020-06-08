@@ -1,9 +1,11 @@
 import { error } from './log.js';
 
+/** @ignore */
 export function isCustomElement(node) {
   return node.tagName.includes('-');
 }
 
+/** @ignore */
 export function maybeAuxElement(node) {
   if (!isCustomElement(node)) return false;
 
@@ -12,6 +14,7 @@ export function maybeAuxElement(node) {
   );
 }
 
+/** @ignore */
 export function getAuxWidget(node) {
   const widget = node.auxWidget;
 

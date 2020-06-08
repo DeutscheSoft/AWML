@@ -1,5 +1,9 @@
 import { StylesComponentBase } from './styles_component_base.js';
 
+/**
+ * Component which modifies the attributes of its parent element. The data is
+ * expected to be an object containing the attributes.
+ */
 export class AttributesComponent extends StylesComponentBase {
   static get observedAttributes() {
     return StylesComponentBase.observedAttributes;

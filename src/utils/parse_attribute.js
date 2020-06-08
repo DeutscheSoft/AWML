@@ -1,5 +1,6 @@
 import { error } from './log.js';
 
+/** @ignore */
 export function parseAttribute(type, x, fallback) {
   if (x === null) return fallback;
   switch (type) {

@@ -4,6 +4,9 @@ import { collectPrefix, registerPrefixTagName } from '../utils/prefix.js';
 import { getBackendValue } from '../backends.js';
 import { parseAttribute } from '../utils/parse_attribute.js';
 
+/**
+ * Base class for components which can bind to backend values using an address.
+ */
 export class PrefixComponentBase extends BaseComponent {
   static get observedAttributes() {
     return BaseComponent.observedAttributes.concat([
@@ -14,6 +17,17 @@ export class PrefixComponentBase extends BaseComponent {
     ]);
   }
 
+  /**
+   * The source address prefix to use for
+   * the `src` property in this component. If `null`, the default prefix will
+   * be used, which corresponds to the `prefix` attribute. If not null, the
+   * source address will instead be constructed using the
+   * `prefix-<srcPrefix>` attribute. This feature can be used to connect
+   * bind components to different backend parameter trees. This property can
+   * be set using the `src-prefix` atttribute.
+   *
+   * @type {?string}
+   */
   get srcPrefix() {
     return this._srcPrefix;
   }
@@ -25,6 +39,13 @@ export class PrefixComponentBase extends BaseComponent {
     this._resubscribe();
   }
 
+  /**
+   * Transformation function for backend values.
+   * This function is called in the context of this component for every value
+   * received from the backend. This property can be set using the
+   * `transform-receive` attribute.
+   * @type {?function}
+   */
   get transformReceive() {
     return this._transformReceive;
   }
@@ -35,6 +56,13 @@ export class PrefixComponentBase extends BaseComponent {
     this._resubscribe();
   }
 
+  /**
+   * The source address of the backend value to
+   * bind to this property. The source address is combined with `prefix`
+   * attributes on this component and all it's DOM parents into the final
+   * address. This property can be set using the `src` attribute.
+   * @type {?string}
+   */
   get src() {
     return this._src;
   }
@@ -46,6 +74,13 @@ export class PrefixComponentBase extends BaseComponent {
     this._resubscribe();
   }
 
+  /**
+   * Transformation function for the source
+   * address. This function is called in the context of this component
+   * once before a source address is subscribed to.
+   * This property can be set using the `transform-src` attribute.
+   * @type {?function}
+   */
   get transformSrc() {
     return this._transformSrc;
   }
@@ -115,6 +150,11 @@ export class PrefixComponentBase extends BaseComponent {
     };
   }
 
+  /**
+   * Internal API method which is called with every values received from the
+   * backend.
+   * @protected
+   */
   _valueReceived(value) {
     // this should be overloaded by subclasses
     throw new Error('Not implemented.');
@@ -126,11 +166,13 @@ export class PrefixComponentBase extends BaseComponent {
     this._resubscribe();
   }
 
+  /** @ignore */
   disconnectedCallback() {
     super.disconnectedCallback();
     this._currentPrefix = null;
   }
 
+  /** @ignore */
   attributeChangedCallback(name, oldValue, newValue) {
     switch (name) {
       case 'src-prefix':

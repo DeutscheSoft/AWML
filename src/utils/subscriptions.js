@@ -1,5 +1,6 @@
 import { error } from './log.js';
 
+/** @ignore */
 export class Subscriptions {
   constructor() {
     this.subscriptions = [];

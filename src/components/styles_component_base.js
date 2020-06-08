@@ -5,8 +5,16 @@ function Identity(v) {
   return v;
 }
 
+/**
+ * Base class for style transformation components.
+ */
 export class StylesComponentBase extends RedrawComponentBase {
-
+  /**
+   * Method which calculates the display state. It is initialized
+   * by parsing the textContent of this
+   * component.
+   * @type {?function}
+   */
   get getState() {
     return this._getState;
   }
@@ -17,6 +25,7 @@ export class StylesComponentBase extends RedrawComponentBase {
     this._getState = v;
   }
 
+  /** @ignore */
   static get observedAttributes() {
     return RedrawComponentBase.observedAttributes;
   }
@@ -28,6 +37,7 @@ export class StylesComponentBase extends RedrawComponentBase {
     this._target = null;
   }
 
+  /** @ignore */
   redraw() {
     // we do this here because it needs to happen after all
     // children have been initialized
@@ -46,17 +56,20 @@ export class StylesComponentBase extends RedrawComponentBase {
     this._state = state;
   }
 
+  /** @ignore */
   updateState(oldState, newState) {
     if (oldState !== null) this.removeState(oldState);
     this._state = null;
     if (newState !== null) this.applyState(newState);
   }
 
+  /** @ignore */
   connectedCallback() {
     this._target = this.parentNode;
     super.connectedCallback();
   }
 
+  /** @ignore */
   disconnectedCallback() {
     super.disconnectedCallback();
 

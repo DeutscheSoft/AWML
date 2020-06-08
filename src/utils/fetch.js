@@ -1,3 +1,4 @@
+/** @ignore */
 export function fetchText(url) {
   return fetch(url).then(function (response) {
     if (!response.ok) throw new Error(response.statusText);
@@ -5,6 +6,7 @@ export function fetchText(url) {
   });
 }
 
+/** @ignore */
 export function fetchJSON(url) {
   return fetch(url).then(function (response) {
     if (!response.ok) throw new Error(response.statusText);

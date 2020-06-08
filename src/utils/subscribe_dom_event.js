@@ -14,6 +14,9 @@ export function subscribeDOMEvent(node, name, callback) {
   };
 }
 
+/**
+ * Subscribes to a DOM event once.
+ */
 export function subscribeDOMEventOnce(node, name, callback) {
   // make unique
   const cb = (...args) => {
