@@ -6,6 +6,17 @@ function Identity(v) {
 }
 
 export class StylesComponentBase extends RedrawComponentBase {
+
+  get getState() {
+    return this._getState;
+  }
+  set getState(v) {
+    if (v !== null && typeof v !== 'function') {
+      throw new TypeError('Expected function.');
+    }
+    this._getState = v;
+  }
+
   static get observedAttributes() {
     return RedrawComponentBase.observedAttributes;
   }
@@ -21,7 +32,7 @@ export class StylesComponentBase extends RedrawComponentBase {
     // we do this here because it needs to happen after all
     // children have been initialized
     if (this._getState === null) {
-      this._getState = parseAttribute('javascript', this.textContent, Identity);
+      this.getState = parseAttribute('javascript', this.textContent, Identity);
     }
 
     const state = this._getState(this._value);
