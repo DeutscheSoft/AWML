@@ -25,6 +25,20 @@ export class StylesComponentBase extends RedrawComponentBase {
     this._getState = v;
   }
 
+  /**
+   * If true, a resize is triggered after updating the display state.
+   * @type {?boolean}
+   */
+  get triggerResize() {
+    return this._triggerResize;
+  }
+  set triggerResize(v) {
+    if (typeof v !== 'boolean') {
+      throw new TypeError('Expected boolean.');
+    }
+    this._triggerResize = v;
+  }
+
   /** @ignore */
   static get observedAttributes() {
     return RedrawComponentBase.observedAttributes;
@@ -35,6 +49,7 @@ export class StylesComponentBase extends RedrawComponentBase {
     this._getState = null;
     this._state = null;
     this._target = null;
+    this._triggerResize = false;
   }
 
   /** @ignore */
@@ -46,14 +61,27 @@ export class StylesComponentBase extends RedrawComponentBase {
     }
 
     const state = this._getState(this._value);
-    this.log('Applying state %o to %o', state, this._target);
-
     const prevState = this._state;
 
     if (state === prevState) return;
 
+    this.log('Applying state %o to %o', state, this._target);
+
     this.updateState(prevState, state);
     this._state = state;
+    if (this._triggerResize) {
+      const widget = this._target.auxWidget;
+
+      if (widget !== void 0) {
+        if (widget.parent) {
+          this.log('Triggering resize in widget parent.');
+          widget.parent.triggerResize();
+        } else {
+          this.log('Triggering resize in widget.');
+          widget.triggerResize();
+        }
+      }
+    }
   }
 
   /** @ignore */
@@ -80,5 +108,16 @@ export class StylesComponentBase extends RedrawComponentBase {
     this.removeState(state);
     this._state = null;
     this._target = null;
+  }
+
+  /** @ignore */
+  attributeChangedCallback(name, oldValue, newValue) {
+    switch (name) {
+      case 'trigger-resize':
+        this.srcPrefix = newValue !== null;
+        break;
+      default:
+        super.attributeChangedCallback(name, oldValue, newValue);
+    }
   }
 }
