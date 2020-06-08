@@ -5,32 +5,60 @@
       import { getBackendValue } from '../src/index.js';
 
       define(async () => {
-        const widget = document.querySelector('test-component').auxWidget;
-        const awmlOption = document.querySelector('awml-option');
+        const components = Array.from(document.querySelectorAll('test-component'));
+        const widgets = components.map((c) => c.auxWidget);
 
-        const backendValue = getBackendValue('test:foo');
+        {
+          const widget = widgets[0];
+          const awmlOption = components[0].querySelector('awml-option');
 
-        assertEqual(widget.get('foo'), 'bar');
-        backendValue.set('flu');
-        assertEqual(widget.get('foo'), 'flu');
-        widget.userset('foo', 'bar');
-        assertEqual(await backendValue.wait(), 'bar');
-        widget.set('interacting', true);
-        backendValue.set('flu');
-        assertEqual(widget.get('foo'), 'bar');
-        widget.set('interacting', false);
-        assertEqual(widget.get('foo'), 'flu');
+          const backendValue = getBackendValue('test:foo');
+
+          assertEqual(widget.get('foo'), 'bar');
+          backendValue.set('flu');
+          assertEqual(widget.get('foo'), 'flu');
+          widget.userset('foo', 'bar');
+          assertEqual(await backendValue.wait(), 'bar');
+          widget.set('interacting', true);
+          backendValue.set('flu');
+          assertEqual(widget.get('foo'), 'bar');
+          widget.set('interacting', false);
+          assertEqual(widget.get('foo'), 'flu');
+        }
+
+        {
+          const widget = widgets[1];
+          const awmlOption = components[1].querySelector('awml-option');
+
+          assertEqual(widget.get('foo'), 'barbar');
+          widget.set('foo', null);
+
+          awmlOption.src = 'test:flu';
+          awmlOption.src = 'test:bar';
+          assertEqual(widget.get('foo'), 'barbar');
+        }
       });
+    </script>
+    <script>
+      function double(x) {
+        return x + x;
+      }
     </script>
     <script type="module" src="../src/index.js"></script>
     <script type="module" src="./test-component.js"></script>
     <awml-backend type="local" name="test">
-      { "foo" : "bar" }
+      {
+        "foo" : "bar",
+        "bar" : "bar"
+      }
     </awml-backend>
   </head>
   <body>
     <test-component>
       <awml-option type="bind" name="foo" src="test:foo"></awml-option>
+    </test-component>
+    <test-component>
+      <awml-option type="bind" name="foo" src="test:bar" transform-receive='double'></awml-option>
     </test-component>
   </body>
 </html>

@@ -21,6 +21,7 @@ export class BindOption extends BaseOption {
     this._sub = null;
     this._interacting_sub = null;
     this._receiving = false;
+    this._lastValue = null;
 
     if (!readonly) {
       let sub;
@@ -63,11 +64,13 @@ export class BindOption extends BaseOption {
       const widget = this.widget;
 
       if (widget.get('interacting') === true) {
+        this._lastValue = value;
         if (this._interacting_sub !== null) return;
 
         this._interacting_sub = widget.once('set_interacting', () => {
           this._interacting_sub = null;
-          this.valueReceived(this.backendValue.value);
+          this.valueReceived(this._lastValue);
+          this._lastValue = null;
         });
       } else {
         widget.set(this.name, value);

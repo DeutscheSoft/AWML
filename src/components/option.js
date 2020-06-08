@@ -129,7 +129,14 @@ class OptionComponent extends PrefixComponentBase {
     const backendValue = this._backendValue;
 
     if (backendValue !== null && backendValue.hasValue) {
-      option.valueReceived(backendValue.value);
+      let value = backendValue.value;
+      const transformReceive = this._transformReceive;
+
+      if (transformReceive !== null) {
+        value = transformReceive.call(this._backendValue, value);
+      }
+
+      option.valueReceived(value);
     }
 
     return () => {
