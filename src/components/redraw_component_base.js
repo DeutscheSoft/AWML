@@ -52,7 +52,7 @@ export class RedrawComponentBase extends PrefixComponentBase {
 
   /** @ignore */
   _valueReceived(value) {
-    this.triggerDraw();
     this._value = value;
+    this.triggerDraw();
   }
 }

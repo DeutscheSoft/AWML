@@ -44,6 +44,21 @@ export class VisibilityComponent extends StylesComponentBase {
 
     return super._subscribe();
   }
+
+  triggerDraw() {
+    const target = this._target;
+    const widget = target.auxWidget;
+
+    // if our target is an aux widget, we apply the display state immediately.
+    // aux widgets have their own redraw dispatching logic.
+    if (widget === void 0)
+      return super.triggerDraw();
+
+    this.log('executing redraw immediately on %o', this);
+    this._willDraw = false;
+    if (!this.isConnected) return;
+    this.redraw();
+  }
 }
 
 export class HideComponent extends VisibilityComponent {
