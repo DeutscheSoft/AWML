@@ -7,11 +7,38 @@
       window.clicked = function (ev) {
         clickEvent = ev;
       };
+
       define(() => {
         const button = document.querySelector('button');
-        const event = new CustomEvent('click');
-        button.dispatchEvent(event);
-        assertEqual(event, clickEvent);
+        {
+          const event = new CustomEvent('click');
+          button.dispatchEvent(event);
+          assertEqual(event, clickEvent);
+        }
+        {
+          const awmlevent = button.querySelector('awml-event');
+          awmlevent.type = [ 'click', 'clock' ];
+          let event = new CustomEvent('clock');
+          button.dispatchEvent(event);
+          assertEqual(event, clickEvent);
+
+          event = new CustomEvent('click');
+          button.dispatchEvent(event);
+          assertEqual(event, clickEvent);
+          awmlevent.type = 'click';
+        }
+        {
+          const awmlevent = button.querySelector('awml-event');
+          awmlevent.setAttribute('type',  'click clock');
+          let event = new CustomEvent('clock');
+          button.dispatchEvent(event);
+          assertEqual(event, clickEvent);
+
+          event = new CustomEvent('click');
+          button.dispatchEvent(event);
+          assertEqual(event, clickEvent);
+          awmlevent.type = 'click';
+        }
       });
     </script>
     <script type="module" src="../src/index.js"></script>

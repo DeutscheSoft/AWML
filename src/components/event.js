@@ -7,6 +7,15 @@ import {
 } from '../utils/aux.js';
 import { BaseComponent } from './base.js';
 
+function combine_subscriptions(callbacks) {
+  return () => {
+    if (callbacks === null) return;
+    const tmp = callbacks;
+    callbacks === null;
+    tmp.forEach((cb) => cb());
+  };
+}
+
 class EventComponent extends BaseComponent {
   static get observedAttributes() {
     return BaseComponent.observedAttributes.concat(['type', 'callback']);
@@ -17,7 +26,7 @@ class EventComponent extends BaseComponent {
   }
 
   set type(v) {
-    if (typeof v !== 'string' && v !== null)
+    if (typeof v !== 'string' && v !== null && !Array.isArray(v))
       throw new TypeError('Expected string.');
     this._type = v;
     this._resubscribe();
@@ -55,17 +64,41 @@ class EventComponent extends BaseComponent {
       if (widget === null)
         return subscribeCustomElement(parent, () => this._resubscribe());
 
-      return widget.subscribe(type, callback);
+      if (typeof type === 'string')
+        return widget.subscribe(type, callback);
+
+      return combine_subscriptions(
+        type.map((name) => widget.subscribe(name, callback))
+      );
     } else {
       // generic DOM node
-      return subscribeDOMEvent(parent, type, callback);
+      if (typeof type === 'string')
+        return subscribeDOMEvent(parent, type, callback);
+
+      return combine_subscriptions(
+        type.map((name) => subscribeDOMEvent(parent, name, callback))
+      );
     }
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
     switch (name) {
       case 'type':
-        this.type = newValue;
+        if (newValue === '' || newValue === null) {
+          this.type = null;
+        } else {
+          const tmp = newValue.split(/[^a-zA-Z0-9\-_]/)
+            .map((v) => v.trim())
+            .filter((v) => v.length);
+
+          if (tmp.length === 0) {
+            this.type = null;
+          } else if (tmp.length === 1) {
+            this.type = tmp[0];
+          } else {
+            this.type = tmp;
+          }
+        }
         break;
       case 'callback':
         this.callback = parseAttribute('javascript', newValue, null);
