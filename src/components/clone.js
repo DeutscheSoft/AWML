@@ -3,6 +3,7 @@ import { parseAttribute } from '../utils/parse_attribute.js';
 import { Subscriptions } from '../utils/subscriptions.js';
 import { fetchText } from '../utils/fetch.js';
 import { subscribeDOMEventOnce } from '../utils/subscribe_dom_event.js';
+import { registerLoading } from '../utils/awml_content_loaded.js';
 
 // this
 const urlStack = [window.location.href];
@@ -130,7 +131,6 @@ class Template {
 }
 
 function fetchTemplate(url) {
-  // TODO: register loading
   return fetchText(url).then((text) => {
     const template = document.createElement('TEMPLATE');
     template.innerHTML = text;
@@ -332,7 +332,7 @@ export class CloneComponent extends PrefixComponentBase {
     let stop = false;
     let addedNodes = null;
 
-    this._fetchTemplate()
+    const p = this._fetchTemplate()
       .then((template) => {
         if (stop) return;
         if (template !== null) {
@@ -369,6 +369,8 @@ export class CloneComponent extends PrefixComponentBase {
           })
         );
       });
+
+    registerLoading(p);
 
     return () => {
       if (addedNodes) addedNodes.forEach((node) => node.remove());

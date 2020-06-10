@@ -1,0 +1,18 @@
+<html>
+  <head>
+    <script type="module">
+      import { define, assertEqual } from './testing.js';
+      import { waitForAWMLContentLoaded } from '../src/index.js';
+
+      define(async () => {
+        await waitForAWMLContentLoaded();
+        assertEqual(document.querySelector('awml-clone').innerText, 'foo');
+      });
+    </script>
+    <script type="module" src="../src/index.js"></script>
+  </head>
+  <body>
+    <awml-clone fetch template="templates/t1.html"><div></div></awml-clone
+    ><br />
+  </body>
+</html>

@@ -33,3 +33,12 @@ export function subscribeDOMEventOnce(node, name, callback) {
     node = null;
   };
 }
+
+/**
+ * Waits for a DOM event to fire.
+ */
+export function waitForDOMEvent(node, name) {
+  return new Promise((resolve) => {
+    subscribeDOMEventOnce(node, name, resolve);
+  });
+}
