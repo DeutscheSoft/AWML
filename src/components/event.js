@@ -64,8 +64,7 @@ class EventComponent extends BaseComponent {
       if (widget === null)
         return subscribeCustomElement(parent, () => this._resubscribe());
 
-      if (typeof type === 'string')
-        return widget.subscribe(type, callback);
+      if (typeof type === 'string') return widget.subscribe(type, callback);
 
       return combine_subscriptions(
         type.map((name) => widget.subscribe(name, callback))
@@ -87,7 +86,8 @@ class EventComponent extends BaseComponent {
         if (newValue === '' || newValue === null) {
           this.type = null;
         } else {
-          const tmp = newValue.split(/[^a-zA-Z0-9\-_]/)
+          const tmp = newValue
+            .split(/[^a-zA-Z0-9\-_]/)
             .map((v) => v.trim())
             .filter((v) => v.length);
 

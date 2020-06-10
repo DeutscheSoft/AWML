@@ -17,7 +17,7 @@
         }
         {
           const awmlevent = button.querySelector('awml-event');
-          awmlevent.type = [ 'click', 'clock' ];
+          awmlevent.type = ['click', 'clock'];
           let event = new CustomEvent('clock');
           button.dispatchEvent(event);
           assertEqual(event, clickEvent);
@@ -29,7 +29,7 @@
         }
         {
           const awmlevent = button.querySelector('awml-event');
-          awmlevent.setAttribute('type',  'click clock');
+          awmlevent.setAttribute('type', 'click clock');
           let event = new CustomEvent('clock');
           button.dispatchEvent(event);
           assertEqual(event, clickEvent);
