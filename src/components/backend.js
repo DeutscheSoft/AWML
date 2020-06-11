@@ -96,12 +96,19 @@ export class BackendComponent extends BaseComponent {
     return backend !== null && backend.isOpen;
   }
 
+  calculateRetryInterval() {
+    const interval = this.retryInterval;
+
+    return interval * (1 + Math.log(Math.pow(1+this._retries, 2)));
+  }
+
   constructor() {
     super();
     this._name = null;
     this._type = null;
     this._backend = null;
     this._retryInterval = null;
+    this._retries = 0;
   }
 
   _subscribe() {
@@ -134,6 +141,7 @@ export class BackendComponent extends BaseComponent {
     } else {
       subscriptions.add(
         backend.once('open', () => {
+          this._retries = 0;
           this.log('is open.');
           this.dispatchEvent(
             new CustomEvent('open', {
@@ -157,11 +165,14 @@ export class BackendComponent extends BaseComponent {
 
     const retry = () => {
       unregister();
+      const time = this.calculateRetryInterval();
+      this.log('retrying in %d ms', time);
       subscriptions.add(
         timeout(() => {
           this._resubscribe();
-        }, this.retryInterval)
+        }, time)
       );
+      this._retries++;
     };
 
     subscriptions.add(
