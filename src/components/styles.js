@@ -13,7 +13,7 @@ export class StylesComponent extends StylesComponentBase {
     const style = this._target.style;
 
     if (typeof v === 'object') {
-      for (let name in v) {
+      for (const name in v) {
         style.setProperty(name, v[name]);
       }
     } else {
@@ -25,7 +25,7 @@ export class StylesComponent extends StylesComponentBase {
     const style = this._target.style;
 
     if (typeof v === 'object') {
-      for (let name in v) {
+      for (const name in v) {
         style.removeProperty(name);
       }
     } else {

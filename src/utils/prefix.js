@@ -42,7 +42,7 @@ export function setPrefix(node, prefix, handle) {
 
   if (typeof prefix !== 'string') throw new TypeError('Expected string.');
 
-  let attribute = handle === null ? 'prefix' : 'prefix-' + handle;
+  const attribute = handle === null ? 'prefix' : 'prefix-' + handle;
 
   if (node.getAttribute(attribute) === prefix) return;
   node.setAttribute(attribute, prefix);

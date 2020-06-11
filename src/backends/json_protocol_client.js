@@ -61,7 +61,7 @@ export class JsonProtocolClientBackend extends Base {
         this.receive(id, value);
       }
     } else {
-      for (let path in message) {
+      for (const path in message) {
         const tmp = message[path];
 
         if (tmp) {

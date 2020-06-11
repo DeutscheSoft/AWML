@@ -33,7 +33,7 @@ export class LocalBackend extends Base {
     // Note: this works because id == path in this backend.
     const values = this._values;
 
-    for (let path in data) {
+    for (const path in data) {
       if (!overwrite && values.has(path)) continue;
       this.receive(path, data[path]);
     }

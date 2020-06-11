@@ -346,7 +346,7 @@ export class CloneComponent extends PrefixComponentBase {
             });
           }
 
-          let length = this.childNodes.length;
+          const length = this.childNodes.length;
           this.appendChild(node);
 
           addedNodes = Array.from(this.childNodes).slice(length);

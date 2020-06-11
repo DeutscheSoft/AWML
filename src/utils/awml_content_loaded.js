@@ -1,7 +1,7 @@
 import { waitForDOMEvent } from './subscribe_dom_event.js';
 
 let fired = false;
-let firedPromise = waitForDOMEvent(document, 'AWMLContentLoaded');
+const firedPromise = waitForDOMEvent(document, 'AWMLContentLoaded');
 let loading = 1;
 
 function fire() {

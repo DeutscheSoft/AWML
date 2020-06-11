@@ -13,7 +13,7 @@ export class AttributesComponent extends StylesComponentBase {
     const target = this._target;
 
     if (typeof v === 'object') {
-      for (let name in v) {
+      for (const name in v) {
         target.setAttribute(name, v[name]);
       }
     } else {
@@ -25,7 +25,7 @@ export class AttributesComponent extends StylesComponentBase {
     const target = this._target;
 
     if (typeof v === 'object') {
-      for (let name in v) {
+      for (const name in v) {
         target.removeAttribute(name);
       }
     } else {
