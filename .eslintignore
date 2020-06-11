@@ -1,0 +1,4 @@
+/eslint/*
+/doc/*
+/prettier/*
+.eslintrc.js
