@@ -9,7 +9,7 @@ module.exports = {
     },
     "rules": {
       "prefer-const" : "error",
-      "no-unused-vars" : [ "error", { "args": "none" } ]
-
+      "no-unused-vars" : [ "error", { "args": "none" } ],
+      "no-var" : "error"
     }
 };
