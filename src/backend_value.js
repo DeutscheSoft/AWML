@@ -1,4 +1,4 @@
-import { error, warn } from './utils/log.js';
+import { warn } from './utils/log.js';
 
 function callSubscriber(cb, value) {
   try {
@@ -131,7 +131,7 @@ export class BackendValue extends BaseValue {
         // to inform the developer about this, it will likely be resolved after
         // reconnect
         if (backend.isOpen)
-          warn('Failed to subscribe to %o: %o', this._path, reason);
+          warn('Failed to subscribe to %o: %o', this._path, err);
       }
     );
   }

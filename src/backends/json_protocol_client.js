@@ -1,4 +1,5 @@
 import { Base } from './base.js';
+import { warn } from '../utils/log.js';
 
 export class JsonProtocolClientBackend extends Base {
   constructor(options) {
@@ -8,7 +9,7 @@ export class JsonProtocolClientBackend extends Base {
     this._willFlush = false;
   }
 
-  send(message) {
+  send() {
     throw new Error('Not implemented.');
   }
 
@@ -47,8 +48,6 @@ export class JsonProtocolClientBackend extends Base {
   }
 
   onMessage(message) {
-    var uri, id, i, tmp;
-
     if (typeof message !== 'object') {
       warn('Unexpected message: %o', message);
       return;
@@ -96,7 +95,7 @@ export class JsonProtocolClientBackend extends Base {
   lowSubscribeBatch(addresses) {
     let message = this._pendingSubscriptionMessage;
 
-    if (pendingSubscriptionMessage === null) {
+    if (message === null) {
       this._pendingSubscriptionMessage = message = {};
     }
 
@@ -111,7 +110,7 @@ export class JsonProtocolClientBackend extends Base {
   lowUnsubscribe(address) {
     let message = this._pendingSubscriptionMessage;
 
-    if (pendingSubscriptionMessage === null) {
+    if (message === null) {
       this._pendingSubscriptionMessage = message = {};
     }
 

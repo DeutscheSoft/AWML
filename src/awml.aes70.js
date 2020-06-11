@@ -1,3 +1,4 @@
+/* eslint-disable */
 var f = function (w, AWML) {
   var base = AWML.Backends.base;
   var proto = base.prototype;

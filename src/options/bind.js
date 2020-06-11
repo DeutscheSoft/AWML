@@ -79,8 +79,6 @@ export class BindOption extends BaseOption {
           this.afterReceive(this.backendValue, this.widget, value, this);
         }
       }
-    } catch (err) {
-      throw err;
     } finally {
       this._receiving = false;
     }

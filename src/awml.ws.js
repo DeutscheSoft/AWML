@@ -1,3 +1,4 @@
+/* eslint-disable */
 const WebSocket = require('ws');
 
 module.exports = function (w, AWML) {

@@ -24,9 +24,8 @@ export class LocalStorageBackend extends LocalBackend {
     this.addSubscription(
       subscribeDOMEvent(window, 'storage', (ev) => {
         if (ev.storageArea !== this._storage) return;
-        var key = ev.key;
-        var old = ev.oldValue;
-        var val = ev.newValue;
+        const key = ev.key;
+        const val = ev.newValue;
         if (this._pathToId.has(key)) {
           this._encodedValues.set(key, val);
           this.receive(key, JSON.parse(val));
@@ -62,7 +61,7 @@ export class LocalStorageBackend extends LocalBackend {
       this.storage.setItem(id, encodedValue);
       encodedValues.set(id, encodedValue);
     } catch (err) {
-      warn('Storing value %o to storage failed: %o', address, err);
+      warn('Storing value %o to storage failed: %o', id, err);
     }
   }
 

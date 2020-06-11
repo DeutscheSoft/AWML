@@ -1,3 +1,4 @@
+/* eslint-disable */
 const { ipcMain } = require('electron');
 const AWML = require('.').AWML;
 

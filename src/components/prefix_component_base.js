@@ -1,4 +1,3 @@
-import { error } from '../utils/log.js';
 import { BaseComponent } from './base.js';
 import { collectPrefix, registerPrefixTagName } from '../utils/prefix.js';
 import { getBackendValue } from '../backends.js';

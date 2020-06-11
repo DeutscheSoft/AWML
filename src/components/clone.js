@@ -1,6 +1,5 @@
 import { PrefixComponentBase } from './prefix_component_base.js';
 import { parseAttribute } from '../utils/parse_attribute.js';
-import { Subscriptions } from '../utils/subscriptions.js';
 import { fetchText } from '../utils/fetch.js';
 import { subscribeDOMEventOnce } from '../utils/subscribe_dom_event.js';
 import { registerLoading } from '../utils/awml_content_loaded.js';
@@ -26,19 +25,11 @@ function withUrl(url, cb) {
 
   try {
     result = cb();
-  } catch (err) {
-    throw err;
   } finally {
     popUrl();
   }
 
   return result;
-}
-
-function getUrl(path, baseUrl) {
-  const base = new URL(baseUrl);
-
-  return new URL(path, base).href;
 }
 
 class Template {
@@ -152,11 +143,12 @@ function fetchTemplateCached(url) {
 
 function onLoad(node) {
   return new Promise((resolve, reject) => {
+    /* eslint-disable prefer-const */
     let errorsub, loadsub;
 
     errorsub = subscribeDOMEventOnce(node, 'error', (err) => {
       loadsub();
-      reject(new Error('Failed to load inline.'));
+      reject(err);
     });
 
     loadsub = subscribeDOMEventOnce(node, 'load', () => {
