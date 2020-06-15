@@ -74,3 +74,7 @@ export function getBackendValue(address) {
 
   return backendValue;
 }
+
+export function getBackends() {
+  return backends;
+}
