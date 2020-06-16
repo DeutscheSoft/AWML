@@ -39,6 +39,12 @@
           awmlOption.src = 'test:bar';
           assertEqual(widget.get('foo'), 'barbar');
         }
+
+        {
+          const widget = widgets[2];
+
+          assertEqual(widget.get('foo'), 'bar');
+        }
       });
     </script>
     <script>
@@ -49,7 +55,7 @@
     <script type="module" src="../src/index.js"></script>
     <script type="module" src="./test-component.js"></script>
     <awml-backend type="local" name="test">
-      { "foo" : "bar", "bar" : "bar" }
+      { "foo" : "bar", "bar" : "bar", "flupp" : "bar" }
     </awml-backend>
   </head>
   <body>
@@ -63,6 +69,9 @@
         src="test:bar"
         transform-receive="double"
       ></awml-option>
+    </test-component>
+    <test-component prefix="test:">
+      <awml-option type="bind" name="foo" prefix="flu" src="pp"></awml-option>
     </test-component>
   </body>
 </html>
