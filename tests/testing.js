@@ -10,7 +10,7 @@ export function assertEqual(a, b) {
 }
 
 export function done() {
-  console.log('done');
+  console.log('%d done', tests);
   window.parent.postMessage({ ok: true, count: tests });
 }
 
@@ -48,6 +48,12 @@ export function define(callback) {
 export function waitForFrame() {
   return new Promise((resolve) => {
     requestAnimationFrame(resolve);
+  });
+}
+
+export function delay(n) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, n);
   });
 }
 

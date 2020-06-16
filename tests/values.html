@@ -1,0 +1,144 @@
+<html>
+  <head>
+    <script type="module">
+      import { define, delay, assertEqual } from './testing.js';
+      import { Value, ListValue } from '../src/index.js';
+
+      define(async () => {
+        {
+          assertEqual(await Value.from(42).wait(), 42);
+        }
+
+        {
+          const list = await ListValue.from(
+            Value.from(23),
+            Value.from(42)
+          ).wait();
+
+          assertEqual(list[0], 23);
+          assertEqual(list[1], 42);
+        }
+
+        {
+          // ListValue basics
+          const v1 = new Value();
+          const v2 = new Value();
+
+          const listv = ListValue.from(v1, v2);
+
+          listv.subscribe(() => {});
+
+          assertEqual(listv.hasValue, false);
+          v1._updateValue(23);
+          assertEqual(listv.hasValue, false);
+          v2._updateValue(23);
+          assertEqual(listv.hasValue, true);
+        }
+
+        {
+          // ListValue with partial
+          const v1 = new Value();
+          const v2 = new Value();
+
+          const listv = ListValue.from(v1, v2);
+
+          v1._updateValue(23);
+          listv.partial = true;
+
+          const list = await listv.wait();
+          assertEqual(list[0], 23);
+          assertEqual(list[1], void 0);
+        }
+
+        {
+          // ListValue with partial = true after subscribe
+          const v1 = new Value();
+          const v2 = new Value();
+
+          const listv = ListValue.from(v1, v2);
+          const p = listv.wait();
+
+          v1._updateValue(23);
+
+          listv.partial = true;
+
+          const list = await p;
+          assertEqual(list[0], 23);
+          assertEqual(list[1], void 0);
+        }
+
+        {
+          // ListValue with partial = true before subscribe
+          const v1 = new Value();
+          const v2 = new Value();
+
+          const listv = ListValue.from(v1, v2);
+          listv.partial = true;
+
+          const p = listv.wait();
+
+          v1._updateValue(23);
+
+          const list = await p;
+          assertEqual(list[0], 23);
+          assertEqual(list[1], void 0);
+        }
+
+        {
+          // subscribed ListValue with partial = true before subscribe
+          const v1 = new Value();
+          const v2 = new Value();
+
+          const listv = ListValue.from(v1, v2);
+          listv.subscribe(() => {});
+          listv.partial = true;
+
+          const p = listv.wait();
+
+          v1._updateValue(23);
+
+          const list = await p;
+          assertEqual(list[0], 23);
+          assertEqual(list[1], void 0);
+        }
+
+        {
+          // subscribed ListValue with partial = true before subscribe
+          const v1 = new Value();
+          const v2 = new Value();
+
+          const listv = ListValue.from(v1, v2);
+          listv.subscribe(() => {});
+          listv.partial = true;
+
+          v1._updateValue(23);
+
+          const p = listv.wait();
+
+          const list = await p;
+          assertEqual(list[0], 23);
+          assertEqual(list[1], void 0);
+        }
+
+        {
+          // debounce
+          const v1 = Value.from(42);
+          const v2 = Value.from(23);
+
+          const listv = new ListValue([v1, v2], false, 20);
+          let called = 0;
+
+          listv.subscribe(() => called++);
+
+          for (let i = 0; i < 1000; i++) v1._updateValue(i);
+
+          assertEqual(called, 1);
+          await delay(30);
+          assertEqual(called, 2);
+        }
+      });
+    </script>
+    <script type="module" src="../src/index.js"></script>
+  </head>
+  <body></body>
+</html>
