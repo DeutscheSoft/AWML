@@ -1,106 +1,34 @@
 import { warn } from './utils/log.js';
+import { Value } from './value.js';
 
-function callSubscriber(cb, value) {
-  try {
-    cb(value);
-  } catch (err) {
-    warn(
-      'Calling subscriber %o with %o generated an exception: %o',
-      cb,
-      value,
-      err
-    );
-  }
-}
+export class BackendValue extends Value {
+  _activate() {}
 
-class BaseValue {
-  constructor() {
-    this._subscribers = null;
-  }
-
-  subscribe(subscriber) {
-    if (typeof subscriber !== 'function')
-      throw new TypeError('Expected function or Subscriber object.');
-
-    const a = this._subscribers;
-
-    if (a === null) {
-      this._subscribers = subscriber;
-    } else if (typeof a === 'function') {
-      this._subscribers = [a, subscriber];
-    } else {
-      this._subscribers.push(subscriber);
-    }
-
-    return () => {
-      if (subscriber === null) return;
-
-      const a = this._subscribers;
-
-      if (typeof a === 'function') {
-        if (a === subscriber) {
-          this._subscribers = null;
-        } else {
-          // this seems unexpected, however someone might have
-          // called removeAllSubscribers() before us
-        }
-      } else if (Array.isArray(a)) {
-        let newSubscribers = a.filter((_sub) => _sub !== subscriber);
-        if (newSubscribers.length === 1) newSubscribers = newSubscribers[0];
-        this._subscribers = newSubscribers;
-      }
-
-      subscriber = null;
-    };
-  }
-
-  removeAllSubscribers() {
-    this._subscribers = null;
-  }
-
-  callSubscribers(v) {
-    const a = this._subscribers;
-
-    if (a === null) return;
-
-    if (typeof a === 'function') {
-      callSubscriber(a, v);
-    } else {
-      for (let i = 0; i < a.length; i++) {
-        callSubscriber(a[i], v);
-      }
-    }
-  }
-}
-
-export class BackendValue extends BaseValue {
-  // these methods are not really part of the public API
-  update(id, value) {
-    // unsubscribe from the backend
-    if (id === false) {
-      this._backendId = null;
-      this._backend = null;
-      return;
-    }
-
-    if (this._hasRequestedValue) {
-      if (value === this._requestedValue) {
-        this._hasRequestedValue = false;
-        this._requestedValue = null;
-      }
-    }
-
-    this._hasValue = true;
-    this._value = value;
-
-    this.callSubscribers(value);
-  }
+  _deactivate() {}
 
   connectBackend(backend) {
     this._backend = backend;
     this._backendId = null;
 
-    backend.subscribe(this._path, this._callback).then(
+    const callback = (id, value) => {
+      // unsubscribe from the backend
+      if (id === false) {
+        this._backendId = null;
+        this._backend = null;
+        return;
+      }
+
+      if (this._hasRequestedValue) {
+        if (value === this._requestedValue) {
+          this._hasRequestedValue = false;
+          this._requestedValue = null;
+        }
+      }
+
+      this._updateValue(value);
+    };
+
+    backend.subscribe(this._path, callback).then(
       (result) => {
         // result[0] == this._path
         const id = result[1];
@@ -109,7 +37,7 @@ export class BackendValue extends BaseValue {
         // while one previous subscribe was still pending. simply
         // unsubscribe then
         if (this._backend !== backend) {
-          backend.unsubscribe(id, this._callback);
+          backend.unsubscribe(id, callback);
           return;
         }
 
@@ -120,7 +48,7 @@ export class BackendValue extends BaseValue {
         }
 
         if (result.length === 3) {
-          this.update(id, result[2]);
+          callback(id, result[2]);
         }
       },
       (err) => {
@@ -153,17 +81,6 @@ export class BackendValue extends BaseValue {
     }
   }
 
-  // public API starts here
-  get value() {
-    if (!this._hasValue) throw new Error('Waiting for value from backend.');
-
-    return this._value;
-  }
-
-  get hasValue() {
-    return this._hasValue;
-  }
-
   get inSync() {
     return (
       this._hasValue &&
@@ -179,15 +96,11 @@ export class BackendValue extends BaseValue {
     super();
     this._address = address;
     this._path = address.split(':')[1];
-    // last value received from the backend
-    this._value = null;
-    this._hasValue = false;
     // last value sent as a request to the backend
     this._requestedValue = null;
     this._hasRequestedValue = false;
     this._backend = null;
     this._backendId = null;
-    this._callback = this.update.bind(this);
   }
 
   set(value) {
@@ -200,29 +113,5 @@ export class BackendValue extends BaseValue {
     if (backend && backendId !== null) {
       backend.set(backendId, value);
     }
-  }
-
-  wait() {
-    return new Promise((resolve) => {
-      if (this._hasValue) {
-        resolve(this._value);
-        return;
-      }
-
-      const sub = this.subscribe((value) => {
-        resolve(value);
-        sub();
-      });
-    });
-  }
-
-  subscribe(callback) {
-    const sub = super.subscribe(callback);
-
-    if (this._hasValue) {
-      callSubscriber(callback, this._value);
-    }
-
-    return sub;
   }
 }

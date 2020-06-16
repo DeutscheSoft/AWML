@@ -6,3 +6,4 @@ export * from './options.js';
 export * from './backends.js';
 export * from './utils/awml_content_loaded.js';
 export { collectPrefix, setPrefix, setPrefixBlock } from './utils/prefix.js';
+export * from './value.js';
