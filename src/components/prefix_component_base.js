@@ -2,6 +2,7 @@ import { BaseComponent } from './base.js';
 import { collectPrefix, registerPrefixTagName } from '../utils/prefix.js';
 import { getBackendValue } from '../backends.js';
 import { parseAttribute } from '../utils/parse_attribute.js';
+import { ListValue } from '../list_value.js';
 
 /**
  * Base class for components which can bind to backend values using an address.
@@ -13,6 +14,8 @@ export class PrefixComponentBase extends BaseComponent {
       'src',
       'transform-receive',
       'transform-src',
+      'debounce',
+      'partial',
     ]);
   }
 
@@ -90,6 +93,52 @@ export class PrefixComponentBase extends BaseComponent {
     this._resubscribe();
   }
 
+  /**
+   * Returns the current prefix of this element.
+   */
+  get currentPrefix() {
+    let prefix = this._currentPrefix;
+
+    if (prefix === null)
+      this._currentPrefix = prefix = collectPrefix(this, this._srcPrefix);
+
+    return prefix;
+  }
+
+  /**
+   * Number of milliseconds to debounce incoming values. This currently only
+   * works with ListValue sources.
+   */
+  get debounce() {
+    return this._debounce;
+  }
+  set debounce(v) {
+    if (typeof v !== 'number' || !(v >= 0))
+      throw new TypeError('Expected non-negative number.');
+    this._debounce = v;
+
+    const backendValue = this._backendValue;
+
+    if (backendValue !== null && backendValue instanceof ListValue)
+      backendValue.debounce = v;
+  }
+
+  /**
+   * If true, partial values are received from a ListValue source.
+   */
+  get partial() {
+    return this._partial;
+  }
+  set partial(v) {
+    if (typeof v !== 'boolean') throw new TypeError('Expected boolean.');
+    this._partial = v;
+
+    const backendValue = this._backendValue;
+
+    if (backendValue !== null && backendValue instanceof ListValue)
+      backendValue.partial = v;
+  }
+
   constructor() {
     super();
     this._srcPrefix = null;
@@ -98,35 +147,70 @@ export class PrefixComponentBase extends BaseComponent {
     this._currentPrefix = null;
     this._transformSrc = null;
     this._backendValue = null;
+    this._debounce = 0;
+    this._partial = false;
 
     // it would be enough to do this once
     registerPrefixTagName(this.tagName);
   }
 
-  _subscribe() {
+  _getBackendValue() {
     let src = this._src;
 
     if (src === null) return null;
 
-    if (!src.includes(':')) {
-      let prefix = this._currentPrefix;
+    if (src.includes(',')) {
+      const a = src.split(',');
+      let prefix = null;
 
-      if (prefix === null) {
-        this._currentPrefix = prefix = collectPrefix(this, this._srcPrefix);
+      for (let i = 0; i < a.length; i++) {
+        const tmp = a[i];
+
+        if (tmp.includes(':')) continue;
+
+        if (prefix === null) {
+          prefix = this.currentPrefix;
+
+          if (!prefix.includes(':')) return null;
+        }
+
+        a[i] = prefix + tmp;
       }
 
-      if (!prefix.includes(':')) return null;
+      if (this.transformSrc !== null) {
+        a = this.transformSrc(a);
+      }
 
-      src = prefix + src;
+      this.log('Subscribing to %o', a);
+
+      return new ListValue(
+        a.map(getBackendValue),
+        this._partial,
+        this._debounce
+      );
+    } else {
+      if (!src.includes(':')) {
+        const prefix = this.currentPrefix;
+
+        if (!prefix.includes(':')) return null;
+
+        src = prefix + src;
+      }
+
+      if (this.transformSrc !== null) {
+        src = this.transformSrc(src);
+      }
+
+      this.log('Subscribing to %o', src);
+
+      return getBackendValue(src);
     }
+  }
 
-    if (this.transformSrc !== null) {
-      src = this.transformSrc(src);
-    }
+  _subscribe() {
+    const backendValue = this._getBackendValue();
 
-    this.log('Subscribing to %o', src);
-
-    const backendValue = getBackendValue(src);
+    if (backendValue === null) return null;
 
     this._backendValue = backendValue;
 
@@ -185,6 +269,12 @@ export class PrefixComponentBase extends BaseComponent {
         break;
       case 'transform-src':
         this.transformSrc = parseAttribute('javascript', newValue, null);
+        break;
+      case 'debounce':
+        this.debounce = parseAttribute('number', newValue, 0);
+        break;
+      case 'partial':
+        this.partial = newValue !== null;
         break;
       default:
         super.attributeChangedCallback(name, oldValue, newValue);

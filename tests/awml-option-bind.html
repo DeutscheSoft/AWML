@@ -1,7 +1,7 @@
 <html>
   <head>
     <script type="module">
-      import { define, assertEqual } from './testing.js';
+      import { define, assertEqual, delay } from './testing.js';
       import { getBackendValue } from '../src/index.js';
 
       define(async () => {
@@ -45,6 +45,42 @@
 
           assertEqual(widget.get('foo'), 'bar');
         }
+
+        {
+          const widget = widgets[3];
+          const awmlOption = components[3].querySelector('awml-option');
+
+          getBackendValue('test:foo').set('bar');
+          getBackendValue('test:bar').set('bar');
+
+          assertEqual(Array.isArray(widget.get('foo')), true);
+          assertEqual(widget.get('foo')[0], 'bar');
+          assertEqual(widget.get('foo')[1], 'bar');
+
+          awmlOption.debounce = 100;
+          getBackendValue('test:foo').set('foo');
+          assertEqual(widget.get('foo')[0], 'bar');
+          assertEqual(widget.get('foo')[1], 'bar');
+          await delay(120);
+          assertEqual(widget.get('foo')[0], 'foo');
+          assertEqual(widget.get('foo')[1], 'bar');
+          awmlOption.debounce = 0;
+          getBackendValue('test:foo').set('bar');
+          getBackendValue('test:bar').set('bar');
+        }
+
+        {
+          const widget = widgets[4];
+          const awmlOption = components[3].querySelector('awml-option');
+
+          getBackendValue('test:foo').set('bar');
+          getBackendValue('test:bar').set('bar');
+
+          assertEqual(Array.isArray(widget.get('foo')), true);
+          assertEqual(widget.get('foo')[0], 'bar');
+          assertEqual(widget.get('foo')[1], void 0);
+          assertEqual(widget.get('foo')[2], 'bar');
+        }
       });
     </script>
     <script>
@@ -72,6 +108,17 @@
     </test-component>
     <test-component prefix="test:">
       <awml-option type="bind" name="foo" prefix="flu" src="pp"></awml-option>
+    </test-component>
+    <test-component prefix="test:">
+      <awml-option type="bind" name="foo" src="foo,bar"></awml-option>
+    </test-component>
+    <test-component prefix="test:">
+      <awml-option
+        type="bind"
+        name="foo"
+        partial
+        src="foo,unknown,bar"
+      ></awml-option>
     </test-component>
   </body>
 </html>
