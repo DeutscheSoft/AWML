@@ -14,7 +14,7 @@
           document.querySelectorAll('awml-clone')
         ).filter((clone) => clone.parentNode === document.body);
 
-        assertEqual(clones.length, 8);
+        assertEqual(clones.length, 9);
 
         await waitForFrame();
 
@@ -93,6 +93,11 @@
           const clone = clones[7];
           assertEqual(clone.innerText, '');
         }
+
+        {
+          const clone = clones[8];
+          assertEqual(clone.innerText, 'FOO');
+        }
       });
     </script>
     <script>
@@ -119,5 +124,11 @@
     <awml-clone import-scripts fetch template="templates/t6.html"></awml-clone
     ><br />
     <awml-clone fetch template="templates/t7.html"></awml-clone><br />
+    <awml-clone
+      fetch
+      transform-template="replaceFoo"
+      template="templates/t1.html"
+    ></awml-clone
+    ><br />
   </body>
 </html>
