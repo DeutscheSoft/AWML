@@ -99,7 +99,7 @@ export class BackendComponent extends BaseComponent {
   calculateRetryInterval() {
     const interval = this.retryInterval;
 
-    return interval * (1 + Math.log(Math.pow(1+this._retries, 2)));
+    return interval * (1 + Math.log(Math.pow(1 + this._retries, 2)));
   }
 
   constructor() {
