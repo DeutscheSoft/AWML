@@ -1,0 +1,30 @@
+<html>
+  <head>
+    <script type="module" src="../src/index.js"></script>
+    <script type="module">
+      import { assertEqual, define, waitForFrame } from './testing.js';
+      define(async () => {
+        const div = document.querySelector('div');
+        const awmlPrefixs = div.querySelectorAll('awml-prefix');
+
+        await waitForFrame();
+
+        assertEqual(div.getAttribute('prefix'), 'bar');
+        assertEqual(div.getAttribute('prefix-bar'), 'bar');
+        awmlPrefixs[0].remove();
+        awmlPrefixs[1].remove();
+        assertEqual(div.hasAttribute('prefix'), false);
+      });
+    </script>
+    <awml-backend name="test" type="local">
+      { "foo" : "bar", "bar" : "flu" }
+    </awml-backend>
+  </head>
+  <body>
+    <div prefix-bar="test:">
+      <awml-prefix src-prefix="foo" src="test:foo"></awml-prefix>
+      <awml-prefix src-prefix="foo" handle="bar" src="test:foo"></awml-prefix>
+      <awml-prefix src-prefix="bar" src=""></awml-prefix>
+    </div>
+  </body>
+</html>
