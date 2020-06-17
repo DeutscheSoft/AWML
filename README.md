@@ -1,10 +1,7 @@
 # AWML
 
 **A**udio **W**idget **M**arkup **L**anguage is a markup language for describing user interfaces for audio applications.
-AWML aims to be an independent description language, however it is currently de-facto specified by this implementation.
-This implementation uses HTML5 Custom Tags and is based on the [toolkit widget library](https://github.com/DeutscheSoft/toolkit).
-
-The aim of AWML is to simplify the creation of professional user interfaces.
+This implementation uses HTML5 Custom Tags and supports integration with the AUX widget library.
 
 ## Contents
 
@@ -25,18 +22,6 @@ The aim of AWML is to simplify the creation of professional user interfaces.
 * [Installation](#installation)
 * [License](#license)
 
-## Widgets
-
-Using a toolkit widget in AWML is as easy as writing standard HTML.
-
-    <awml-knob class="myKnob"
-      min="-24" max="24"
-      base="0" value="12" 
-      labels="[-24, 0, 24]"
-      >
-      <awml-option name='show_hand' type='media' media='(min-width: 800px)'></awml-option>
-    </awml-knob>
-
 ## Options
 
 The behavior of AWML widgets is completely controlled by their options.
@@ -44,8 +29,8 @@ The behavior of AWML widgets is completely controlled by their options.
 There are two different ways to specify options for a widget.
 They can either be set inline using attributes or using the `awml-option` tag.
 
-The possible options of an AWML Tag are identical to those of the corresponding toolkit widget.
-See the [toolkit documentation](http://deuso.de/toolkit/docs/) for a complete list of widgets and their options.
+The possible options of an AWML Tag are identical to those of the corresponding AUX widget.
+See the [AUX documentation](http://docs.deuso.de/AUX/) for a complete list of widgets and their options.
 
 Options usually have both a type and a format.
 For inline options using attributes the type is always `static` and the `format` is specified by prepending the attribute value by the format name followed by a `:` (e.g. `min='js:4*12'`).
@@ -54,16 +39,16 @@ The default type is `static`.
 
 Example:
 
-    <awml-knob min="-24" max="24">
+    <aux-knob min="-24" max="24">
       <awml-option name="value" format="number" value='-21'></awml-option>
       <awml-option name="base">0</awml-option>
       <awml-option name="labels" format="json">[-24, 0, 24]</awml-option>
-    </awml-knob>
+    </aux-knob>
 
 
 ### Option formats
 
-Since AWML options are mapped onto options for widgets of the 'toolkit' library, they need to represent different JavaScript types.
+Since AWML options are mapped onto options for widgets of the 'AUX' library, they need to represent different JavaScript types.
 This is done in AWML by using different data formats.
 
 When specifying an option as a tag attribute, the format is part of the attribute value.
@@ -114,13 +99,13 @@ Additional attributes are:
 
 Example:
 
-    <awml-knob>
+    <aux-knob>
       <awml-option type=media name=active media='(min-width: 400px)'></awml-option>
-    </awml-knob>
-    <awml-fader>
+    </aux-knob>
+    <aux-fader>
       <awml-option type=media media='(max-width:600 px)' name=min>[0,2]</awml-option>
       <awml-option type=media media='(max-width:500 px)' name=show_scale></awml-option>
-    </awml-fader>
+    </aux-fader>
 
 In the above example, the `min` option of the fader will have the value `0` if the window is smaller than 600 pixels and `2` otherwise.
 
@@ -154,7 +139,7 @@ Additional attributes are:
 * `value` - the default value, if none is set in the corresponding backend (optional)
 * `format` - option format for default value (optional)
 * `partial` - accept partial values for list bindings
-* `prevent-default` - If set, the event handler of the toolkit event will return false. This will prevent
+* `prevent-default` - If set, the event handler of the AUX event will return false. This will prevent
   the default action of that event handler. What this default action is depends
   on the widget.
 * `receive-delay` - Time in milliseconds for which value changes from the
@@ -165,7 +150,7 @@ Additional attributes are:
   reason.
 
 By default, bindings will only react to user interaction in the widget, as opposed to any modification.
-This means it will bind the `useraction` event in the Toolkit widget. This
+This means it will bind the `useraction` event in the AUX widget. This
 behavior can be controlled using the following flags:
 * `readonly` - No event will be used. The binding will not react to changes of
   the widget option at all and only set the option in the widget when values
@@ -180,13 +165,13 @@ behavior can be controlled using the following flags:
 
 Example:
 
-      <awml-knob min=0 max=10>
+      <aux-knob min=0 max=10>
         <awml-option name=value type=bind src='remote:foo'></awml-option>
         <awml-option sync name=value type=bind src='local:foo'></awml-option>
-      </awml-knob>
-      <awml-knob min=0 max=10>
+      </aux-knob>
+      <aux-knob min=0 max=10>
         <awml-option name=value type=bind src='local:foo'></awml-option>
-      </awml-knob>
+      </aux-knob>
 
 The purpose of the `prefix` handle is to simplify binding a tree of widgets to a tree of values in the backend.
 This is useful when building interfaces using templates or similar mechanisms where copies of the same AWML structure are connected to different sources.
@@ -199,19 +184,19 @@ If the prefix attributes are without a value (i.e. the value is `prefix`), the s
 Example:
 
         <template id='foo'>
-          <awml-knob>
+          <aux-knob>
             <awml-option name=value type=bind src='knob1/value' prefix></awml-option>
             <awml-option sync name=min type=bind src='knob1/min' prefix></awml-option>
             <awml-option sync name=max type=bind src='knob1/max' prefix></awml-option>
-          </awml-knob>
-          <awml-knob>
+          </aux-knob>
+          <aux-knob>
             <awml-option name=value type=bind src='knob2/value' prefix></awml-option>
             <awml-option sync name=min type=bind src='knob2/min' prefix></awml-option>
             <awml-option sync name=max type=bind src='knob2/max' prefix></awml-option>
-          </awml-knob>
-          <awml-knob min=-96 max=6>
+          </aux-knob>
+          <aux-knob min=-96 max=6>
             <awml-option name=value type=bind src='knob/gain' prefix=bar></awml-option>
-          </awml-knob>
+          </aux-knob>
         </template>
         <script>
             window.addEventListener('load', function() {
@@ -235,83 +220,34 @@ Example:
 Note that, the `awml-clone` tag is a simple alternative to using templates with automatic prefix support.
 See the section about [templates](#templates) for more information.
 
-### Options and inheritance
-
-In complex user interfaces many widgets end up sharing the same or similar sets of options.
-Repeating the same set of options every time a widget is created is cumbersome and unecessarily verbose.
-To simplify this scenario a predefined set of options can be defined using the `awml-options` tag.
-
-Currently, the `awml-options` tag has two limitations.
-
-1. Only `static` options are allowed as defaults.
-2. Changing the value of a set of default options does not change the options in existing widgets.
-
-Both of these limitations may be removed in the future.
-
-There are several possibilities to define default options:
-
-1. As defaults for one specific type of widget using the `widget` attribute.
-
-   Example:
-
-        <awml-root>
-          <awml-options widget='awml-fader' min=-96 max=6></awml-options>
-
-          <awml-fader></awml-fader>
-        </awml-root>
-
-2. As a set of named defaults using the `name` attribute. This set of options can then
-   be applied to a widget by referencing that name in the `options` attribute.
-
-   Example:
-
-        <awml-root>
-          <awml-options name='knob1' min=0 max=10></awml-options>
-
-          <awml-knob options='knob1'></awml-knob>
-        </awml-root>
-
-   It is possible to combine multiple named options using a list of names (e.g. `options='knob1 knob2'`).
-   Furthermore, `awml-options` tag can inherit each other using the same syntax. This allow building up
-   inhertance structures.
-
-Both types of default options can be combined, named options overwrite tagname based defaults.
-
-Example:
-
-        <awml-root>
-          <awml-options name='foo' max=10></awml-options>
-          <awml-options name='bar' options='foo' min=0></awml-options>
-
-          <awml-options widget='awml-fader' min=-96 max=6></awml-options>
-
-          <awml-knob options='bar'></awml-knob>
-          <!-- will have min=0 and max=10 and min=0 -->
-
-          <awml-fader options='foo'></awml-fader>
-          <!-- will have min=-96 and max=10 -->
-        </awml-root>
-
-Apart from widget options, the `awml-options` tag can also be given a CSS class. This class
-will be added to any tag the options are applied to. This is useful in situations where one set
-of options is directly linked to style properties.
-
 ## Events
 
-toolkit widgets have several custom events in addition to the standard DOM events.
-In AWML, event handlers can be registered by using the `awml-event` tag.
+The `aux-event` component can be used to install event handlers to a parent
+element. If the parent element is an AUX widget, the event handler will use the
+`subscribe` method in the parent AUX widget to subscribe to an event. If the
+parent is not an AUX event, the event handler will be subscribed using the
+standard DOM event mechanism `addEventListener`.
 
-Example:
+### Properties
 
-        <awml-root>
-          <awml-button label='Click me!'>
-            <awml-event type='click'>
-                function() {
-                    window.alert('Hello!');
-                }
-            </awml-event>
-          </awml-button>
-        </awml-root>
+* `type` - Event name (available as `type` attribute).
+* `callback` - Event callback (available as `callback` attribute, parsed as
+  javascript).
+
+### Example
+
+Using an AUX widget:
+
+        <aux-button label='Click me!'>
+          <awml-event type=click callback="function() { window.alert('Hello!'); }"></awml-event>
+        </aux-button>
+
+Using a standard DOM element:
+
+        <button>
+          Click me!
+          <awml-event type=click callback="function() { window.alert('Hello!'); }"></awml-event>
+        </button>
 
 ## Protocol Backends
 
@@ -320,7 +256,6 @@ Protocol backends are defined in `awml.backends.js`.
 
 ### Common Attributes
 
-* `shared`
 * `transform-path`
 * `name`
 * `type`
@@ -333,18 +268,16 @@ In addition, it can also be used as a building block for more complex setups.
 
 Example:
 
-    <awml-root>
-      <awml-backend type='local' name='local'></awml-backend>
+    <awml-backend type='local' name='local'></awml-backend>
 
-      <h1>These two knobs stay in sync</h1>
+    <h1>These two knobs stay in sync</h1>
 
-      <awml-knob min='0' max='10'>
-        <awml-option type=bind name='value' src='local:foo'></awml-option>
-      </awml-knob>
-      <awml-knob min='0' max='10'>
-        <awml-option type=bind name='value' src='local:foo'></awml-option>
-      </awml-knob>
-    </awml-root>
+    <aux-knob min='0' max='10'>
+      <awml-option type=bind name='value' src='local:foo'></awml-option>
+    </aux-knob>
+    <aux-knob min='0' max='10'>
+      <awml-option type=bind name='value' src='local:foo'></awml-option>
+    </aux-knob>
 
 #### Attributes
 
@@ -363,19 +296,17 @@ in `bin/server.pike`.
 
 Example:
 
-    <awml-root>
-      <awml-backend
-            type='websocket' name='local'
-            src='ws://localhost:8080/data'
-        >
-      </awml-backend>
+    <awml-backend
+          type='websocket' name='local'
+          src='ws://localhost:8080/data'
+      >
+    </awml-backend>
 
-      <h1>All connected clients will keep this in sync</h1>
+    <h1>All connected clients will keep this in sync</h1>
 
-      <awml-knob min='0' max='10'>
-        <awml-option name='value' src='local:foo'></awml-option>
-      </awml-knob>
-    </awml-root>
+    <aux-knob min='0' max='10'>
+      <awml-option name='value' src='local:foo'></awml-option>
+    </aux-knob>
 
 #### Attributes
 
@@ -448,17 +379,13 @@ The basic idea behind the `awml-clone` tag is to allow cloning templates in a AW
         <awml-button label='hello'></awml-button>
     </template>
     
-    <awml-root>
-      4x4 buttons:<br>
-      <awml-clone template='block'></awml-clone>
-    </awml-root>
+    4x4 buttons:<br>
+    <awml-clone template='block'></awml-clone>
 
 Adding the attribute `fetch` to the `awml-clone` element fetches the file stated in the `template` attribute from the server. The path is relative to the document containing the `awml-clone` element.
 
-    <awml-root>
-        4x4 buttons:<br>
-        <awml-clone template='block.html' fetch></awml-clone>
-    </awml-root>
+    4x4 buttons:<br>
+    <awml-clone template='block.html' fetch></awml-clone>
 
 
 The real benefit of the `awml-clone` tag is the built-in support for relative binding addresses.
@@ -480,15 +407,13 @@ This could then easily be implemented in the above template examples:
         <br>
     </template>
     <template id='button'>
-        <awml-button label='hello'>
+        <aux-button label='hello'>
             <awml-option type=bind src='/value' prefix></awml-option>
-        </awml-button>
+        </aux-button>
     </template>
     
-    <awml-root>
-      4x4 buttons:<br>
-      <awml-clone template='block' prefix='remote:block1/'></awml-clone>
-    </awml-root>
+    4x4 buttons:<br>
+    <awml-clone template='block' prefix='remote:block1/'></awml-clone>
 
 The `awml-clone` tag will automatically propagate the correct prefix values to all `awml-option` tags.
 
@@ -515,10 +440,14 @@ All of these tags are defined in the source file `awml.styles.js`.
 ### `<awml-show>` and `<awml-hide>`
 
 The parent widgets is either hidden or shown depending on whether the value
-received is true or false. Note that these tags do not (directly) change the CSS
-of their parent widgets, instead they try to hide or show the parent by calling
-`hide_child` or `show_child` in its parent widget. Note that for this to work,
-the widget needs to be a child of a `awml-container`.
+received is true or false. Depending on what the parent widget is, the behavior
+of these tags is different:
+
+* If the parent is an AUX widget inside of an AUX Container, it will call
+  `hideChild` or `showChild` in its Container parent.
+* If the parent is any other AUX widget, it will call `hide` and `show`.
+* If the parent is any other DOM element, it will set the CSS `display`
+  property to `none`.
 
 ### `<awml-styles>`
 
@@ -543,25 +472,23 @@ chosen using the `handle` attribute.
 
 ## Installation
 
-Simply clone this repository and update the submodule to get the right version to the toolkit library.
+AWML is written as ES6 modules. In order to install it into a project, either
+add it as a git submodule or install it from git using npm. Then adding it into
+an application can either be done by including using a script tag.
 
-    git clone http://github.com/DeutscheSoft/AWML.git
-    cd AWML
-    git submodule init
-    git submodule sync
-    git submodule update
+    <script type=module src='AWML/src/index.js'></script>
 
-To start playing around with AWML, use one of the files in `tests/`.
-Most of the AWML features will work when opening files locally, however some things (e.g. the `shared` or `websocket` backends) will require a webserver.
-This repository contains a simple webserver which can be used for testing, which is written in the [Pike](http://pike.lysator.liu.se) programming language.
+Alternatively it can also be imported by adding an import statement to an
+existing ES6 module script.
 
-    pike backend/wsjson.pike
+    import './AWML/src/index.js';
 
-After starting it, you can access the tests using the url (http://localhost:8080/tests/).
+AWML is compatible with the AUX widget library. AWML will automatically detect
+AUX components if they are used.
 
 ## License
 
 This implementation of AWML is available under the terms of the GNU General Public License version 2.
 See the `COPYING` file for details.
 
-Copyright (c) 2015-2019 DeusO GmbH
+Copyright (c) 2015-2020 DeusO GmbH
