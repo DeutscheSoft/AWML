@@ -9,7 +9,9 @@ export class ListValue extends Value {
   _notify() {
     const t = this._debounce;
     if (t === 0) {
-      this.callSubscribers(this._value.slice(0));
+      const v = this._values;
+      this._values = v.slice(0);
+      this._updateValue(v);
       return;
     }
 
@@ -20,7 +22,9 @@ export class ListValue extends Value {
     id = setTimeout(() => {
       if (id !== this._debounce_id) return;
       this._debounce_id = -1;
-      this.callSubscribers(this._value.slice(0));
+      const v = this._values;
+      this._values = v.slice(0);
+      this._updateValue(v);
     }, t);
     this._debounce_id = id;
   }
@@ -32,7 +36,7 @@ export class ListValue extends Value {
     this.values.forEach((value, index) => {
       sub.add(
         value.subscribe((v) => {
-          this._value[index] = v;
+          this._values[index] = v;
           this._hasValues[index] = true;
 
           if (this._hasValue) {
@@ -41,7 +45,6 @@ export class ListValue extends Value {
           }
 
           if (this._partial) {
-            this._hasValue = true;
             this._notify();
             return;
           }
@@ -50,10 +53,6 @@ export class ListValue extends Value {
             if (!this._hasValues[i]) return;
           }
 
-          // _hasValue is also true after _updateValue has been called,
-          // however this might happen late. We set it here early to avoid
-          // the above slow path in the future
-          this._hasValue = true;
           this._notify();
         })
       );
@@ -76,7 +75,7 @@ export class ListValue extends Value {
   constructor(values, partial, debounce) {
     super();
     this.values = values;
-    this._value = values.map(() => void 0);
+    this._values = values.map(() => void 0);
     this._hasValues = values.map(() => false);
     this._partial = !!partial;
     this._debounce = debounce > 0 ? debounce : 0;

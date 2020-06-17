@@ -132,9 +132,44 @@
 
           for (let i = 0; i < 1000; i++) v1._updateValue(i);
 
-          assertEqual(called, 1);
+          assertEqual(called, 0);
           await delay(30);
-          assertEqual(called, 2);
+          assertEqual(called, 1);
+        }
+
+        {
+          // debounce
+          const v1 = Value.from(42);
+          const v2 = Value.from(23);
+
+          const listv = new ListValue([v1, v2], false, 20);
+
+          // add a subscription to get it live
+          listv.subscribe(() => {});
+
+          {
+            const tmp = await listv.wait();
+            assertEqual(tmp[0], 42);
+            assertEqual(tmp[1], 23);
+          }
+
+          v1._updateValue(0);
+
+          {
+            // the debounce should prevent the new value from arriving
+            const tmp = await listv.wait();
+            assertEqual(tmp[0], 42);
+            assertEqual(tmp[1], 23);
+          }
+
+          // now it should be here
+          await delay(30);
+
+          {
+            const tmp = await listv.wait();
+            assertEqual(tmp[0], 0);
+            assertEqual(tmp[1], 23);
+          }
         }
       });
     </script>
