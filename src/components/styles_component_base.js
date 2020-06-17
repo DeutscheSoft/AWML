@@ -105,6 +105,7 @@ export class StylesComponentBase extends RedrawComponentBase {
 
     if (state === null) return;
 
+    this.log('Removing state', state);
     this.removeState(state);
     this._state = null;
     this._target = null;

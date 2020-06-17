@@ -4,5 +4,6 @@ export * from './components/class.js';
 export * from './components/clone.js';
 export * from './components/event.js';
 export * from './components/option.js';
+export * from './components/prefix.js';
 export * from './components/styles.js';
 export * from './components/visibility.js';

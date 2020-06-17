@@ -36,7 +36,7 @@ export function triggerUpdatePrefix(node, handle) {
 export function setPrefix(node, prefix, handle) {
   if (handle === void 0) {
     handle = null;
-  } else if (typeof handle === 'string') {
+  } else if (typeof handle !== 'string') {
     throw new TypeError('Expected string.');
   }
 
@@ -46,6 +46,21 @@ export function setPrefix(node, prefix, handle) {
 
   if (node.getAttribute(attribute) === prefix) return;
   node.setAttribute(attribute, prefix);
+
+  triggerUpdatePrefix(node, handle);
+}
+
+export function removePrefix(node, handle) {
+  if (handle === void 0) {
+    handle = null;
+  } else if (typeof handle !== 'string') {
+    throw new TypeError('Expected string.');
+  }
+
+  const attribute = handle === null ? 'prefix' : 'prefix-' + handle;
+
+  if (!node.hasAttribute(attribute)) return;
+  node.removeAttribute(attribute);
 
   triggerUpdatePrefix(node, handle);
 }
