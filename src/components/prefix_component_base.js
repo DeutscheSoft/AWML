@@ -218,7 +218,7 @@ export class PrefixComponentBase extends BaseComponent {
       const transformReceive = this._transformReceive;
 
       if (transformReceive !== null) {
-        value = transformReceive.call(this._backendValue, value);
+        value = transformReceive.call(this._backendValue, value, this);
       }
 
       this.log('Received value %o', value);

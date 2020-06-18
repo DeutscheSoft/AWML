@@ -133,7 +133,7 @@ class OptionComponent extends PrefixComponentBase {
       const transformReceive = this._transformReceive;
 
       if (transformReceive !== null) {
-        value = transformReceive.call(this._backendValue, value);
+        value = transformReceive.call(this._backendValue, value, this);
       }
 
       option.valueReceived(value);
