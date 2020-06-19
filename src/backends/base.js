@@ -39,6 +39,10 @@ export class Base extends EventTarget {
     return this._node;
   }
 
+  get options() {
+    return this._options;
+  }
+
   constructor(options) {
     super();
     if (typeof options !== 'object')
@@ -62,6 +66,7 @@ export class Base extends EventTarget {
     this._name = name;
     this._node = options.node || null;
     this._eventSubscriptions = new Subscriptions();
+    this._options = options;
   }
 
   addSubscription(...args) {
