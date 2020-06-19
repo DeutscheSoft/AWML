@@ -138,7 +138,7 @@ export class BackendComponent extends BaseComponent {
     if (backend.isOpen) {
       registerBackend(name, backend);
       registered = true;
-    } else {
+    } else if (backend.isInit) {
       subscriptions.add(
         backend.once('open', () => {
           this._retries = 0;
@@ -205,6 +205,11 @@ export class BackendComponent extends BaseComponent {
         this._backend = null;
       }
     );
+
+    if (backend.isError || backend.isClosed) {
+      // do this after return
+      setTimeout(retry, 0);
+    }
 
     return subscriptions.unsubscribe.bind(subscriptions);
   }
