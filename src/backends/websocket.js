@@ -2,7 +2,7 @@ import { JsonProtocolClientBackend } from './json_protocol_client.js';
 import { subscribeDOMEvent } from '../utils/subscribe_dom_event.js';
 import { registerBackendType } from '../components/backend.js';
 
-function getCurrentWebSocketUrl() {
+export function getCurrentWebSocketUrl() {
   const location = window.location;
 
   let href;
