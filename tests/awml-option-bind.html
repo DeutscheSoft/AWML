@@ -81,6 +81,14 @@
           assertEqual(widget.get('foo')[1], void 0);
           assertEqual(widget.get('foo')[2], 'bar');
         }
+        {
+          const widget = widgets[5];
+          const awmlOption = components[3].querySelector('awml-option');
+
+          getBackendValue('test:foo').set('bar');
+
+          assertEqual(widget.get('foo'), 'bar');
+        }
       });
     </script>
     <script>
@@ -117,6 +125,14 @@
         type="bind"
         name="foo"
         partial
+        src="foo,unknown,bar"
+      ></awml-option>
+    </test-component>
+    <test-component prefix="test:">
+      <awml-option
+        type="bind"
+        name="foo"
+        transform-src='(a) => a[0]'
         src="foo,unknown,bar"
       ></awml-option>
     </test-component>

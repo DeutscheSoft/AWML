@@ -177,17 +177,8 @@ export class PrefixComponentBase extends BaseComponent {
         a[i] = prefix + tmp;
       }
 
-      if (this.transformSrc !== null) {
-        a = this.transformSrc(a);
-      }
+      src = a;
 
-      this.log('Subscribing to %o', a);
-
-      return new ListValue(
-        a.map(getBackendValue),
-        this._partial,
-        this._debounce
-      );
     } else {
       if (!src.includes(':')) {
         const prefix = this.currentPrefix;
@@ -197,13 +188,22 @@ export class PrefixComponentBase extends BaseComponent {
         src = prefix + src;
       }
 
-      if (this.transformSrc !== null) {
-        src = this.transformSrc(src);
-      }
+    }
 
-      this.log('Subscribing to %o', src);
+    if (this.transformSrc !== null) {
+      src = this.transformSrc(src);
+    }
 
+    this.log('Subscribing to %o', src);
+
+    if (typeof src === 'string') {
       return getBackendValue(src);
+    } else {
+      return new ListValue(
+        src.map(getBackendValue),
+        this._partial,
+        this._debounce
+      );
     }
   }
 
