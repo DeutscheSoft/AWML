@@ -27,6 +27,10 @@ export class Base extends EventTarget {
     return this._state === 'closed';
   }
 
+  get isError() {
+    return this._state === 'error';
+  }
+
   get name() {
     return this._name;
   }
