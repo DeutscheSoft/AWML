@@ -160,7 +160,7 @@ export class PrefixComponentBase extends BaseComponent {
     if (src === null) return null;
 
     if (src.includes(',')) {
-      let a = src.split(',');
+      const a = src.split(',');
       let prefix = null;
 
       for (let i = 0; i < a.length; i++) {
