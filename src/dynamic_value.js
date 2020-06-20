@@ -14,29 +14,31 @@ function callSubscriber(cb, value) {
 }
 
 /**
- * Base class for values. Values represent value which can be used in data
- * bindings. Values can be subscribed to and changed. They can be used to
- * implement bindings to backend data, as well as for general application
- * interaction.
+ * Base class for values. DynamicValue instances represent value which can
+ * be used in data bindings. DynamicValue instances can be subscribed to
+ * and modified by calling `set()`. What exactly the `set()` method does depends
+ * on the implementation.
+ * They can be used to implement bindings to backend data,
+ * as well as for application interaction.
  *
- * Values are similar to BehaviorSubjects in the language of Rx.
+ * DynamicValues are similar to BehaviorSubjects in the language of Rx.
  */
-export class Value {
+export class DynamicValue {
   /**
    * Create a value from a constant.
    *
    * @param value - The value to emit.
-   * @return {Value}
+   * @return {DynamicValue}
    */
   static fromConstant(value) {
-    const result = new Value();
+    const result = new DynamicValue();
     result._updateValue(value);
     return result;
   }
 
   /** @ignore */
   static from(v) {
-    if (v instanceof Value) return v;
+    if (v instanceof this) return v;
 
     return this.fromConstant(v);
   }

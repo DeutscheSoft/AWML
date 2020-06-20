@@ -1,7 +1,7 @@
 import { warn } from './utils/log.js';
-import { Value } from './value.js';
+import { DynamicValue } from './dynamic_value.js';
 
-export class BackendValue extends Value {
+export class BackendValue extends DynamicValue {
   _activate() {}
 
   _deactivate() {}

@@ -1,19 +1,19 @@
-import { Value } from './value.js';
+import { DynamicValue } from './dynamic_value.js';
 import { Subscriptions } from './utils/subscriptions.js';
 
 /**
- * A special Value implementation which combines a list of other Value
+ * A special DynamicValue implementation which combines a list of other DynamicValue
  * instances. The ListValue will emit an array of values emitted by that list of
  * values.
  */
-export class ListValue extends Value {
+export class ListValue extends DynamicValue {
   /**
    * A shorthand function to create a ListValue from a list of values.
    *
-   * @param values {Value}
+   * @param values {DynamicValue}
    */
   static from(...values) {
-    return new this(values.map((val) => Value.from(val)));
+    return new this(values.map((val) => DynamicValue.from(val)));
   }
 
   _notify() {
@@ -83,7 +83,7 @@ export class ListValue extends Value {
   }
 
   /**
-   * @param values {Value[]}
+   * @param values {DynamicValue[]}
    * @param [partial=false] {boolean} - Initial value for the partial property.
    * @param [debounce=0] {number} - Initial value for the debounce property.
    */

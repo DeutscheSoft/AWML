@@ -2,17 +2,17 @@
   <head>
     <script type="module">
       import { define, delay, assertEqual } from './testing.js';
-      import { Value, ListValue } from '../src/index.js';
+      import { DynamicValue, ListValue } from '../src/index.js';
 
       define(async () => {
         {
-          assertEqual(await Value.from(42).wait(), 42);
+          assertEqual(await DynamicValue.from(42).wait(), 42);
         }
 
         {
           const list = await ListValue.from(
-            Value.from(23),
-            Value.from(42)
+            DynamicValue.from(23),
+            DynamicValue.from(42)
           ).wait();
 
           assertEqual(list[0], 23);
@@ -21,8 +21,8 @@
 
         {
           // ListValue basics
-          const v1 = new Value();
-          const v2 = new Value();
+          const v1 = new DynamicValue();
+          const v2 = new DynamicValue();
 
           const listv = ListValue.from(v1, v2);
 
@@ -37,8 +37,8 @@
 
         {
           // ListValue with partial
-          const v1 = new Value();
-          const v2 = new Value();
+          const v1 = new DynamicValue();
+          const v2 = new DynamicValue();
 
           const listv = ListValue.from(v1, v2);
 
@@ -52,8 +52,8 @@
 
         {
           // ListValue with partial = true after subscribe
-          const v1 = new Value();
-          const v2 = new Value();
+          const v1 = new DynamicValue();
+          const v2 = new DynamicValue();
 
           const listv = ListValue.from(v1, v2);
           const p = listv.wait();
@@ -69,8 +69,8 @@
 
         {
           // ListValue with partial = true before subscribe
-          const v1 = new Value();
-          const v2 = new Value();
+          const v1 = new DynamicValue();
+          const v2 = new DynamicValue();
 
           const listv = ListValue.from(v1, v2);
           listv.partial = true;
@@ -86,8 +86,8 @@
 
         {
           // subscribed ListValue with partial = true before subscribe
-          const v1 = new Value();
-          const v2 = new Value();
+          const v1 = new DynamicValue();
+          const v2 = new DynamicValue();
 
           const listv = ListValue.from(v1, v2);
           listv.subscribe(() => {});
@@ -104,8 +104,8 @@
 
         {
           // subscribed ListValue with partial = true before subscribe
-          const v1 = new Value();
-          const v2 = new Value();
+          const v1 = new DynamicValue();
+          const v2 = new DynamicValue();
 
           const listv = ListValue.from(v1, v2);
           listv.subscribe(() => {});
@@ -122,8 +122,8 @@
 
         {
           // debounce
-          const v1 = Value.from(42);
-          const v2 = Value.from(23);
+          const v1 = DynamicValue.from(42);
+          const v2 = DynamicValue.from(23);
 
           const listv = new ListValue([v1, v2], false, 20);
           let called = 0;
@@ -139,8 +139,8 @@
 
         {
           // debounce
-          const v1 = Value.from(42);
-          const v2 = Value.from(23);
+          const v1 = DynamicValue.from(42);
+          const v2 = DynamicValue.from(23);
 
           const listv = new ListValue([v1, v2], false, 20);
 
