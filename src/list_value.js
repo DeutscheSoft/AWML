@@ -39,9 +39,8 @@ export class ListValue extends DynamicValue {
     this._debounce_id = id;
   }
 
-  _activate() {
+  _subscribe() {
     const sub = new Subscriptions();
-    this._subscriptions = sub;
 
     this.values.forEach((value, index) => {
       sub.add(
@@ -67,12 +66,12 @@ export class ListValue extends DynamicValue {
         })
       );
     });
+
+    return sub.unsubscribe.bind(sub);
   }
 
   _deactivate() {
-    const sub = this._subscriptions;
-    this._subscriptions = null;
-    if (sub !== null) sub.unsubscribe();
+    super._deactivate();
 
     // mark all values as undefined
     this._hasValue = false;
@@ -95,7 +94,6 @@ export class ListValue extends DynamicValue {
     this._hasValues = values.map(() => false);
     this._partial = !!partial;
     this._debounce = debounce > 0 ? debounce : 0;
-    this._subscriptions = null;
     this._debounce_id = -1;
     this._readonly = values.every((value) => typeof value.set === 'function');
   }
