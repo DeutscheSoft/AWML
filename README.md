@@ -252,7 +252,6 @@ Using a standard DOM element:
 ## Protocol Backends
 
 In principle, protocol backends can be used without bindings, but usually they are used together with data bindings.
-Protocol backends are defined in `awml.backends.js`.
 
 ### Common Attributes
 
@@ -316,8 +315,9 @@ Example:
 ### `<awml-backend type=aes70>`
 
 This backend uses [AES70.js](http://github.com/DeutscheSoft/AES70.js) to control
-a remote device. It is defined in the source file `awml.aes70.js`. All
-properties in the device will become available through path names built up from
+a remote device. The `aes70` backend is not exported by default, it needs to be
+explicitly imported from `src/backends/aes70.js`.
+All properties in the device will become available through path names built up from
 their [AES70](https://ocaalliance.com) Role names. The path name of an object
 consists of its role name and the role names of its parent objects, seperated by
 `/`. The root block is excluded from this naming scheme, which means that the
@@ -417,8 +417,6 @@ This could then easily be implemented in the above template examples:
 
 The `awml-clone` tag will automatically propagate the correct prefix values to all `awml-option` tags.
 
-The `awml-clone` tag is defined in the src file `awml.templates.js`.
-
 ## Mutation Tags
 
 The mutation tags described here can be used to modify the DOM tree based
@@ -427,8 +425,6 @@ interpreted as a transformation method which is called with the current backend
 value. The interpretation of its return value depends on the mutation tag.
 Alternatively, the `transform-receive` attribute can be used to set a
 transformation function.
-
-All of these tags are defined in the source file `awml.styles.js`.
 
 ### Common Attributes
 
