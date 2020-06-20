@@ -6,6 +6,7 @@ export class BackendValue extends Value {
 
   _deactivate() {}
 
+  /** @ignore */
   connectBackend(backend) {
     this._backend = backend;
     this._backendId = null;
@@ -64,6 +65,7 @@ export class BackendValue extends Value {
     );
   }
 
+  /** @ignore */
   disconnectBackend() {
     const backend = this._backend;
     const backendId = this._backendId;
@@ -81,6 +83,10 @@ export class BackendValue extends Value {
     }
   }
 
+  /**
+   * Returns true if this value is currently synchronized with the backend. This
+   * means that currently no value change is pending.
+   */
   get inSync() {
     return (
       this._hasValue &&
@@ -88,10 +94,20 @@ export class BackendValue extends Value {
     );
   }
 
+  /**
+   * Returns true if this value is currently synchronized with the backend. This
+   * means that currently no value change is pending.
+   */
   get uri() {
     return this._address;
   }
 
+  /** @ignore */
+  get address() {
+    return this._address;
+  }
+
+  /** @ignore */
   constructor(address) {
     super();
     this._address = address;
@@ -103,6 +119,12 @@ export class BackendValue extends Value {
     this._backendId = null;
   }
 
+  /**
+   * Sets the value in the backend. If the corresponding backend is currently
+   * offline, the value will be kept until it is connected.
+   *
+   * @param value
+   */
   set(value) {
     this._requestedValue = value;
     this._hasRequestedValue = true;

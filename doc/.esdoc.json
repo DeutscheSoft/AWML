@@ -2,5 +2,13 @@
   "source": "../src",
   "index": "../README.md",
   "destination": "./out",
-  "plugins": [{"name": "esdoc-standard-plugin"}]
+  "plugins": [
+    {
+      "name": "esdoc-standard-plugin",
+      "option": {
+        "coverage": {"enable": true},
+        "accessor": {"access": ["public", "protected" ], "autoPrivate": true}
+      }
+    }
+  ]
 }

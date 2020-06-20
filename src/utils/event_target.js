@@ -1,5 +1,10 @@
 import { error } from './log.js';
 
+/**
+ * A simple EventTarget implementation used by backends.
+ *
+ * @ignore
+ */
 export class EventTarget {
   constructor() {
     this._eventHandlers = new Map();

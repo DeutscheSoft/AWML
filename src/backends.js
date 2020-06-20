@@ -3,10 +3,17 @@ import { BackendValue } from './backend_value.js';
 const backendValues = new Map();
 const backends = new Map();
 
+/**
+ * Get the backend currently registered for the given name.
+ *
+ * @param name {string} The backend name.
+ * @return {Backend} 
+ */
 export function getBackend(name) {
   return backends.get(name);
 }
 
+/** @ignore */
 export function registerBackend(name, backend) {
   if (backends.has(name)) {
     throw new Error('Backend already exists.');
@@ -23,6 +30,7 @@ export function registerBackend(name, backend) {
   });
 }
 
+/** @ignore */
 export function unregisterBackend(name, backend) {
   if (backend !== backends.get(name)) {
     throw new Error('Unregistering wrong backend.');
@@ -39,6 +47,12 @@ export function unregisterBackend(name, backend) {
   });
 }
 
+/**
+ * Return a Map of all backend values which currently exist for the given
+ * backend name.
+ *
+ * @return {Map<string,BackendValue>}
+ */
 export function getBackendValues(backendName) {
   let result = backendValues.get(backendName);
 
@@ -51,6 +65,13 @@ export function getBackendValues(backendName) {
   return result;
 }
 
+/**
+ * Get the BackendValue for the given address. Addresses have the form
+ * `<backendName>:<path>`.
+ *
+ * @param {string} address
+ * @return {BackendValue}
+ */
 export function getBackendValue(address) {
   const pos = address.search(':');
 
@@ -75,6 +96,11 @@ export function getBackendValue(address) {
   return backendValue;
 }
 
+/**
+ * Return all backends.
+ *
+ * @return {Map<string,Backend>}
+ */
 export function getBackends() {
   return backends;
 }

@@ -19,6 +19,7 @@ window.addEventListener('load', () => {
   maybeFire();
 });
 
+/** @ignore */
 export function registerLoading(p) {
   if (fired) return p;
 
@@ -32,6 +33,11 @@ export function registerLoading(p) {
   return p;
 }
 
+/**
+ * Wait for the `AWMLContentLoaded` event to be emitted.
+ *
+ * @return {Promise}
+ */
 export function waitForAWMLContentLoaded() {
   return firedPromise;
 }

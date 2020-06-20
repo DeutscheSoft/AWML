@@ -1,5 +1,5 @@
 {
-  "name": "awml-documentation",
+  "name": "@deutschesoft/awml",
   "version": "1.0.0",
   "description": "Documentation generator for AWML",
   "main": "index.js",

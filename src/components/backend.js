@@ -7,6 +7,7 @@ import { timeout } from '../utils/timeout.js';
 const backendTypes = new Map();
 const backendTypeSubscribers = new Map();
 
+/** @ignore */
 export function registerBackendType(type, constructor) {
   if (backendTypes.has(type))
     throw new Error('Cannot redefine a backend type.');
@@ -27,6 +28,7 @@ export function registerBackendType(type, constructor) {
   });
 }
 
+/** @ignore */
 export function subscribeBackendType(type, callback) {
   if (typeof type !== 'string') throw new TypeError('Expected string.');
 

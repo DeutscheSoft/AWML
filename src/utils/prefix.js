@@ -1,3 +1,15 @@
+/**
+ * Calculate the prefix of the given node for the given handle. The prefix
+ * is the concatenation of the `"prefix"` attribute of this node and all its
+ * parent nodes. This collection terminates early either
+ * - if a prefix attribute has the value `":noprefix:"` which results in an empty
+ *   prefix, or
+ * - if a prefix contains a `":"` at which point the prefix is complete.
+ *
+ * @param node {Node} - The DOM node.
+ * @param [handle] {string} - The handle name. If given, instead of the
+ * `"prefix"` attribute, the attribute `"prefix-" + handle` is used.
+ */
 export function collectPrefix(node, handle) {
   const attributeName = handle && handle.length ? 'prefix-' + handle : 'prefix';
   const prefix = [];
@@ -16,12 +28,19 @@ export function collectPrefix(node, handle) {
 const prefixTags = new Set();
 let prefixTagSelector = '';
 
+/** @ignore */
 export function registerPrefixTagName(tagName) {
   if (prefixTags.has(tagName)) return;
   prefixTags.add(tagName);
   prefixTagSelector = Array.from(prefixTags).join(',');
 }
 
+/**
+ * Tell a node and all its children to recalculate their prefixes.
+ *
+ * @param node {Node} - The DOM node.
+ * @param [handle] {string} - The handle name.
+ */
 export function triggerUpdatePrefix(node, handle) {
   if (node._updatePrefix) node._updatePrefix(handle);
 
@@ -33,6 +52,13 @@ export function triggerUpdatePrefix(node, handle) {
   }
 }
 
+/**
+ * Update the prefix of a node.
+ *
+ * @param node {Node} - The DOM node.
+ * @param prefix {string} - The prefix value.
+ * @param [handle] {string} - The handle name.
+ */
 export function setPrefix(node, prefix, handle) {
   if (handle === void 0) {
     handle = null;
@@ -50,6 +76,12 @@ export function setPrefix(node, prefix, handle) {
   triggerUpdatePrefix(node, handle);
 }
 
+/**
+ * Remove the prefix of a node.
+ *
+ * @param node {Node} - The DOM node.
+ * @param [handle] {string} - The handle name.
+ */
 export function removePrefix(node, handle) {
   if (handle === void 0) {
     handle = null;
@@ -65,6 +97,12 @@ export function removePrefix(node, handle) {
   triggerUpdatePrefix(node, handle);
 }
 
+/**
+ * Block prefix collection at this node.
+ *
+ * @param node {Node} - The DOM node.
+ * @param [handle] {string} - The handle name.
+ */
 export function setPrefixBlock(node, handle) {
   setPrefix(node, ':noprefix:', handle);
 }

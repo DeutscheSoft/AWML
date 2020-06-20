@@ -13,19 +13,35 @@ function callSubscriber(cb, value) {
   }
 }
 
+/**
+ * Base class for values. Values represent value which can be used in data
+ * bindings. Values can be subscribed to and changed. They can be used to
+ * implement bindings to backend data, as well as for general application
+ * interaction.
+ *
+ * Values are similar to BehaviorSubjects in the language of Rx.
+ */
 export class Value {
+  /**
+   * Create a value from a constant.
+   *
+   * @param value - The value to emit.
+   * @return {Value}
+   */
   static fromConstant(value) {
     const result = new Value();
     result._updateValue(value);
     return result;
   }
 
+  /** @ignore */
   static from(v) {
     if (v instanceof Value) return v;
 
     return this.fromConstant(v);
   }
 
+  /** @ignore */
   _updateValue(value) {
     this._hasValue = true;
     this._value = value;
@@ -33,8 +49,14 @@ export class Value {
     this.callSubscribers(value);
   }
 
+  /**
+   * @protected
+   */
   _activate() {}
 
+  /**
+   * @protected
+   */
   _deactivate() {}
 
   constructor() {
@@ -44,20 +66,43 @@ export class Value {
     this._hasValue = false;
   }
 
+  /**
+   * Returns the last value received. Throws an error if no value has been
+   * received, yet.
+   *
+   * @returns any - The value.
+   */
   get value() {
     if (!this._hasValue) throw new Error('Waiting for value from backend.');
 
     return this._value;
   }
 
+  /**
+   * Returns true if a value is available.
+   *
+   * @returns boolean
+   */
   get hasValue() {
     return this._hasValue;
   }
 
+  /**
+   * Returns true if this value is currently subscribed to.
+   */
   get isActive() {
     return this._subscribers !== null;
   }
 
+  /**
+   * Subscribe to this value. Will call the callback argument whenever a value
+   * becomes available.
+   *
+   * Returns a unsubscribe callback. Calling it will remove the subscription.
+   *
+   * @param {Function} subscriber - Callback function to subscribe.
+   * @return {Function} - The unsubscribe callback.
+   */
   subscribe(subscriber) {
     if (typeof subscriber !== 'function')
       throw new TypeError('Expected function or Subscriber object.');
@@ -100,11 +145,17 @@ export class Value {
     };
   }
 
+  /**
+   * Remove all subscribed listeners.
+   */
   removeAllSubscribers() {
     this._subscribers = null;
     this._deactivate();
   }
 
+  /**
+   * @protected
+   */
   callSubscribers(v) {
     const a = this._subscribers;
 
@@ -119,6 +170,11 @@ export class Value {
     }
   }
 
+  /**
+   * Wait for a value to be available.
+   *
+   * @returns Promise<any>
+   */
   wait() {
     return new Promise((resolve) => {
       if (this._hasValue) {

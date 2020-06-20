@@ -9,6 +9,7 @@ import {
 const optionTypes = new Map();
 const optionTypeSubscribers = new Map();
 
+/** @ignore */
 export function registerOptionType(type, constructor) {
   if (optionTypes.has(type)) throw new Error('Cannot redefine a backend type.');
 
@@ -28,6 +29,7 @@ export function registerOptionType(type, constructor) {
   });
 }
 
+/** @ignore */
 export function subscribeOptionType(type, callback) {
   if (typeof type !== 'string') throw new TypeError('Expected string.');
 
