@@ -176,9 +176,9 @@ Example:
 The purpose of the `prefix` handle is to simplify binding a tree of widgets to a tree of values in the backend.
 This is useful when building interfaces using templates or similar mechanisms where copies of the same AWML structure are connected to different sources.
 Another application is where the binding of parts of a user interface is changed dynamically.
-The basic idea is that the `src` attribute is a relative address which is to be prefixed later by calling `AWML.set_prefix` on the widget tree.
+The basic idea is that the `src` attribute is a relative address which is to be prefixed later by calling `setPrefix` on the widget tree.
 The value of the `prefix` attribute is a handle.
-When setting the prefix of option bindings with a given handle, the handle is passed as the second argument to `AWML.set_prefix`.
+When setting the prefix of option bindings with a given handle, the handle is passed as the second argument to `setPrefix`.
 If the prefix attributes are without a value (i.e. the value is `prefix`), the second argument is optional.
 
 Example:
@@ -198,7 +198,9 @@ Example:
             <awml-option name=value type=bind src='knob/gain' prefix=bar></awml-option>
           </aux-knob>
         </template>
-        <script>
+        <script type=module>
+            import { setPrefix } from 'AWML/src/index.js';
+
             window.addEventListener('load', function() {
                 var template = document.getElementById('foo');
                 var clone;
@@ -207,10 +209,10 @@ Example:
                     clone = document.importNode(template, true);
 
                     // set the prefix for the first two knobs
-                    AWML.set_prefix(clone, "remote:device"+i+"/");
+                    setPrefix(clone, "remote:device"+i+"/");
 
                     // set the prefix for the third knob
-                    AWML.set_prefix(clone, "local:device"+i+"/", 'bar');
+                    setPrefix(clone, "local:device"+i+"/", 'bar');
 
                     document.body.appendChild(clone);
                 }
