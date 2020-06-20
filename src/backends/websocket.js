@@ -1,24 +1,7 @@
 import { JsonProtocolClientBackend } from './json_protocol_client.js';
 import { subscribeDOMEvent } from '../utils/subscribe_dom_event.js';
 import { registerBackendType } from '../components/backend.js';
-
-export function getCurrentWebSocketUrl() {
-  const location = window.location;
-
-  let href;
-
-  if (location.protocol == 'http:') {
-    href = 'ws://' + location.hostname;
-    if (location.port != 80) href += ':' + location.port;
-  } else if (location.protocol == 'https:') {
-    href = 'wss://' + location.hostname;
-    if (location.port != 443) href += ':' + location.port;
-  } else {
-    throw new Error('Unsupported protocol.');
-  }
-
-  return new URL(href);
-}
+import { getCurrentWebSocketUrl } from '../utils/fetch.js';
 
 export class WebSocketBackend extends JsonProtocolClientBackend {
   constructor(options) {

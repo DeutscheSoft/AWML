@@ -2,7 +2,7 @@ import { Base } from './base.js';
 import { registerBackendType } from '../components/backend.js';
 import { warn } from '../utils/log.js';
 import { subscribeDOMEvent } from '../utils/subscribe_dom_event.js';
-import { getCurrentWebSocketUrl } from './websocket.js';
+import { getCurrentWebSocketUrl } from '../utils/fetch.js';
 
 /* global OCA */
 

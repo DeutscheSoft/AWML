@@ -13,3 +13,23 @@ export function fetchJSON(url) {
     return response.json();
   });
 }
+
+/** @ignore */
+export function getCurrentWebSocketUrl() {
+  const location = window.location;
+
+  let href;
+
+  if (location.protocol == 'http:') {
+    href = 'ws://' + location.hostname;
+    if (location.port != 80) href += ':' + location.port;
+  } else if (location.protocol == 'https:') {
+    href = 'wss://' + location.hostname;
+    if (location.port != 443) href += ':' + location.port;
+  } else {
+    throw new Error('Unsupported protocol.');
+  }
+
+  return new URL(href);
+}
+
