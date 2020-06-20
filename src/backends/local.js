@@ -1,10 +1,10 @@
-import { Base } from './base.js';
+import { Backend } from './backend.js';
 import { registerBackendType } from '../components/backend.js';
 import { parseAttribute } from '../utils/parse_attribute.js';
 import { fetchJSON } from '../utils/fetch.js';
 import { error } from '../utils/log.js';
 
-export class LocalBackend extends Base {
+export class LocalBackend extends Backend {
   get delay() {
     return this._delay;
   }
@@ -96,7 +96,7 @@ export class LocalBackend extends Base {
   }
 
   static argumentsFromNode(node) {
-    const options = Base.argumentsFromNode(node);
+    const options = Backend.argumentsFromNode(node);
     const tmp = node.getAttribute('transform-data');
 
     options.delay = parseInt(node.getAttribute('delay')) || 0;

@@ -1,4 +1,4 @@
-import { Base } from './base.js';
+import { Backend } from './backend.js';
 import { registerBackendType } from '../components/backend.js';
 import { warn } from '../utils/log.js';
 import { subscribeDOMEvent } from '../utils/subscribe_dom_event.js';
@@ -10,7 +10,7 @@ if (typeof OCA === 'undefined') {
   warn('Cannot find AES70.js library. Missing a script include?');
 }
 
-export class AES70Backend extends Base {
+export class AES70Backend extends Backend {
   get src() {
     return this._src;
   }
@@ -213,7 +213,7 @@ export class AES70Backend extends Base {
   }
 
   static argumentsFromNode(node) {
-    const options = Base.argumentsFromNode(node);
+    const options = Backend.argumentsFromNode(node);
 
     const src = node.getAttribute('src');
 

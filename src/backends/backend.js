@@ -3,7 +3,10 @@ import { EventTarget } from '../utils/event_target.js';
 import { warn } from '../utils/log.js';
 import { Subscriptions } from '../utils/subscriptions.js';
 
-export class Base extends EventTarget {
+/**
+ * Base class for all backends.
+ */
+export class Backend extends EventTarget {
   get transformPath() {
     return this._transformPath;
   }

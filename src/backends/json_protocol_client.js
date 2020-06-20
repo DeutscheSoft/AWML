@@ -1,7 +1,7 @@
-import { Base } from './base.js';
+import { Backend } from './backend.js';
 import { warn } from '../utils/log.js';
 
-export class JsonProtocolClientBackend extends Base {
+export class JsonProtocolClientBackend extends Backend {
   constructor(options) {
     super(options);
     this._pendingSubscriptionMessage = null;
@@ -128,7 +128,7 @@ export class JsonProtocolClientBackend extends Base {
   }
 
   static argumentsFromNode(node) {
-    const options = Base.argumentsFromNode(node);
+    const options = Backend.argumentsFromNode(node);
 
     return options;
   }
