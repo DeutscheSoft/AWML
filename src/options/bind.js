@@ -1,8 +1,8 @@
-import { BaseOption } from './base.js';
+import { Option } from './option.js';
 import { registerOptionType } from '../components/option.js';
 import { parseAttribute } from '../utils/parse_attribute.js';
 
-export class BindOption extends BaseOption {
+export class BindOption extends Option {
   static get needsBackendValue() {
     return true;
   }
@@ -85,7 +85,7 @@ export class BindOption extends BaseOption {
   }
 
   static optionsFromNode(node) {
-    const options = BaseOption.optionsFromNode(node);
+    const options = Option.optionsFromNode(node);
 
     options.backendValue = node._backendValue;
     options.readonly = node.getAttribute('readonly') !== null;

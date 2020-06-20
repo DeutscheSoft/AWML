@@ -1,8 +1,8 @@
-import { BaseOption } from './base.js';
+import { Option } from './option.js';
 import { registerOptionType } from '../components/option.js';
 import { parseAttribute } from '../utils/parse_attribute.js';
 
-export class StaticOption extends BaseOption {
+export class StaticOption extends Option {
   constructor(options) {
     super(options);
 
@@ -10,7 +10,7 @@ export class StaticOption extends BaseOption {
   }
 
   static optionsFromNode(node) {
-    const options = BaseOption.optionsFromNode(node);
+    const options = Option.optionsFromNode(node);
     const format = node.getAttribute('format') || 'json';
 
     options.value = parseAttribute(format, node.getAttribute('value'));
