@@ -1,5 +1,5 @@
 {
-  "name": "@deutschesoft/awml",
+  "name": "awml-documentation",
   "version": "1.0.0",
   "description": "Documentation generator for AWML",
   "main": "index.js",
@@ -10,6 +10,9 @@
   "private": "true",
   "dependencies": {
     "esdoc": "^1.1.0",
+    "esdoc-brand-plugin": "^1.0.1",
+    "esdoc-inject-style-plugin": "^1.0.0",
+    "esdoc-publish-html-plugin": "^1.1.2",
     "esdoc-standard-plugin": "^1.0.0"
   }
 }
