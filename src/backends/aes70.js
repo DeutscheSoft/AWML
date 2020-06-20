@@ -122,28 +122,28 @@ export class AES70Backend extends Base {
             return;
           }
 
-          const task = event ? event.subscribe(eventCallback).then(() => true) : Promise.resolve(false);
+          const task = event
+            ? event.subscribe(eventCallback).then(() => true)
+            : Promise.resolve(false);
 
-          task.then(
-            (subscribed) => {
+          task
+            .then((subscribed) => {
               const setter = property.setter(o);
               const unsubscribe = () => {
                 if (!subscribed) return;
                 event.unsubscribe(eventCallback);
-                if (setter)
-                  this._setters.delete(path);
+                if (setter) this._setters.delete(path);
               };
               getter().then(
                 (x) => {
                   let val;
                   if (x instanceof OCA.SP.Arguments) {
-                    val = x.item(0); 
+                    val = x.item(0);
                   } else {
                     val = x;
                   }
                   this.receive(path, val);
-                  if (setter)
-                    this._setters.set(path, setter);
+                  if (setter) this._setters.set(path, setter);
                   this._subscribeSuccess(path, path);
                   if (subscribed)
                     this._path_subscriptions.set(path, unsubscribe);
@@ -153,49 +153,47 @@ export class AES70Backend extends Base {
                   throw error;
                 }
               );
-            }
-          ).catch(
-            (error) => {
+            })
+            .catch((error) => {
               this._subscribeFailure(path, error);
-            }
-          );
+            });
         }
       }
       return;
     } else {
       switch (propertyName) {
-      case 'Min':
-      case 'Max':
-        const index = propertyName === 'Min' ? 1 : 2;
-        propertyName = tmp.pop();
-        objectPath = tmp.join('/');
+        case 'Min':
+        case 'Max':
+          const index = propertyName === 'Min' ? 1 : 2;
+          propertyName = tmp.pop();
+          objectPath = tmp.join('/');
 
-        if (!objects.has(objectPath)) break;
+          if (!objects.has(objectPath)) break;
 
-        const o = objects.get(objectPath);
-        const properties = o.get_properties();
+          const o = objects.get(objectPath);
+          const properties = o.get_properties();
 
-        const property = properties.find_property(propertyName);
+          const property = properties.find_property(propertyName);
 
-        if (!property) break;
+          if (!property) break;
 
-        const getter = property.getter(o);
+          const getter = property.getter(o);
 
-        if (!getter) break;
+          if (!getter) break;
 
-        getter().then(
-          (x) => {
-            if (!(x instanceof OCA.SP.Arguments))
-              throw new Error('Property has no min or max.');
+          getter()
+            .then((x) => {
+              if (!(x instanceof OCA.SP.Arguments))
+                throw new Error('Property has no min or max.');
 
-            this.receive(path, x.item(index));
-            this._subscribeSuccess(path, path);
-          }
-        ).catch((error) => {
-          this._subscribeFailure(path, error);
-        });
+              this.receive(path, x.item(index));
+              this._subscribeSuccess(path, path);
+            })
+            .catch((error) => {
+              this._subscribeFailure(path, error);
+            });
 
-        return;
+          return;
       }
     }
 

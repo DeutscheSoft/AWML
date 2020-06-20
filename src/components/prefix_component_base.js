@@ -178,7 +178,6 @@ export class PrefixComponentBase extends BaseComponent {
       }
 
       src = a;
-
     } else {
       if (!src.includes(':')) {
         const prefix = this.currentPrefix;
@@ -187,7 +186,6 @@ export class PrefixComponentBase extends BaseComponent {
 
         src = prefix + src;
       }
-
     }
 
     if (this.transformSrc !== null) {
