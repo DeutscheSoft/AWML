@@ -32,4 +32,3 @@ export function getCurrentWebSocketUrl() {
 
   return new URL(href);
 }
-

@@ -7,7 +7,7 @@ const backends = new Map();
  * Get the backend currently registered for the given name.
  *
  * @param name {string} The backend name.
- * @return {Backend} 
+ * @return {Backend}
  */
 export function getBackend(name) {
   return backends.get(name);

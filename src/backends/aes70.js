@@ -165,39 +165,38 @@ export class AES70Backend extends Base {
     } else {
       switch (propertyName) {
         case 'Min':
-        case 'Max':
-          {
-            const index = propertyName === 'Min' ? 1 : 2;
-            propertyName = tmp.pop();
-            objectPath = tmp.join('/');
+        case 'Max': {
+          const index = propertyName === 'Min' ? 1 : 2;
+          propertyName = tmp.pop();
+          objectPath = tmp.join('/');
 
-            if (!objects.has(objectPath)) break;
+          if (!objects.has(objectPath)) break;
 
-            const o = objects.get(objectPath);
-            const properties = o.get_properties();
+          const o = objects.get(objectPath);
+          const properties = o.get_properties();
 
-            const property = properties.find_property(propertyName);
+          const property = properties.find_property(propertyName);
 
-            if (!property) break;
+          if (!property) break;
 
-            const getter = property.getter(o);
+          const getter = property.getter(o);
 
-            if (!getter) break;
+          if (!getter) break;
 
-            getter()
-              .then((x) => {
-                if (!(x instanceof OCA.SP.Arguments))
-                  throw new Error('Property has no min or max.');
+          getter()
+            .then((x) => {
+              if (!(x instanceof OCA.SP.Arguments))
+                throw new Error('Property has no min or max.');
 
-                this.receive(path, x.item(index));
-                this._subscribeSuccess(path, path);
-              })
-              .catch((error) => {
-                this._subscribeFailure(path, error);
-              });
+              this.receive(path, x.item(index));
+              this._subscribeSuccess(path, path);
+            })
+            .catch((error) => {
+              this._subscribeFailure(path, error);
+            });
 
-            return;
-          }
+          return;
+        }
       }
     }
 
