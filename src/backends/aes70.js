@@ -24,6 +24,7 @@ export class AES70Backend extends Base {
     this._device = null;
     this._objects = null;
     this._path_subscriptions = new Map();
+    this._setters = new Map();
     this.addSubscription(
       subscribeDOMEvent(websocket, 'open', () => {
         try {
@@ -61,6 +62,14 @@ export class AES70Backend extends Base {
   }
 
   set(id, value) {
+    const setter = this._setters.get(id);
+
+    if (!setter) {
+      warn('%o is a readonly property.', id);
+      return;
+    }
+
+    setter(value);
   }
 
   lowSubscribe(path) {
@@ -117,9 +126,12 @@ export class AES70Backend extends Base {
 
           task.then(
             (subscribed) => {
+              const setter = property.setter(o);
               const unsubscribe = () => {
                 if (!subscribed) return;
                 event.unsubscribe(eventCallback);
+                if (setter)
+                  this._setters.delete(path);
               };
               getter().then(
                 (x) => {
@@ -130,6 +142,8 @@ export class AES70Backend extends Base {
                     val = x;
                   }
                   this.receive(path, val);
+                  if (setter)
+                    this._setters.set(path, setter);
                   this._subscribeSuccess(path, path);
                   if (subscribed)
                     this._path_subscriptions.set(path, unsubscribe);
