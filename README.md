@@ -24,7 +24,7 @@ This implementation uses HTML5 Custom Tags and supports integration with the AUX
 
 ## Options
 
-The behavior of AWML widgets is completely controlled by their options.
+The behavior of AUX widgets is completely controlled by their options.
 
 There are two different ways to specify options for a widget.
 They can either be set inline using attributes or using the `awml-option` tag.
