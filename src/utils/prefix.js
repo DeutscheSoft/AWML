@@ -6,9 +6,10 @@
  *   prefix, or
  * - if a prefix contains a `":"` at which point the prefix is complete.
  *
- * @param node {Node} - The DOM node.
- * @param [handle] {string} - The handle name. If given, instead of the
- * `"prefix"` attribute, the attribute `"prefix-" + handle` is used.
+ * @param {Node} node The DOM node.
+ * @param {string} [handle]
+ *      The handle name. If given, instead of the
+ *      `"prefix"` attribute, the attribute `"prefix-" + handle` is used.
  */
 export function collectPrefix(node, handle) {
   const attributeName = handle && handle.length ? 'prefix-' + handle : 'prefix';
@@ -38,8 +39,10 @@ export function registerPrefixTagName(tagName) {
 /**
  * Tell a node and all its children to recalculate their prefixes.
  *
- * @param node {Node} - The DOM node.
- * @param [handle] {string} - The handle name.
+ * @param {Node} node
+ *      The DOM node.
+ * @param {string} [handle]
+ *      The handle name.
  */
 export function triggerUpdatePrefix(node, handle) {
   if (node._updatePrefix) node._updatePrefix(handle);
@@ -55,9 +58,12 @@ export function triggerUpdatePrefix(node, handle) {
 /**
  * Update the prefix of a node.
  *
- * @param node {Node} - The DOM node.
- * @param prefix {string} - The prefix value.
- * @param [handle] {string} - The handle name.
+ * @param {Node} node
+ *      The DOM node.
+ * @param {string} prefix
+ *      The prefix value.
+ * @param {string} [handle]
+ *      The handle name.
  */
 export function setPrefix(node, prefix, handle) {
   if (handle === void 0) {
@@ -79,8 +85,10 @@ export function setPrefix(node, prefix, handle) {
 /**
  * Remove the prefix of a node.
  *
- * @param node {Node} - The DOM node.
- * @param [handle] {string} - The handle name.
+ * @param {Node} node
+ *      The DOM node.
+ * @param {string} [handle]
+ *      The handle name.
  */
 export function removePrefix(node, handle) {
   if (handle === void 0) {
@@ -100,8 +108,10 @@ export function removePrefix(node, handle) {
 /**
  * Block prefix collection at this node.
  *
- * @param node {Node} - The DOM node.
- * @param [handle] {string} - The handle name.
+ * @param {Node} node
+ *      The DOM node.
+ * @param {string} [handle]
+ *      The handle name.
  */
 export function setPrefixBlock(node, handle) {
   setPrefix(node, ':noprefix:', handle);
