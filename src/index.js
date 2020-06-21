@@ -8,3 +8,4 @@ export * from './utils/awml_content_loaded.js';
 export { collectPrefix, setPrefix, setPrefixBlock } from './utils/prefix.js';
 export * from './dynamic_value.js';
 export * from './list_value.js';
+export * from './operators.js';

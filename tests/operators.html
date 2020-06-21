@@ -1,0 +1,144 @@
+<html>
+  <head>
+    <script type="module">
+      import { define, delay, assertEqual } from './testing.js';
+      import {
+        DynamicValue,
+        ListValue,
+        map,
+        filter,
+        switchMap,
+        resolve,
+      } from '../src/index.js';
+
+      function record(dv) {
+        const values = [];
+        dv.subscribe((x) => values.push(x));
+        return values;
+      }
+
+      define(async () => {
+        // map
+        {
+          const v1 = DynamicValue.fromConstant(42);
+          let v2 = map(v1, (x) => 2 * x);
+
+          assertEqual(await v2.wait(), 42 * 2);
+
+          try {
+            v2.set(23);
+            assertEqual(true, false);
+          } catch (err) {
+            assertEqual(true, true);
+          }
+
+          v2 = map(
+            v1,
+            (x) => 2 * x,
+            (x) => x / 2
+          );
+          v2.set(42);
+
+          assertEqual(await v1.wait(), 21);
+        }
+
+        // filter
+        {
+          const v1 = DynamicValue.fromConstant(42);
+          const v2 = filter(v1, (x) => x % 2 === 0);
+
+          let val;
+
+          v2.subscribe((x) => {
+            val = x;
+          });
+
+          assertEqual(val, 42);
+
+          v1.set(41);
+
+          assertEqual(val, 42);
+
+          v1.set(44);
+
+          assertEqual(val, 44);
+        }
+
+        // switchMap
+        {
+          const v1 = DynamicValue.fromConstant(42);
+          const v2 = DynamicValue.fromConstant(23);
+
+          const d = DynamicValue.fromConstant(true);
+
+          const result = switchMap(d, (cond) => (cond ? v1 : v2));
+
+          let val;
+
+          result.subscribe((x) => {
+            val = x;
+          });
+
+          assertEqual(val, 42);
+
+          d.set(false);
+
+          assertEqual(val, 23);
+
+          result.set(22);
+
+          assertEqual(v1.value, 42);
+          assertEqual(v2.value, 22);
+
+          d.set(true);
+
+          result.set(41);
+
+          assertEqual(v2.value, 22);
+          assertEqual(v1.value, 41);
+        }
+
+        // resolve
+        {
+          const v1 = DynamicValue.fromConstant(0);
+
+          const projection = (n) => {
+            return new Promise((resolve) => {
+              setTimeout(() => resolve(n), n);
+            });
+          };
+
+          const dv = resolve(v1, projection);
+          const values = record(dv);
+
+          assertEqual(values.length, 0);
+          await delay(0);
+          assertEqual(values.length, 1);
+          assertEqual(values[0], 0);
+
+          v1.set(5);
+          assertEqual(values.length, 1);
+          await delay(5);
+          assertEqual(values.length, 2);
+          assertEqual(values[1], 5);
+
+          v1.set(10);
+          for (let i = 0; i < 5; i++) {
+            v1.set(5);
+            // awaiting a promise will essentially dispatch
+            await Promise.resolve();
+          }
+          await delay(10);
+          assertEqual(values.length, 3);
+          assertEqual(values[2], 10);
+
+          await delay(10);
+          assertEqual(values.length, 4);
+          assertEqual(values[3], 5);
+        }
+      });
+    </script>
+    <script type="module" src="../src/index.js"></script>
+  </head>
+  <body></body>
+</html>

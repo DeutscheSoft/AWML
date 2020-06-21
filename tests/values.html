@@ -29,9 +29,9 @@
           listv.subscribe(() => {});
 
           assertEqual(listv.hasValue, false);
-          v1._updateValue(23);
+          v1.set(23);
           assertEqual(listv.hasValue, false);
-          v2._updateValue(23);
+          v2.set(23);
           assertEqual(listv.hasValue, true);
         }
 
@@ -42,7 +42,7 @@
 
           const listv = ListValue.from(v1, v2);
 
-          v1._updateValue(23);
+          v1.set(23);
           listv.partial = true;
 
           const list = await listv.wait();
@@ -58,7 +58,7 @@
           const listv = ListValue.from(v1, v2);
           const p = listv.wait();
 
-          v1._updateValue(23);
+          v1.set(23);
 
           listv.partial = true;
 
@@ -77,7 +77,7 @@
 
           const p = listv.wait();
 
-          v1._updateValue(23);
+          v1.set(23);
 
           const list = await p;
           assertEqual(list[0], 23);
@@ -95,7 +95,7 @@
 
           const p = listv.wait();
 
-          v1._updateValue(23);
+          v1.set(23);
 
           const list = await p;
           assertEqual(list[0], 23);
@@ -111,7 +111,7 @@
           listv.subscribe(() => {});
           listv.partial = true;
 
-          v1._updateValue(23);
+          v1.set(23);
 
           const p = listv.wait();
 
@@ -130,7 +130,7 @@
 
           listv.subscribe(() => called++);
 
-          for (let i = 0; i < 1000; i++) v1._updateValue(i);
+          for (let i = 0; i < 1000; i++) v1.set(i);
 
           assertEqual(called, 0);
           await delay(30);
@@ -153,7 +153,7 @@
             assertEqual(tmp[1], 23);
           }
 
-          v1._updateValue(0);
+          v1.set(0);
 
           {
             // the debounce should prevent the new value from arriving

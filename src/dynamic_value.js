@@ -215,4 +215,11 @@ export class DynamicValue {
   get inSync() {
     return false;
   }
+
+  /**
+   * Updates the value.
+   */
+  set(value) {
+    this._updateValue(value);
+  }
 }
