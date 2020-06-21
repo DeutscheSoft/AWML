@@ -82,10 +82,10 @@ class ResolveValue extends DynamicValue {
 }
 
 /**
- * This transformation can be used to start a asynchronous task for each value
+ * This transformation can be used to start an asynchronous task for each value
  * emitted.
  * The returned DynamicValue will emit one value for each result of a resolved
- * task. Tasks which fail will caught and generate warnings in the console.
+ * task. Tasks which fail will be caught and generate a warning in the console.
  *
  * @param {DynamicValue} dv
  *      The input DynamicValue.
