@@ -12,6 +12,7 @@ export class PrefixComponentBase extends BaseComponent {
     return BaseComponent.observedAttributes.concat([
       'debounce',
       'partial',
+      'pipe',
       'src-prefix',
       'src',
       'transform-receive',
@@ -63,6 +64,23 @@ export class PrefixComponentBase extends BaseComponent {
 
     if (backendValue !== null && backendValue instanceof ListValue)
       backendValue.partial = v;
+  }
+
+  /**
+   * A function which is called before subscribing to a DynamicValue. It can be
+   * used to transform the DynamicValue, e.g. by using an operator. If null, no
+   * transformation happens.
+   *
+   * @return {function(dv: DynamicValue):DynamicValue}
+   */
+  get pipe() {
+    return this._pipe;
+  }
+  set pipe(v) {
+    if (v !== null && typeof v !== 'function')
+      throw new TypeError('Expected function.');
+    this._pipe = v;
+    this._resubscribe();
   }
 
   /**
@@ -149,6 +167,7 @@ export class PrefixComponentBase extends BaseComponent {
     this._backendValue = null;
     this._debounce = 0;
     this._partial = false;
+    this._pipe = null;
 
     // it would be enough to do this once
     registerPrefixTagName(this.tagName);
@@ -194,15 +213,23 @@ export class PrefixComponentBase extends BaseComponent {
 
     this.log('Subscribing to %o', src);
 
+    let dv;
+
     if (typeof src === 'string') {
-      return getBackendValue(src);
+      dv = getBackendValue(src);
     } else {
-      return new ListValue(
+      dv = new ListValue(
         src.map(getBackendValue),
         this._partial,
         this._debounce
       );
     }
+
+    if (this._pipe !== null) {
+      dv = this.pipe(dv);
+    }
+
+    return dv;
   }
 
   _subscribe() {
@@ -261,6 +288,9 @@ export class PrefixComponentBase extends BaseComponent {
         break;
       case 'partial':
         this.partial = newValue !== null;
+        break;
+      case 'pipe':
+        this.pipe = parseAttribute('javascript', newValue, null);
         break;
       case 'src':
         this.src = newValue;
