@@ -10,87 +10,13 @@ import { ListValue } from '../list_value.js';
 export class PrefixComponentBase extends BaseComponent {
   static get observedAttributes() {
     return BaseComponent.observedAttributes.concat([
+      'debounce',
+      'partial',
       'src-prefix',
       'src',
       'transform-receive',
       'transform-src',
-      'debounce',
-      'partial',
     ]);
-  }
-
-  /**
-   * The source address prefix to use for
-   * the `src` property in this component. If `null`, the default prefix will
-   * be used, which corresponds to the `prefix` attribute. If not null, the
-   * source address will instead be constructed using the
-   * `prefix-<srcPrefix>` attribute. This feature can be used to connect
-   * bind components to different backend parameter trees. This property can
-   * be set using the `src-prefix` atttribute.
-   *
-   * @type {?string}
-   */
-  get srcPrefix() {
-    return this._srcPrefix;
-  }
-  set srcPrefix(v) {
-    if (typeof v !== 'string' && v !== null)
-      throw new TypeError('Expected string.');
-
-    this._srcPrefix = v;
-    this._resubscribe();
-  }
-
-  /**
-   * Transformation function for backend values.
-   * This function is called in the context of this component for every value
-   * received from the backend. This property can be set using the
-   * `transform-receive` attribute.
-   * @type {?function}
-   */
-  get transformReceive() {
-    return this._transformReceive;
-  }
-  set transformReceive(v) {
-    if (typeof v !== 'function' && v !== null)
-      throw new TypeError('Expected function.');
-    this._transformReceive = v;
-    this._resubscribe();
-  }
-
-  /**
-   * The source address of the backend value to
-   * bind to this property. The source address is combined with `prefix`
-   * attributes on this component and all it's DOM parents into the final
-   * address. This property can be set using the `src` attribute.
-   * @type {?string}
-   */
-  get src() {
-    return this._src;
-  }
-  set src(v) {
-    if (typeof v !== 'string' && v !== null)
-      throw new TypeError('Expected string.');
-
-    this._src = v;
-    this._resubscribe();
-  }
-
-  /**
-   * Transformation function for the source
-   * address. This function is called in the context of this component
-   * once before a source address is subscribed to.
-   * This property can be set using the `transform-src` attribute.
-   * @type {?function}
-   */
-  get transformSrc() {
-    return this._transformSrc;
-  }
-  set transformSrc(v) {
-    if (typeof v !== 'function' && v !== null)
-      throw new TypeError('Expected function.');
-    this._transformSrc = v;
-    this._resubscribe();
   }
 
   /**
@@ -137,6 +63,80 @@ export class PrefixComponentBase extends BaseComponent {
 
     if (backendValue !== null && backendValue instanceof ListValue)
       backendValue.partial = v;
+  }
+
+  /**
+   * The source address of the backend value to
+   * bind to this property. The source address is combined with `prefix`
+   * attributes on this component and all it's DOM parents into the final
+   * address. This property can be set using the `src` attribute.
+   * @type {?string}
+   */
+  get src() {
+    return this._src;
+  }
+  set src(v) {
+    if (typeof v !== 'string' && v !== null)
+      throw new TypeError('Expected string.');
+
+    this._src = v;
+    this._resubscribe();
+  }
+
+  /**
+   * The source address prefix to use for
+   * the `src` property in this component. If `null`, the default prefix will
+   * be used, which corresponds to the `prefix` attribute. If not null, the
+   * source address will instead be constructed using the
+   * `prefix-<srcPrefix>` attribute. This feature can be used to connect
+   * bind components to different backend parameter trees. This property can
+   * be set using the `src-prefix` atttribute.
+   *
+   * @type {?string}
+   */
+  get srcPrefix() {
+    return this._srcPrefix;
+  }
+  set srcPrefix(v) {
+    if (typeof v !== 'string' && v !== null)
+      throw new TypeError('Expected string.');
+
+    this._srcPrefix = v;
+    this._resubscribe();
+  }
+
+  /**
+   * Transformation function for backend values.
+   * This function is called in the context of this component for every value
+   * received from the backend. This property can be set using the
+   * `transform-receive` attribute.
+   * @type {?function}
+   */
+  get transformReceive() {
+    return this._transformReceive;
+  }
+  set transformReceive(v) {
+    if (typeof v !== 'function' && v !== null)
+      throw new TypeError('Expected function.');
+    this._transformReceive = v;
+    this._resubscribe();
+  }
+
+  /**
+   * Transformation function for the source
+   * address. This function is called in the context of this component
+   * once before a source address is subscribed to.
+   * This property can be set using the `transform-src` attribute.
+   * @type {?function}
+   */
+  get transformSrc() {
+    return this._transformSrc;
+  }
+  set transformSrc(v) {
+    if (typeof v !== 'function' && v !== null)
+      throw new TypeError('Expected function.');
+    this._transformSrc = v;
+    this._resubscribe();
   }
 
   constructor() {
@@ -256,23 +256,23 @@ export class PrefixComponentBase extends BaseComponent {
   /** @ignore */
   attributeChangedCallback(name, oldValue, newValue) {
     switch (name) {
-      case 'src-prefix':
-        this.srcPrefix = newValue;
+      case 'debounce':
+        this.debounce = parseAttribute('number', newValue, 0);
+        break;
+      case 'partial':
+        this.partial = newValue !== null;
         break;
       case 'src':
         this.src = newValue;
+        break;
+      case 'src-prefix':
+        this.srcPrefix = newValue;
         break;
       case 'transform-receive':
         this.transformReceive = parseAttribute('javascript', newValue, null);
         break;
       case 'transform-src':
         this.transformSrc = parseAttribute('javascript', newValue, null);
-        break;
-      case 'debounce':
-        this.debounce = parseAttribute('number', newValue, 0);
-        break;
-      case 'partial':
-        this.partial = newValue !== null;
         break;
       default:
         super.attributeChangedCallback(name, oldValue, newValue);
