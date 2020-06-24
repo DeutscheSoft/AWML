@@ -226,7 +226,7 @@ export class PrefixComponentBase extends BaseComponent {
     }
 
     if (this._pipe !== null) {
-      dv = this.pipe(dv);
+      dv = this._pipe(dv);
     }
 
     return dv;
