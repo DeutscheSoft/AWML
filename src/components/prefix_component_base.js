@@ -4,6 +4,20 @@ import { getBackendValue } from '../backends.js';
 import { parseAttribute } from '../utils/parse_attribute.js';
 import { ListValue } from '../list_value.js';
 
+function srcEqual(a, b) {
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false;
+
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) return false;
+    }
+
+    return true;
+  }
+
+  return a === b;
+}
+
 /**
  * Base class for components which can bind to backend values using an address.
  */
@@ -24,6 +38,8 @@ export class PrefixComponentBase extends BaseComponent {
    * Returns the current prefix of this element.
    */
   get currentPrefix() {
+    if (!this.isConnected) return null;
+
     let prefix = this._currentPrefix;
 
     if (prefix === null)
@@ -98,7 +114,7 @@ export class PrefixComponentBase extends BaseComponent {
       throw new TypeError('Expected string.');
 
     this._src = v;
-    this._resubscribe();
+    this._updateEffectiveSrc();
   }
 
   /**
@@ -120,7 +136,7 @@ export class PrefixComponentBase extends BaseComponent {
       throw new TypeError('Expected string.');
 
     this._srcPrefix = v;
-    this._resubscribe();
+    this._updateEffectiveSrc();
   }
 
   /**
@@ -168,12 +184,16 @@ export class PrefixComponentBase extends BaseComponent {
     this._debounce = 0;
     this._partial = false;
     this._pipe = null;
+    this._effectiveSrc = null;
 
     // it would be enough to do this once
     registerPrefixTagName(this.tagName);
   }
 
-  _getBackendValue() {
+  get effectiveSrc() {
+    if (!this.isConnected) return null;
+    if (this._effectiveSrc !== null) return this._effectiveSrc;
+
     let src = this._src;
 
     if (src === null) return null;
@@ -197,15 +217,31 @@ export class PrefixComponentBase extends BaseComponent {
       }
 
       src = a;
-    } else {
-      if (!src.includes(':')) {
-        const prefix = this.currentPrefix;
+    } else if (!src.includes(':')) {
+      const prefix = this.currentPrefix;
 
-        if (!prefix.includes(':')) return null;
+      if (!prefix.includes(':')) return null;
 
-        src = prefix + src;
-      }
+      src = prefix + src;
     }
+
+    this._effectiveSrc = src;
+
+    return src;
+  }
+
+  _updateEffectiveSrc() {
+    const last = this._effectiveSrc;
+    this._effectiveSrc = null;
+    const effectiveSrc = this.effectiveSrc;
+    if (srcEqual(last, effectiveSrc)) return;
+    this._resubscribe();
+  }
+
+  _getBackendValue() {
+    let src = this.effectiveSrc;
+
+    if (src === null) return null;
 
     if (this.transformSrc !== null) {
       src = this.transformSrc(src);
@@ -271,7 +307,7 @@ export class PrefixComponentBase extends BaseComponent {
   _updatePrefix(handle) {
     if (handle !== this._srcPrefix) return;
     this._currentPrefix = null;
-    this._resubscribe();
+    this._updateEffectiveSrc();
   }
 
   /** @ignore */
