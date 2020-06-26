@@ -41,7 +41,9 @@ export class StylesComponentBase extends RedrawComponentBase {
 
   /** @ignore */
   static get observedAttributes() {
-    return RedrawComponentBase.observedAttributes;
+    return RedrawComponentBase.observedAttributes.concat([
+      'trigger-resize'
+    ]);
   }
 
   constructor() {
@@ -73,9 +75,10 @@ export class StylesComponentBase extends RedrawComponentBase {
       const widget = this._target.auxWidget;
 
       if (widget !== void 0) {
-        if (widget.parent) {
-          this.log('Triggering resize in widget parent.');
-          widget.parent.triggerResize();
+        const parent = widget.parent;
+        if (parent) {
+          this.log('Triggering resize in widget parent', parent.element);
+          parent.triggerResize();
         } else {
           this.log('Triggering resize in widget.');
           widget.triggerResize();
@@ -115,7 +118,7 @@ export class StylesComponentBase extends RedrawComponentBase {
   attributeChangedCallback(name, oldValue, newValue) {
     switch (name) {
       case 'trigger-resize':
-        this.srcPrefix = newValue !== null;
+        this.triggerResize = newValue !== null;
         break;
       default:
         super.attributeChangedCallback(name, oldValue, newValue);
