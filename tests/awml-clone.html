@@ -8,6 +8,7 @@
         define,
         waitForFrame,
         waitForDOMEvent,
+        testAttribute,
       } from './testing.js';
       define(async () => {
         const clones = Array.from(
@@ -97,6 +98,60 @@
         {
           const clone = clones[8];
           assertEqual(clone.innerText, 'FOO');
+        }
+
+        // stand alone tests
+
+        {
+          const clone = document.createElement('awml-clone');
+
+          assertEqual(clone.template, null);
+          testAttribute(clone, 'template', 'foo', 'template', 'foo');
+          testAttribute(clone, 'template', null, 'template', null);
+
+          assertEqual(clone.fetch, false);
+          testAttribute(clone, 'fetch', '', 'fetch', true);
+          testAttribute(clone, 'fetch', null, 'fetch', false);
+
+          assertEqual(clone.notemplate, false);
+          testAttribute(clone, 'notemplate', '', 'notemplate', true);
+          testAttribute(clone, 'notemplate', null, 'notemplate', false);
+
+          assertEqual(clone.nocache, false);
+          testAttribute(clone, 'nocache', '', 'nocache', true);
+          testAttribute(clone, 'nocache', null, 'nocache', false);
+
+          assertEqual(clone.transformTemplate, null);
+          testAttribute(
+            clone,
+            'transform-template',
+            'replaceFoo',
+            'transformTemplate',
+            replaceFoo
+          );
+          testAttribute(
+            clone,
+            'transform-template',
+            null,
+            'transformTemplate',
+            null
+          );
+
+          assertEqual(clone.triggerResize, 0);
+          testAttribute(clone, 'trigger-resize', '', 'triggerResize', 0);
+          testAttribute(clone, 'trigger-resize', null, 'triggerResize', 0);
+          testAttribute(
+            clone,
+            'trigger-resize',
+            'false',
+            'triggerResize',
+            false
+          );
+          testAttribute(clone, 'trigger-resize', '23', 'triggerResize', 23);
+
+          assertEqual(clone.importScripts, false);
+          testAttribute(clone, 'import-scripts', '', 'importScripts', true);
+          testAttribute(clone, 'import-scripts', null, 'importScripts', false);
         }
       });
     </script>

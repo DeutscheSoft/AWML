@@ -1,5 +1,6 @@
 import { RedrawComponentBase } from './redraw_component_base.js';
 import { parseAttribute } from '../utils/parse_attribute.js';
+import { triggerResize } from '../utils/aux.js';
 
 function Identity(v) {
   return v;
@@ -33,7 +34,7 @@ export class StylesComponentBase extends RedrawComponentBase {
     return this._triggerResize;
   }
   set triggerResize(v) {
-    if (typeof v !== 'boolean') {
+    if (typeof v !== 'boolean' && !(v >= 0)) {
       throw new TypeError('Expected boolean.');
     }
     this._triggerResize = v;
@@ -41,9 +42,7 @@ export class StylesComponentBase extends RedrawComponentBase {
 
   /** @ignore */
   static get observedAttributes() {
-    return RedrawComponentBase.observedAttributes.concat([
-      'trigger-resize'
-    ]);
+    return RedrawComponentBase.observedAttributes.concat(['trigger-resize']);
   }
 
   constructor() {
@@ -71,19 +70,9 @@ export class StylesComponentBase extends RedrawComponentBase {
 
     this.updateState(prevState, state);
     this._state = state;
-    if (this._triggerResize) {
-      const widget = this._target.auxWidget;
-
-      if (widget !== void 0) {
-        const parent = widget.parent;
-        if (parent) {
-          this.log('Triggering resize in widget parent', parent.element);
-          parent.triggerResize();
-        } else {
-          this.log('Triggering resize in widget.');
-          widget.triggerResize();
-        }
-      }
+    if (this._triggerResize !== false) {
+      this.log('Triggering resize %d levels up', this._triggerResize);
+      triggerResize(this.parentNode, this._triggerResize);
     }
   }
 
@@ -118,7 +107,8 @@ export class StylesComponentBase extends RedrawComponentBase {
   attributeChangedCallback(name, oldValue, newValue) {
     switch (name) {
       case 'trigger-resize':
-        this.triggerResize = newValue !== null;
+        this.triggerResize =
+          newValue === null ? false : parseAttribute('int', newValue, 0);
         break;
       default:
         super.attributeChangedCallback(name, oldValue, newValue);

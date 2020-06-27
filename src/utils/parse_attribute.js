@@ -27,10 +27,14 @@ export function parseAttribute(type, x, fallback) {
       return fallback;
     case 'string':
       return x;
-    case 'number':
-      return parseFloat(x);
-    case 'int':
-      return parseInt(x);
+    case 'number': {
+      const n = parseFloat(x);
+      return n === n ? n : fallback;
+    }
+    case 'int': {
+      const n = parseInt(x);
+      return n === n ? n : fallback;
+    }
     case 'regexp':
       return new RegExp(x);
     case 'bool':

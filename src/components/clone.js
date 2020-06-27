@@ -3,6 +3,7 @@ import { parseAttribute } from '../utils/parse_attribute.js';
 import { fetchText } from '../utils/fetch.js';
 import { subscribeDOMEventOnce } from '../utils/subscribe_dom_event.js';
 import { registerLoading } from '../utils/awml_content_loaded.js';
+import { triggerResize } from '../utils/aux.js';
 
 // this
 const urlStack = [window.location.href];
@@ -215,7 +216,8 @@ export class CloneComponent extends PrefixComponentBase {
   }
 
   set triggerResize(v) {
-    if (typeof v !== 'boolean') throw new TypeError('Expected boolean.');
+    if (typeof v !== 'boolean' && !(v >= 0))
+      throw new TypeError('Expected boolean or non-negativee interger.');
     this._triggerResize = v;
   }
 
@@ -349,8 +351,10 @@ export class CloneComponent extends PrefixComponentBase {
         }
 
         this.dispatchEvent(new Event('load'));
-
-        if (this._triggerResize) window.dispatchEvent(new UIEvent('resize'));
+        if (this._triggerResize !== false) {
+          this.log('Triggering resize %d levels up', this._triggerResize);
+          triggerResize(this.parentNode, this._triggerResize);
+        }
       })
       .catch((err) => {
         if (stop) return;
@@ -377,7 +381,7 @@ export class CloneComponent extends PrefixComponentBase {
     this._notemplate = false;
     this._nocache = false;
     this._transformTemplate = null;
-    this._triggerResize = false;
+    this._triggerResize = 0;
     this._importScripts = false;
     this._baseUrl = getBaseUrl();
     this._templateElement = null;
@@ -415,7 +419,8 @@ export class CloneComponent extends PrefixComponentBase {
         this.transformTemplate = parseAttribute('javascript', newValue, null);
         break;
       case 'trigger-resize':
-        this.triggerResize = newValue !== null;
+        this.triggerResize =
+          newValue === 'false' ? false : parseAttribute('int', newValue, 0);
         break;
       case 'import-scripts':
         this.importScripts = newValue !== null;

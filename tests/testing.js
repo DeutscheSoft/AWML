@@ -64,3 +64,18 @@ export function waitForDOMEvent(node, name) {
     subscribeDOMEventOnce(node, name, resolve);
   });
 }
+
+export function testAttribute(
+  node,
+  attributeName,
+  attributeValue,
+  name,
+  value
+) {
+  if (attributeValue === null) {
+    node.removeAttribute(attributeName);
+  } else {
+    node.setAttribute(attributeName, attributeValue);
+  }
+  assertEqual(node[name], value);
+}

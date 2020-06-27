@@ -62,3 +62,30 @@ export function subscribeCustomElement(node, callback) {
     subscribers.delete(cb);
   };
 }
+
+export function triggerResize(node, levels) {
+  if (!(levels >= 0)) levels = 0;
+
+  let widget = null;
+
+  while (node) {
+    const w = node.auxWidget;
+
+    if (w !== void 0) {
+      widget = w;
+      break;
+    }
+
+    node = node.parentNode;
+  }
+
+  for (let i = 0; widget && i < levels; i++) {
+    widget = widget.parent;
+  }
+
+  if (widget) {
+    widget.triggerResize();
+  } else {
+    window.dispatchEvent(new UIEvent('resize'));
+  }
+}
