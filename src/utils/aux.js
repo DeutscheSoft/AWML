@@ -63,6 +63,9 @@ export function subscribeCustomElement(node, callback) {
   };
 }
 
+/**
+ * @ignore
+ */
 export function triggerResize(node, levels) {
   if (!(levels >= 0)) levels = 0;
 

@@ -160,10 +160,18 @@ function onLoad(node) {
 }
 
 export class CloneComponent extends PrefixComponentBase {
+  /**
+   * Identifier of the template to be loaded and cloned. If `fetch` is false,
+   * this is interpreted as a DOM id of a TEMPLATE node or, if `fetch` is true,
+   * as a relative URL.
+   *
+   * @return {string}
+   */
   get template() {
     return this._template;
   }
 
+  /** @ignore */
   set template(v) {
     if (v !== null && typeof v !== 'string')
       throw new TypeError('Expected string.');
@@ -171,30 +179,54 @@ export class CloneComponent extends PrefixComponentBase {
     this._resubscribe();
   }
 
+  /**
+   * If true, the template identifier (e.g. either the `template` property or
+   * the vaule received by a binding) will be interpreted as a relative URL. The
+   * template will then be fetched. Relative URLs are interpreted relative to
+   * the current template location.
+   *
+   * @return {boolean}
+   */
   get fetch() {
     return this._fetch;
   }
 
+  /** @ignore */
   set fetch(v) {
     if (typeof v !== 'boolean') throw new TypeError('Expected boolean.');
     this._fetch = v;
     this._resubscribe();
   }
 
+  /**
+   * If true, the `src` property will be ignored and no template will be loaded.
+   * Instead, an empty DocumentFragment will be generated. This is useful
+   * together with `transformTemplate` in order to generate templates
+   * dynamically.
+   *
+   * @return {boolean}
+   */
   get notemplate() {
     return this._notemplate;
   }
 
+  /** @ignore */
   set notemplate(v) {
     if (typeof v !== 'boolean') throw new TypeError('Expected boolean.');
     this._notemplate = v;
     this._resubscribe();
   }
 
+  /**
+   * If true, templates will not be cached.
+   *
+   * @return {boolean}
+   */
   get nocache() {
     return this._nocache;
   }
 
+  /** @ignore */
   set nocache(v) {
     if (typeof v !== 'boolean') throw new TypeError('Expected boolean.');
     this._nocache = v;
@@ -204,6 +236,7 @@ export class CloneComponent extends PrefixComponentBase {
     return this._transformTemplate;
   }
 
+  /** @ignore */
   set transformTemplate(v) {
     if (v !== null && typeof v !== 'function')
       throw new TypeError('Expected boolean.');
@@ -211,20 +244,39 @@ export class CloneComponent extends PrefixComponentBase {
     this._resubscribe();
   }
 
+  /**
+   * If not false, a resize is triggered in the parent widget when the template
+   * has been loaded. If it is a positive integer N, a resize will be triggered
+   * N levels higher in the widget tree.
+   *
+   * The default value is `0`.
+   *
+   * This property can be set using the `trigger-resize` attribute.
+   *
+   * @return {boolean|number}
+   */
   get triggerResize() {
     return this._triggerResize;
   }
 
+  /** @ignore */
   set triggerResize(v) {
     if (typeof v !== 'boolean' && !(v >= 0))
       throw new TypeError('Expected boolean or non-negativee interger.');
     this._triggerResize = v;
   }
 
+  /**
+   * If true, SCRIPT tags are extracted from templates and placed into the page
+   * HEAD.
+   *
+   * @return {boolean}
+   */
   get importScripts() {
     return this._importScripts;
   }
 
+  /** @ignore */
   set importScripts(v) {
     if (typeof v !== 'boolean') throw new TypeError('Expected boolean.');
     this._importScripts = v;
@@ -389,6 +441,7 @@ export class CloneComponent extends PrefixComponentBase {
     this._value = null;
   }
 
+  /** @ignore */
   static get observedAttributes() {
     return PrefixComponentBase.observedAttributes.concat([
       'template',
@@ -401,6 +454,7 @@ export class CloneComponent extends PrefixComponentBase {
     ]);
   }
 
+  /** @ignore */
   attributeChangedCallback(name, oldValue, newValue) {
     switch (name) {
       case 'template':
@@ -430,6 +484,7 @@ export class CloneComponent extends PrefixComponentBase {
     }
   }
 
+  /** @ignore */
   connectedCallback() {
     super.connectedCallback();
     // FIXME: remove display: none from the base class

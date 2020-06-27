@@ -16,15 +16,29 @@ function combine_subscriptions(callbacks) {
   };
 }
 
+/**
+ * The AWML-EVENT component can be used to attach event handlers to an AUX
+ * widget or other DOM nodes.
+ *
+ * If the parent is an AUX widget the event handler will use the AUX widget
+ * event mechanism, is the parent is any other DOM node, the standard DOM event
+ * API will be used.
+ */
 class EventComponent extends BaseComponent {
   static get observedAttributes() {
     return BaseComponent.observedAttributes.concat(['type', 'callback']);
   }
 
+  /**
+   * Event type, e.g. `"click"`.
+   *
+   * @return {string}
+   */
   get type() {
     return this._type;
   }
 
+  /** @ignore */
   set type(v) {
     if (typeof v !== 'string' && v !== null && !Array.isArray(v))
       throw new TypeError('Expected string.');
@@ -32,10 +46,16 @@ class EventComponent extends BaseComponent {
     this._resubscribe();
   }
 
+  /**
+   * Callback function.
+   *
+   * @return {function}
+   */
   get callback() {
     return this._callback;
   }
 
+  /** @ignore */
   set callback(v) {
     if (typeof v !== 'function' && v !== null)
       throw new TypeError('Expected function.');
@@ -80,6 +100,7 @@ class EventComponent extends BaseComponent {
     }
   }
 
+  /** @ignore */
   attributeChangedCallback(name, oldValue, newValue) {
     switch (name) {
       case 'type':

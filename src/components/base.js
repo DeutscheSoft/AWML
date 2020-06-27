@@ -4,6 +4,7 @@ import { log } from '../utils/log.js';
  * Component base class for all AWML components.
  */
 export class BaseComponent extends HTMLElement {
+  /** @ignore */
   static get observedAttributes() {
     return ['debug'];
   }
