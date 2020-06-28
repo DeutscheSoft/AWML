@@ -65,7 +65,7 @@ export function subscribeOptionType(type, callback) {
  * modify either `name` or `type` to trigger the option to be reinitialized.
  *
  */
-class OptionComponent extends PrefixComponentBase {
+export class OptionComponent extends PrefixComponentBase {
   /** @ignore */
   static get observedAttributes() {
     return PrefixComponentBase.observedAttributes.concat(['type', 'name']);

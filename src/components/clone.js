@@ -159,6 +159,10 @@ function onLoad(node) {
   });
 }
 
+/**
+ * The `AWML-CLONE` component loads and clones templates. It can be combined
+ * with data bindings to dynamically load, modify and clone templates.
+ */
 export class CloneComponent extends PrefixComponentBase {
   /**
    * Identifier of the template to be loaded and cloned. If `fetch` is false,

@@ -26,7 +26,7 @@ class FilteredValue extends DynamicValue {
  * Transform the input dynamic value and emits a new DynamicValue which emits
  * only those value for which the predicate is true.
  *
- * @param {DynamicValue}
+ * @param {DynamicValue} dv
  * @param {function(value: *): boolean} predicate
  *      The predicate function. If it returns false, the corresponding value
  *      is ignored.

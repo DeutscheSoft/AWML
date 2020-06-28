@@ -24,7 +24,7 @@ function combine_subscriptions(callbacks) {
  * event mechanism, is the parent is any other DOM node, the standard DOM event
  * API will be used.
  */
-class EventComponent extends BaseComponent {
+export class EventComponent extends BaseComponent {
   static get observedAttributes() {
     return BaseComponent.observedAttributes.concat(['type', 'callback']);
   }
