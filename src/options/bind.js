@@ -56,8 +56,43 @@ export class BindOption extends Option {
     this.backendValue.set(value);
   }
 
+  _subscribeInteractionEnd(widget, timeout, callback) {
+    if (!(timeout > 0)) {
+      // if the timeout is zero, we immediately continue with
+      // the new value
+      return widget.once('set_interacting', callback);
+    }
+
+    let sub;
+
+    sub = widget.subscribe('set_interacting', (interacting) => {
+      if (interacting) return;
+
+      setTimeout(() => {
+        if (sub === null) return;
+        if (widget.get('interacting')) return;
+        sub();
+        sub = null;
+        callback();
+      }, timeout);
+    });
+
+    return () => {
+      if (sub === null) return;
+      sub();
+      sub = null;
+    };
+  }
+
   valueReceived(value) {
     if (this._receiving) return;
+
+    // we are waiting for interaction to end
+    if (this._interacting_sub !== null) {
+      this._lastValue = value;
+      return;
+    }
+
     this._receiving = true;
 
     try {
@@ -65,13 +100,17 @@ export class BindOption extends Option {
 
       if (widget.get('interacting') === true) {
         this._lastValue = value;
-        if (this._interacting_sub !== null) return;
 
-        this._interacting_sub = widget.once('set_interacting', () => {
-          this._interacting_sub = null;
-          this.valueReceived(this._lastValue);
-          this._lastValue = null;
-        });
+        this._interacting_sub = this._subscribeInteractionEnd(
+          widget,
+          this.receiveDelay,
+          () => {
+            const value = this._lastValue;
+            this._interacting_sub = null;
+            this._lastValue = null;
+            this.valueReceived(value);
+          }
+        );
       } else {
         widget.set(this.name, value);
 
@@ -105,7 +144,7 @@ export class BindOption extends Option {
     options.receiveDelay = parseAttribute(
       'int',
       node.getAttribute('receive-delay'),
-      1000
+      500
     );
 
     return options;
