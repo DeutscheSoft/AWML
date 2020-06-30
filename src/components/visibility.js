@@ -3,7 +3,7 @@ import {
   maybeAuxElement,
   getAuxWidget,
   subscribeCustomElement,
-} from '../utils/aux.js';
+} from '../utils/aux-support.js';
 
 function changeVisibility(target, hidden) {
   const widget = target.auxWidget;

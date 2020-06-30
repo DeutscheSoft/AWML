@@ -3,7 +3,7 @@ import { parseAttribute } from '../utils/parse_attribute.js';
 import { fetchText } from '../utils/fetch.js';
 import { subscribeDOMEventOnce } from '../utils/subscribe_dom_event.js';
 import { registerLoading } from '../utils/awml_content_loaded.js';
-import { triggerResize } from '../utils/aux.js';
+import { triggerResize } from '../utils/aux-support.js';
 
 // this
 const urlStack = [window.location.href];

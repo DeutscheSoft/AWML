@@ -4,7 +4,7 @@ import {
   maybeAuxElement,
   getAuxWidget,
   subscribeCustomElement,
-} from '../utils/aux.js';
+} from '../utils/aux-support.js';
 
 const optionTypes = new Map();
 const optionTypeSubscribers = new Map();

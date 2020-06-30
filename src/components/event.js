@@ -4,7 +4,7 @@ import {
   isCustomElement,
   getAuxWidget,
   subscribeCustomElement,
-} from '../utils/aux.js';
+} from '../utils/aux-support.js';
 import { BaseComponent } from './base.js';
 
 function combine_subscriptions(callbacks) {
