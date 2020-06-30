@@ -243,7 +243,7 @@ export class CloneComponent extends PrefixComponentBase {
   /** @ignore */
   set transformTemplate(v) {
     if (v !== null && typeof v !== 'function')
-      throw new TypeError('Expected boolean.');
+      throw new TypeError('Expected function.');
     this._transformTemplate = v;
     this._resubscribe();
   }

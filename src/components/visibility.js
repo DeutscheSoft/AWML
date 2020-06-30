@@ -33,6 +33,7 @@ function changeVisibility(target, hidden) {
   }
 }
 
+/** @ignore */
 export class VisibilityComponent extends StylesComponentBase {
   _subscribe() {
     const parentNode = this.parentNode;
@@ -45,6 +46,7 @@ export class VisibilityComponent extends StylesComponentBase {
     return super._subscribe();
   }
 
+  /** @ignore */
   triggerDraw() {
     const target = this._target;
     const widget = target.auxWidget;
@@ -60,15 +62,22 @@ export class VisibilityComponent extends StylesComponentBase {
   }
 }
 
+/**
+ * The `AWML-SHOW` component hides its parent widget if the
+ * corresponding backend value is true.
+ */
 export class HideComponent extends VisibilityComponent {
+  /** @ignore */
   static get observedAttributes() {
     return StylesComponentBase.observedAttributes;
   }
 
+  /** @ignore */
   applyState(v) {
     changeVisibility(this._target, !!v);
   }
 
+  /** @ignore */
   removeState(v) {
     changeVisibility(this._target, !v);
   }
@@ -76,15 +85,22 @@ export class HideComponent extends VisibilityComponent {
 
 customElements.define('awml-hide', HideComponent);
 
+/**
+ * The `AWML-SHOW` component makes its parent widget visible if the
+ * corresponding backend value is true.
+ */
 export class ShowComponent extends VisibilityComponent {
+  /** @ignore */
   static get observedAttributes() {
     return StylesComponentBase.observedAttributes;
   }
 
+  /** @ignore */
   applyState(v) {
     changeVisibility(this._target, !v);
   }
 
+  /** @ignore */
   removeState(v) {
     changeVisibility(this._target, !!v);
   }
