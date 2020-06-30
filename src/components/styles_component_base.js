@@ -1,6 +1,6 @@
 import { RedrawComponentBase } from './redraw_component_base.js';
 import { parseAttribute } from '../utils/parse_attribute.js';
-import { triggerResize } from '../utils/aux.js';
+import { triggerResize } from '../utils/aux-support.js';
 
 function Identity(v) {
   return v;
