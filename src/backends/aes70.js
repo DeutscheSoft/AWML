@@ -103,11 +103,36 @@ export class AES70Backend extends Backend {
           return;
       }
 
-      const property = properties.find_property(propertyName);
+      let property = properties.find_property(propertyName);
 
       if (!property) {
-        warn('Could not find property %o in %o.', propertyName, properties);
-        this._subscribeFailure(path, new Error('No such property.'));
+        if (propertyName === '$children' && (property = properties.find_property('Members'))) {
+          const getter = property.getter(o);
+          const event = property.event(o);
+
+          if (!getter || !event) {
+            this._subscribeFailure(path, new Error('Not a block.'));
+            return;
+          }
+
+          const eventCallback = (members) => {
+            members = members.map((tmp) => this._device.resolve_object(tmp));
+            this.receive(path, members);
+          };
+
+          event.subscribe(eventCallback);
+          this._subscribeSuccess(path, path);
+          this._path_subscriptions.set(path, () => {
+            event.unsubscribe(eventCallback);
+          });
+          getter().then((members) => {
+            members = members.map((tmp) => this._device.resolve_object(tmp));
+            this.receive(path, members);
+          });
+        } else {
+          warn('Could not find property %o in %o.', propertyName, properties);
+          this._subscribeFailure(path, new Error('No such property.'));
+        }
       } else {
         if (property.static) {
           this.receive(path, o[propertyName]);
