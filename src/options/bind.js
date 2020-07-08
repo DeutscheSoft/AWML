@@ -18,6 +18,7 @@ export class BindOption extends Option {
     this.transformSend = options.transformSend;
     this.afterReceive = options.afterReceive;
     this.receiveDelay = options.receiveDelay;
+    this.ignoreInteraction = options.ignoreInteraction;
     this.node = options.node;
     this._sub = null;
     this._interacting_sub = null;
@@ -100,7 +101,7 @@ export class BindOption extends Option {
     try {
       const widget = this.widget;
 
-      if (widget.get('interacting') === true) {
+      if (!this.ignoreInteraction && widget.get('interacting') === true) {
         this._lastValue = value;
 
         this._interacting_sub = this._subscribeInteractionEnd(
@@ -128,6 +129,7 @@ export class BindOption extends Option {
   static optionsFromNode(node) {
     const options = Option.optionsFromNode(node);
 
+    options.node = node;
     options.backendValue = node._backendValue;
     options.readonly = node.getAttribute('readonly') !== null;
     options.writeonly = node.getAttribute('writeonly') !== null;
@@ -148,6 +150,7 @@ export class BindOption extends Option {
       node.getAttribute('receive-delay'),
       500
     );
+    options.ignoreInteraction = node.getAttribute('ignore-interaction') !== null;
 
     return options;
   }
