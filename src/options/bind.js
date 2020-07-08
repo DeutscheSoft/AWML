@@ -18,6 +18,7 @@ export class BindOption extends Option {
     this.transformSend = options.transformSend;
     this.afterReceive = options.afterReceive;
     this.receiveDelay = options.receiveDelay;
+    this.node = options.node;
     this._sub = null;
     this._interacting_sub = null;
     this._receiving = false;
@@ -53,6 +54,7 @@ export class BindOption extends Option {
     if (this.transformSend !== null) {
       value = this.transformSend(value);
     }
+    this.node.log('Sending value %o', value);
     this.backendValue.set(value);
   }
 
