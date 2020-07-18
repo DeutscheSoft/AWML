@@ -60,6 +60,10 @@ export class VisibilityComponent extends StylesComponentBase {
     if (!this.isConnected) return;
     this.redraw();
   }
+
+  updateState(oldState, newState) {
+    this.applyState(newState);
+  }
 }
 
 /**
