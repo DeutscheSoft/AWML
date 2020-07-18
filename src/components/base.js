@@ -26,7 +26,7 @@ export class BaseComponent extends HTMLElement {
    */
   log(fmt, ...args) {
     if (!this.debug) return;
-    log('%o ' + fmt, this, ...args);
+    log('%o ' + fmt, this.tagName, ...args);
   }
 
   /** @ignore */
