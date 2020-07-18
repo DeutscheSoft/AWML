@@ -55,7 +55,7 @@ export class VisibilityComponent extends StylesComponentBase {
     // aux widgets have their own redraw dispatching logic.
     if (widget === void 0) return super.triggerDraw();
 
-    this.log('executing redraw immediately on %o', this);
+    this.log('executing redraw immediately on %o', target);
     this._willDraw = false;
     if (!this.isConnected) return;
     this.redraw();
