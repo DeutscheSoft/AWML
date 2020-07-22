@@ -2,34 +2,11 @@ import { warn } from './utils/log.js';
 import { DynamicValue } from './dynamic_value.js';
 
 export class BackendValue extends DynamicValue {
-  _activate() {}
+  _activate() {
+    const backend = this._backend;
+    if (!backend) return;
 
-  _deactivate() {}
-
-  /** @ignore */
-  connectBackend(backend) {
-    this._backend = backend;
-    this._backendId = null;
-
-    const callback = (id, value) => {
-      // unsubscribe from the backend
-      if (id === false) {
-        this._backendId = null;
-        this._backend = null;
-        return;
-      }
-
-      if (this._hasRequestedValue) {
-        if (value === this._requestedValue) {
-          this._hasRequestedValue = false;
-          this._requestedValue = null;
-        }
-      }
-
-      this._updateValue(value);
-    };
-
-    backend.subscribe(this._path, callback).then(
+    backend.subscribe(this._path, this._callback).then(
       (result) => {
         // result[0] == this._path
         const id = result[1];
@@ -38,7 +15,7 @@ export class BackendValue extends DynamicValue {
         // while one previous subscribe was still pending. simply
         // unsubscribe then
         if (this._backend !== backend) {
-          backend.unsubscribe(id, callback);
+          backend.unsubscribe(id, this._callback);
           return;
         }
 
@@ -49,7 +26,7 @@ export class BackendValue extends DynamicValue {
         }
 
         if (result.length === 3) {
-          callback(id, result[2]);
+          this._callback(id, result[2]);
         }
       },
       (err) => {
@@ -65,15 +42,32 @@ export class BackendValue extends DynamicValue {
     );
   }
 
-  /** @ignore */
-  disconnectBackend() {
+  _deactivate() {
     const backend = this._backend;
     const backendId = this._backendId;
 
-    if (backendId !== null) {
-      backend.unsubscribe(backendId, this._callback);
-    }
+    if (!backend) return;
+    if (backendId === null) return;
 
+    try {
+      backend.unsubscribe(backendId, this._callback);
+    } catch (err) {
+      warn(err);
+    }
+  }
+
+  /** @ignore */
+  connectBackend(backend) {
+    this._backend = backend;
+    this._backendId = null;
+
+    if (this.isActive)
+      this._activate();
+  }
+
+  /** @ignore */
+  disconnectBackend() {
+    this._deactivate();
     this._backend = null;
     this._backendId = null;
 
@@ -117,6 +111,24 @@ export class BackendValue extends DynamicValue {
     this._hasRequestedValue = false;
     this._backend = null;
     this._backendId = null;
+    this._callback = (id, value) => {
+      // unsubscribe from the backend
+      if (id === false) {
+        this._backendId = null;
+        this._backend = null;
+        return;
+      }
+
+      if (this._hasRequestedValue) {
+        if (value === this._requestedValue) {
+          this._hasRequestedValue = false;
+          this._requestedValue = null;
+        }
+      }
+
+      this._updateValue(value);
+    };
+
   }
 
   /**
