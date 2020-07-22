@@ -46,6 +46,10 @@ export class Backend extends EventTarget {
     return this._options;
   }
 
+  log(...args) {
+    this.node.log(...args);
+  }
+
   constructor(options) {
     super();
     if (typeof options !== 'object')
