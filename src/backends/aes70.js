@@ -10,6 +10,13 @@ if (typeof OCA === 'undefined') {
   warn('Cannot find AES70.js library. Missing a script include?');
 }
 
+function runCleanupHandler(cleanup) {
+  try {
+    cleanup();
+  } catch (error) {
+    warn('Cleanup handler threw an exception:', error);
+  }
+}
 export class AES70Backend extends Backend {
   get src() {
     return this._src;
@@ -74,15 +81,15 @@ export class AES70Backend extends Backend {
     setter(value);
   }
 
-  lowSubscribe(path) {
+  // Promise<CleanupLogic>
+  doSubscribe(path) {
     const objects = this._objects;
 
     if (objects.has(path)) {
       // it is an object
       const o = objects.get(path);
       this.receive(path, o);
-      this._subscribeSuccess(path, path);
-      return;
+      return Promise.resolve();
     }
 
     const tmp = path.split('/');
@@ -99,8 +106,7 @@ export class AES70Backend extends Backend {
       switch (propertyName) {
         case 'ClassName':
           this.receive(path, o[propertyName]);
-          this._subscribeSuccess(path, path);
-          return;
+          return Promise.resolve();
       }
 
       let property = properties.find_property(propertyName);
@@ -121,22 +127,21 @@ export class AES70Backend extends Backend {
           };
 
           event.subscribe(eventCallback);
-          this._subscribeSuccess(path, path);
-          this._path_subscriptions.set(path, () => {
-            event.unsubscribe(eventCallback);
-          });
           getter().then((members) => {
             members = members.map((tmp) => this._device.resolve_object(tmp));
             this.receive(path, members);
           });
+          return Promise.resolve(() => {
+            event.unsubscribe(eventCallback);
+          });
         } else {
           warn('Could not find property %o in %o.', propertyName, properties);
-          this._subscribeFailure(path, new Error('No such property.'));
+          return Promise.reject(new Error('No such property.'));
         }
       } else {
         if (property.static) {
           this.receive(path, o[propertyName]);
-          this._subscribeSuccess(path, path);
+          return Promise.resolve();
         } else {
           const eventCallback = (value, type, id) => {
             this.receive(path, value);
@@ -153,7 +158,7 @@ export class AES70Backend extends Backend {
             ? event.subscribe(eventCallback).then(() => true)
             : Promise.resolve(false);
 
-          task
+          return task
             .then((subscribed) => {
               const setter = property.setter(o);
               const unsubscribe = () => {
@@ -161,7 +166,7 @@ export class AES70Backend extends Backend {
                 event.unsubscribe(eventCallback);
                 if (setter) this._setters.delete(path);
               };
-              getter().then(
+              return getter().then(
                 (x) => {
                   let val;
                   if (x instanceof OCA.SP.Arguments) {
@@ -171,18 +176,14 @@ export class AES70Backend extends Backend {
                   }
                   this.receive(path, val);
                   if (setter) this._setters.set(path, setter);
-                  this._subscribeSuccess(path, path);
                   if (subscribed)
-                    this._path_subscriptions.set(path, unsubscribe);
+                    return unsubscribe;
                 },
                 (error) => {
                   unsubscribe();
                   throw error;
                 }
               );
-            })
-            .catch((error) => {
-              this._subscribeFailure(path, error);
             });
         }
       }
@@ -208,24 +209,31 @@ export class AES70Backend extends Backend {
 
           if (!getter) break;
 
-          getter()
+          return getter()
             .then((x) => {
               if (!(x instanceof OCA.SP.Arguments))
                 throw new Error('Property has no min or max.');
 
               this.receive(path, x.item(index));
-              this._subscribeSuccess(path, path);
-            })
-            .catch((error) => {
-              this._subscribeFailure(path, error);
             });
-
-          return;
         }
       }
     }
 
-    this._subscribeFailure(path, new Error('Not such address.'));
+    return Promise.reject(new Error('No such address.'));
+  }
+
+  lowSubscribe(path) {
+    this.doSubscribe(path).then(
+      (cleanup) => {
+        if (cleanup)
+          this._path_subscriptions.set(path, cleanup);
+        this._subscribeSuccess(path, path);
+      },
+      (error) => {
+        this._subscribeFailure(path, error);
+      }
+    );
   }
 
   lowUnsubscribe(id) {
@@ -233,7 +241,7 @@ export class AES70Backend extends Backend {
     if (m.has(id)) {
       const sub = m.get(id);
       m.delete(id);
-      sub();
+      runCleanupHandler(sub);
     }
   }
 
