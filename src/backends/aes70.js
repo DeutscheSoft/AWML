@@ -17,6 +17,125 @@ function runCleanupHandler(cleanup) {
     warn('Cleanup handler threw an exception:', error);
   }
 }
+
+function splitAtLast(path, seperator) {
+  const pos = path.lastIndexOf(seperator);
+
+  return pos === -1 ? [ seperator, path ] : [ path.substr(0, pos + 1), path.substr(pos + 1) ];
+}
+
+const toplevelObjects = [
+  "DeviceManager",
+  "SecurityManager",
+  "FirmwareManager",
+  "SubscriptionManager",
+  "PowerManager",
+  "NetworkManager",
+  "MediaClockManager",
+  "LibraryManager",
+  "AudioProcessingManager",
+  "DeviceTimeManager",
+  "TaskManager",
+  "CodingManager",
+  "DiagnosticManager",
+  "Root"
+];
+
+function throttle(callback) {
+  let dispatched = false;
+  let lastArgs = null;
+
+  return (...args) => {
+    lastArgs = args;
+    if (dispatched) return;
+    dispatched = true;
+    Promise.resolve().then(() => {
+      dispatched = false;
+      callback(...lastArgs);
+    });
+  };
+}
+
+function unCurry(callback) {
+  return (id, value) => {
+    // if we get unsubscribed, we simply abort
+    if (id === false) return;
+    return callback(value);
+  }
+}
+
+function isBlock(o) {
+  return typeof o === 'object' && typeof o.GetMembers === 'function';
+}
+
+function forEachMemberAsync(block, callback, onError) {
+  if (typeof callback !== 'function')
+    throw new TypeError('Expected function.');
+  if (!onError) onError = (err) => warn('Error while fetching members:', err);
+  // ono -> [ object, callback(object) ]
+  const members = new Map();
+  const device = block.device;
+
+  const onMembers = (a) => {
+    // unsubscribed
+    if (callback === null) return;
+
+    const objectNumbers = new Set();
+
+    a.forEach((member) => {
+      const objectNumber = member.ONo;
+
+      objectNumbers.add(objectNumber);
+
+      // we already know this child
+      if (members.has(objectNumber)) return;
+
+      const o = device.resolve_object(member);
+
+      members.set(objectNumber, [ o, callback(o) ]);
+    });
+
+    members.forEach((a, objectNumber) => {
+      if (objectNumbers.has(objectNumber)) return;
+      members.delete(objectNumber);
+      runCleanupHandler(a[1]);
+    });
+  };
+
+  block.OnMembersChanged.subscribe(onMembers);
+  block.GetMembers().then(onMembers, onError);
+
+  return () => {
+    // unsubscribe
+    if (callback === null) return;
+    block.OnMembersChanged.unsubscribe(onMembers);
+    const cleanup = Array.from(members.values()).map((a) => a[1]);
+    members.clear();
+    cleanup.forEach(runCleanupHandler);
+    callback = null;
+  };
+}
+
+function forEachMemberAndRoleAsync(block, callback, onError) {
+  const cb = (o) => {
+    let cleanup = null;
+
+    o.GetRole().then((role) => {
+      if (o === null) return;
+      cleanup = callback(o, role);
+    }, onError);
+
+    return () => {
+      if (o === null) return;
+      o = null;
+      if (cleanup)
+        runCleanupHandler(cleanup());
+    };
+  };
+
+  return forEachMemberAsync(block, cb, onError);
+}
+
 export class AES70Backend extends Backend {
   get src() {
     return this._src;
@@ -31,9 +150,9 @@ export class AES70Backend extends Backend {
     const websocket = new WebSocket(options.url);
     this._websocket = websocket;
     this._device = null;
-    this._objects = null;
     this._path_subscriptions = new Map();
     this._setters = new Map();
+    this._seperator = '/';
     this.addSubscription(
       subscribeDOMEvent(websocket, 'open', () => {
         try {
@@ -46,17 +165,7 @@ export class AES70Backend extends Backend {
             new OCA.WebSocketConnection(this._websocket, options)
           );
           this._device.set_keepalive_interval(1);
-          this._device.get_role_map('/').then(
-            (objects) => {
-              if (!this.isInit) return;
-              this._objects = objects;
-              this.open();
-            },
-            (err) => {
-              if (!this.isInit) return;
-              this.error(err);
-            }
-          );
+          this.open();
         } catch (err) {
           this.error(err);
         }
@@ -81,159 +190,279 @@ export class AES70Backend extends Backend {
     setter(value);
   }
 
-  // Promise<CleanupLogic>
-  doSubscribe(path) {
-    const objects = this._objects;
+  // returns CleanupLogic
+  observe(path, callback) {
+    if (typeof callback !== 'function')
+      throw new TypeError('Expected function.');
 
-    if (objects.has(path)) {
-      // it is an object
-      const o = objects.get(path);
-      this.receive(path, o);
-      return Promise.resolve();
+    callback = unCurry(callback);
+
+    let id = null;
+
+    this.subscribe(path, callback).then(
+      (a) => {
+        if (id === false) {
+          this.unsubscribe(a[1], callback);
+          return;
+        } else {
+          id = a[1];
+        }
+
+        if (a.length === 3) {
+          callback(id, a[2]);
+        }
+      },
+      (err) => {
+        warn('Subscription failed:', err);
+      }
+    );
+
+    return () => {
+      if (id !== null) {
+        this.unsubscribe(id, callback);
+      } else {
+        // subscribe is still pending
+        id = false;
+      }
+    };
+  }
+
+  _observeDirectory(o, callback) {
+    //console.log('observeDirectory', o);
+    if (isBlock(o)) {
+      let rolemap = new Map();
+      let pending = 0;
+      let cb = throttle(() => {
+        if (callback === null) return;
+        if (pending !== 0) return;
+        //console.log('rolemap', rolemap);
+        callback([ o, rolemap ]);
+      });
+
+      let cleanup = forEachMemberAsync(o, (member) => {
+        let key = null;
+
+        pending++;
+        member.GetRole().then(
+          (role) => {
+            if (member === null) return;
+            if (callback === null) return;
+            pending--;
+            key = role;
+            if (rolemap.has(key)) {
+              let n = 1;
+              do {
+                key = role + n++;
+              } while (rolemap.has(key));
+            }
+            rolemap.set(key, member);
+            cb();
+          },
+          (error) => {
+            if (member === null) return;
+            if (callback === null) return;
+            pending--;
+            cb();
+            warn('Failed to fetch Role', error);
+          }
+        );
+        return () => {
+          if (member === null) return;
+          if (key !== null)
+            rolemap.delete(key);
+          member = null;
+          cb();
+        };
+      });
+
+      return () => {
+        if (cleanup) runCleanupHandler(cleanup);
+        // cleanup may help
+        cb = null;
+        callback = null;
+        rolemap = null;
+        o = null;
+      };
+    } else {
+      // not a block, so we only care about properties
+      callback([ o ]);
+    }
+  }
+
+  _observeProperty(a, propertyName, path, callback) {
+    //console.log('_observeProperty(%o, %o, %o)', a, propertyName, path);
+    const o = a[0];
+
+    if (isBlock(o) && a[1] instanceof Map) {
+      const rolemap = a[1];
+
+      if (rolemap && rolemap.has(propertyName)) {
+        callback(rolemap.get(propertyName));
+        return;
+      }
     }
 
-    const tmp = path.split('/');
-
-    let propertyName = tmp.pop();
-
-    let objectPath = tmp.join('/');
-
-    if (objects.has(objectPath)) {
-      // it is an object
-      const o = objects.get(objectPath);
+    // actual property lookup
+    if (a.length === 1) {
       const properties = o.get_properties();
-
-      switch (propertyName) {
-        case 'ClassName':
-          this.receive(path, o[propertyName]);
-          return Promise.resolve();
-      }
-
-      let property = properties.find_property(propertyName);
+      const property = properties.find_property(propertyName);
 
       if (!property) {
-        if (propertyName === '$children' && (property = properties.find_property('Members'))) {
-          const getter = property.getter(o);
-          const event = property.event(o);
-
-          if (!getter || !event) {
-            this._subscribeFailure(path, new Error('Not a block.'));
-            return;
-          }
-
-          const eventCallback = (members) => {
-            members = members.map((tmp) => this._device.resolve_object(tmp));
-            this.receive(path, members);
-          };
-
-          event.subscribe(eventCallback);
-          getter().then((members) => {
-            members = members.map((tmp) => this._device.resolve_object(tmp));
-            this.receive(path, members);
-          });
-          return Promise.resolve(() => {
-            event.unsubscribe(eventCallback);
-          });
-        } else {
-          warn('Could not find property %o in %o.', propertyName, properties);
-          return Promise.reject(new Error('No such property.'));
-        }
-      } else {
-        if (property.static) {
-          this.receive(path, o[propertyName]);
-          return Promise.resolve();
-        } else {
-          const eventCallback = (value, type, id) => {
-            this.receive(path, value);
-          };
-          const event = property.event(o);
-          const getter = property.getter(o);
-
-          if (!getter) {
-            this._subscribeFailure(path, new Error('Could not find getter.'));
-            return;
-          }
-
-          const task = event
-            ? event.subscribe(eventCallback).then(() => true)
-            : Promise.resolve(false);
-
-          return task
-            .then((subscribed) => {
-              const setter = property.setter(o);
-              const unsubscribe = () => {
-                if (!subscribed) return;
-                event.unsubscribe(eventCallback);
-                if (setter) this._setters.delete(path);
-              };
-              return getter().then(
-                (x) => {
-                  let val;
-                  if (x instanceof OCA.SP.Arguments) {
-                    val = x.item(0);
-                  } else {
-                    val = x;
-                  }
-                  this.receive(path, val);
-                  if (setter) this._setters.set(path, setter);
-                  if (subscribed)
-                    return unsubscribe;
-                },
-                (error) => {
-                  unsubscribe();
-                  throw error;
-                }
-              );
-            });
-        }
+        this.log('Could not find property %o in %o.', propertyName, properties);
+        return;
       }
-      return;
-    } else {
-      switch (propertyName) {
-        case 'Min':
-        case 'Max': {
-          const index = propertyName === 'Min' ? 1 : 2;
-          propertyName = tmp.pop();
-          objectPath = tmp.join('/');
 
-          if (!objects.has(objectPath)) break;
+      if (property.static) {
+        callback(o[propertyName]);
+        return;
+      }
 
-          const o = objects.get(objectPath);
-          const properties = o.get_properties();
+      const getter = property.getter(o);
 
-          const property = properties.find_property(propertyName);
+      if (!getter) {
+        warn('Could not subscribe to private property %o in %o', propertyName, properties);
+        return;
+      }
 
-          if (!property) break;
+      //console.log('subscribing property', path);
 
-          const getter = property.getter(o);
+      const event = property.event(o);
+      const setter = property.setter(o);
 
-          if (!getter) break;
+      if (event)
+        event.subscribe(callback);
 
-          return getter()
-            .then((x) => {
-              if (!(x instanceof OCA.SP.Arguments))
-                throw new Error('Property has no min or max.');
+      if (setter)
+        this._setters.set(path, setter);
 
-              this.receive(path, x.item(index));
-            });
+      getter().then(
+        (x) => {
+          let val;
+          if (x instanceof OCA.SP.Arguments) {
+            val = x.item(0);
+          } else {
+            val = x;
+          }
+          callback(val);
+        },
+        (error) => {
+          warn('Fetching %o produced an error: %o', propertyName, error);
+        }
+      );
+
+      return () => {
+        if (event)
+          event.unsubscribe(callback);
+        if (setter)
+          this._setters.delete(path);
+      };
+    } else if (a.length === 2) {
+      // meta info
+      const property = a[1];
+
+      if (!property) return;
+    }
+  }
+
+  _observeEach(path, callback) {
+    let lastValue = null;
+    let cleanup = null;
+
+    const cb = (o) => {
+      if (lastValue === o) return;
+      if (cleanup) runCleanupHandler(cleanup);
+
+      cleanup = callback(o);
+    };
+
+    let sub = this.observe(path, cb);
+
+    return () => {
+      if (cleanup) runCleanupHandler(cleanup);
+      if (sub) runCleanupHandler(sub);
+      sub = null;
+      lastValue = null;
+      cleanup = null;
+    };
+  }
+
+  // Promise<CleanupLogic>
+  doSubscribe(path) {
+    //console.log('doSubscribe(%o)', path);
+    const seperator = this._seperator;
+    const dir = path.endsWith(seperator);
+    const [ parentPath, propertyName ] = splitAtLast(dir ? path.substr(0, path.length - 1) : path, seperator);
+
+    // we are at the top level
+    if (parentPath === '/') {
+      if (toplevelObjects.indexOf(propertyName) !== -1) {
+        const o = this.device[propertyName]
+
+        if (!dir) {
+          // just pass the object
+          this.receive(path, o);
+          return;
+        } else {
+          // we got a slash, we subscribe object, rolemap/properties
+          //console.log('trying to subscribe top level %o', path);
+          return this._observeDirectory(o, (a) => {
+            this.receive(path, a);
+          });
         }
       }
     }
 
-    return Promise.reject(new Error('No such address.'));
+    let callback;
+
+    if (dir) {
+      //console.log('trying to subscribe directory %o in %o', propertyName, parentPath);
+      callback = (a) => {
+        //console.log('%o / %o -> %o', parentPath, propertyName, a);
+        const o = a[0];
+
+        if (isBlock(o) && a[1] instanceof Map) {
+          const rolemap = a[1];
+
+          if (rolemap.has(propertyName)) {
+            return this._observeDirectory(rolemap.get(propertyName), (value) => {
+              this.receive(path, value);
+            });
+          }
+        }
+
+        // check the properties, this is for meta-info lookup
+        const property = o.get_properties().find_property(propertyName);
+
+        if (!property) {
+          this.log('Could not find property %o in %o', propertyName, o);
+        }
+
+        if (!isBlock(o))
+          this.receive(path, [ o, property ]);
+      };
+    } else {
+      //console.log('trying to subscribe property %o in %o', propertyName, parentPath);
+      callback = (a) => {
+        return this._observeProperty(a, propertyName, path, (value) => {
+          //console.log('%o -> %o', path, value);
+          this.receive(path, value);
+        });
+      };
+    }
+
+    // get a directory query for the parent object
+    return this._observeEach(parentPath === seperator ? ('Root' + seperator) : parentPath, callback);
   }
 
   lowSubscribe(path) {
-    this.doSubscribe(path).then(
-      (cleanup) => {
-        if (cleanup)
-          this._path_subscriptions.set(path, cleanup);
-        this._subscribeSuccess(path, path);
-      },
-      (error) => {
-        this._subscribeFailure(path, error);
-      }
-    );
+    try {
+      const cleanup = this.doSubscribe(path);
+      if (cleanup)
+        this._path_subscriptions.set(path, cleanup);
+      this._subscribeSuccess(path, path);
+    } catch (error) {
+      this._subscribeFailure(path, error);
+    }
   }
 
   lowUnsubscribe(id) {
