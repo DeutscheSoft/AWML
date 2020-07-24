@@ -2,7 +2,7 @@
   <head>
     <script type="module">
       import { define, delay, assertEqual } from './testing.js';
-      import { DynamicValue, ListValue } from '../src/index.js';
+      import { DynamicValue, ListValue, EventTargetValue } from '../src/index.js';
 
       define(async () => {
         {
@@ -169,6 +169,33 @@
             const tmp = await listv.wait();
             assertEqual(tmp[0], 0);
             assertEqual(tmp[1], 23);
+          }
+        }
+
+        {
+          // EventTargetValue
+          const div = document.createElement('div');
+
+          {
+            const v1 = new EventTargetValue(div, 'click');
+
+            const p = v1.wait();
+            const ev = new CustomEvent('click');
+
+            assertEqual(div.dispatchEvent(ev), true);
+            assertEqual(await p, ev);
+          }
+
+          {
+            const v1 = new EventTargetValue(div, 'click', true);
+
+            const p = v1.wait();
+            const ev = new CustomEvent('click', {
+              cancelable: true,
+            });
+
+            assertEqual(div.dispatchEvent(ev), false);
+            assertEqual(await p, ev);
           }
         }
       });
