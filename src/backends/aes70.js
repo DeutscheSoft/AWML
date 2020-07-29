@@ -300,6 +300,9 @@ export class AES70Backend extends Backend {
         callback(rolemap.get(propertyName));
         return;
       }
+
+      // try property lookup
+      a = [ o ];
     }
 
     // actual property lookup
