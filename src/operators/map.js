@@ -53,3 +53,23 @@ export function map(dv, transform, inverse) {
 
   return new MappedValue(dv, transform, inverse || null);
 }
+
+/**
+ * Transform the input dynamic value and emit a new DynamicValue which emits the
+ * accumulation of all values using the transform function.
+ *
+ * This is similar to Array.reduce().
+ *
+ * @param {DynamicValue} dv
+ * @param {function(*, *:*)} transform
+ *      Transformation function. Is called with each value and the
+ *      accumulator.
+ * @param initialValue
+ *      The initial value for the accumulator.
+ */
+export function reduce(dv, transform, initialValue) {
+  return map(dv, (value) => {
+    initialValue = transform(initialValue, value);
+    return initialValue;
+  });
+}
