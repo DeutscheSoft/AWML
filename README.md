@@ -1,7 +1,8 @@
 # AWML
 
 **A**udio **W**idget **M**arkup **L**anguage is a markup language for describing user interfaces for audio applications.
-This implementation uses HTML5 Custom Tags and supports integration with the AUX widget library.
+This implementation uses HTML5 Custom Tags and supports integration with the
+[AUX widget library](https://github.com/DeutscheSoft/aux-widgets).
 
 ## Contents
 
@@ -30,7 +31,7 @@ There are two different ways to specify options for a widget.
 They can either be set inline using attributes or using the `awml-option` tag.
 
 The possible options of an AWML Tag are identical to those of the corresponding AUX widget.
-See the [AUX documentation](http://docs.deuso.de/AUX/) for a complete list of widgets and their options.
+See the [AUX widgets documentation](http://docs.deuso.de/AUX/) for a complete list of widgets and their options.
 
 Options usually have both a type and a format.
 For inline options using attributes the type is always `static` and the `format` is specified by prepending the attribute value by the format name followed by a `:` (e.g. `min='js:4*12'`).
@@ -48,7 +49,7 @@ Example:
 
 ### Option formats
 
-Since AWML options are mapped onto options for widgets of the 'AUX' library, they need to represent different JavaScript types.
+Since AWML options are mapped onto options for widgets of the 'AUX widgets' library, they need to represent different JavaScript types.
 This is done in AWML by using different data formats.
 
 When specifying an option as a tag attribute, the format is part of the attribute value.
@@ -227,7 +228,7 @@ See the section about [templates](#templates) for more information.
 The `aux-event` component can be used to install event handlers to a parent
 element. If the parent element is an AUX widget, the event handler will use the
 `subscribe` method in the parent AUX widget to subscribe to an event. If the
-parent is not an AUX event, the event handler will be subscribed using the
+parent is not an AUX widget event, the event handler will be subscribed using the
 standard DOM event mechanism `addEventListener`.
 
 ### Properties
