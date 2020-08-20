@@ -116,26 +116,6 @@ function forEachMemberAsync(block, callback, onError) {
   };
 }
 
-function forEachMemberAndRoleAsync(block, callback, onError) {
-  const cb = (o) => {
-    let cleanup = null;
-
-    o.GetRole().then((role) => {
-      if (o === null) return;
-      cleanup = callback(o, role);
-    }, onError);
-
-    return () => {
-      if (o === null) return;
-      o = null;
-      if (cleanup)
-        runCleanupHandler(cleanup());
-    };
-  };
-
-  return forEachMemberAsync(block, cb, onError);
-}
-
 export class AES70Backend extends Backend {
   get src() {
     return this._src;
@@ -276,7 +256,11 @@ export class AES70Backend extends Backend {
       });
 
       return () => {
-        if (cleanup) runCleanupHandler(cleanup);
+        if (cleanup)
+        {
+          runCleanupHandler(cleanup);
+          cleanup = null;
+        }
         // cleanup may help
         cb = null;
         callback = null;
