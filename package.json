@@ -1,14 +1,15 @@
 {
   "name": "@deutschesoft/awml",
   "version": "2.0.3",
-  "description": "A templating language for AUX.",
+  "description": "A templating language for aux-widgets.",
   "browser": "src/index.js",
   "module": "src/index.js",
+  "type": "module",
   "directories": {},
   "scripts": {},
   "repository": {
     "type": "git",
-    "url": "git@gitlab.deuso.de:WebUI/AWML.git"
+    "url": "https://github.com/DeutscheSoft/AWML.git"
   },
   "author": "Arne Goedeke",
   "license": "GPL-2.0-only"
