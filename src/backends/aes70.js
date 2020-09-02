@@ -382,7 +382,11 @@ export class AES70Backend extends Backend {
 
     // we are at the top level
     if (parentPath === '/') {
-      if (toplevelObjects.indexOf(propertyName) !== -1) {
+      if (propertyName == "") {
+        return this._observeDirectory(this.device.Root, (a) => {
+          this.receive(path, a);
+        });
+      } else if (toplevelObjects.indexOf(propertyName) !== -1) {
         const o = this.device[propertyName]
 
         if (!dir) {
