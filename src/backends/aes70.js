@@ -215,8 +215,11 @@ export class AES70Backend extends Backend {
       let cb = throttle(() => {
         if (callback === null) return;
         if (pending !== 0) return;
-        //console.log('rolemap', rolemap);
-        callback([ o, rolemap ]);
+        //console.log('rolemap', Array.from(rolemap);
+        // Note: we pass a copy here to our subscribers
+        // to prevent them from observing modifications
+        // we are making to it in the future
+        callback([ o, new Map(rolemap) ]);
       });
 
       let cleanup = forEachMemberAsync(o, (member) => {
