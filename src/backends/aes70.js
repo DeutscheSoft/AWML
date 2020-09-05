@@ -320,7 +320,9 @@ export class AES70Backend extends Backend {
       const setter = property.setter(o);
 
       if (event)
-        event.subscribe(callback);
+        event.subscribe(callback).catch((err) => {
+          warn('Failed to subscribe to %o: %o.\n', propertyName, err);
+        });
 
       if (setter)
         this._setters.set(path, setter);
@@ -336,7 +338,15 @@ export class AES70Backend extends Backend {
           callback(val);
         },
         (error) => {
-          warn('Fetching %o produced an error: %o', propertyName, error);
+          // NotImplemented
+          if (error.status.value == 8)
+          {
+            warn('Fetching %o failed: not implemented.', propertyName);
+          }
+          else
+          {
+            warn('Fetching %o produced an error: %o', propertyName, error);
+          }
         }
       );
 
