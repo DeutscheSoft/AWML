@@ -150,7 +150,8 @@ export class BindOption extends Option {
       node.getAttribute('receive-delay'),
       500
     );
-    options.ignoreInteraction = node.getAttribute('ignore-interaction') !== null;
+    options.ignoreInteraction =
+      node.getAttribute('ignore-interaction') !== null;
 
     return options;
   }

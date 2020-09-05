@@ -95,7 +95,7 @@ export class LocalBackend extends Backend {
     this._subscribeSuccess(path, path);
   }
 
-  lowUnsubscribe(id) { }
+  lowUnsubscribe(id) {}
 
   static argumentsFromNode(node) {
     const options = Backend.argumentsFromNode(node);

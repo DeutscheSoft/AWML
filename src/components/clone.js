@@ -365,7 +365,14 @@ export class CloneComponent extends PrefixComponentBase {
         const templateNode = document.getElementById(path);
 
         if (templateNode === null)
-          return Promise.reject(new Error('Could not find template element: ' + path + " from base URL: " + this._baseUrl));
+          return Promise.reject(
+            new Error(
+              'Could not find template element: ' +
+                path +
+                ' from base URL: ' +
+                this._baseUrl
+            )
+          );
 
         const template = new Template(
           templateNode,

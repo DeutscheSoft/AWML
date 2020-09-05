@@ -61,8 +61,7 @@ export class BackendValue extends DynamicValue {
     this._backend = backend;
     this._backendId = null;
 
-    if (this.isActive)
-      this._activate();
+    if (this.isActive) this._activate();
   }
 
   /** @ignore */
@@ -128,7 +127,6 @@ export class BackendValue extends DynamicValue {
 
       this._updateValue(value);
     };
-
   }
 
   /**

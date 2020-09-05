@@ -21,24 +21,26 @@ function runCleanupHandler(cleanup) {
 function splitAtLast(path, seperator) {
   const pos = path.lastIndexOf(seperator);
 
-  return pos === -1 ? [ seperator, path ] : [ path.substr(0, pos + 1), path.substr(pos + 1) ];
+  return pos === -1
+    ? [seperator, path]
+    : [path.substr(0, pos + 1), path.substr(pos + 1)];
 }
 
 const toplevelObjects = [
-  "DeviceManager",
-  "SecurityManager",
-  "FirmwareManager",
-  "SubscriptionManager",
-  "PowerManager",
-  "NetworkManager",
-  "MediaClockManager",
-  "LibraryManager",
-  "AudioProcessingManager",
-  "DeviceTimeManager",
-  "TaskManager",
-  "CodingManager",
-  "DiagnosticManager",
-  "Root"
+  'DeviceManager',
+  'SecurityManager',
+  'FirmwareManager',
+  'SubscriptionManager',
+  'PowerManager',
+  'NetworkManager',
+  'MediaClockManager',
+  'LibraryManager',
+  'AudioProcessingManager',
+  'DeviceTimeManager',
+  'TaskManager',
+  'CodingManager',
+  'DiagnosticManager',
+  'Root',
 ];
 
 function throttle(callback) {
@@ -61,7 +63,7 @@ function unCurry(callback) {
     // if we get unsubscribed, we simply abort
     if (id === false) return;
     return callback(value);
-  }
+  };
 }
 
 function isBlock(o) {
@@ -69,8 +71,7 @@ function isBlock(o) {
 }
 
 function forEachMemberAsync(block, callback, onError) {
-  if (typeof callback !== 'function')
-    throw new TypeError('Expected function.');
+  if (typeof callback !== 'function') throw new TypeError('Expected function.');
   if (!onError) onError = (err) => warn('Error while fetching members:', err);
   // ono -> [ object, callback(object) ]
   const members = new Map();
@@ -92,7 +93,7 @@ function forEachMemberAsync(block, callback, onError) {
 
       const o = device.resolve_object(member);
 
-      members.set(objectNumber, [ o, callback(o) ]);
+      members.set(objectNumber, [o, callback(o)]);
     });
 
     members.forEach((a, objectNumber) => {
@@ -219,7 +220,7 @@ export class AES70Backend extends Backend {
         // Note: we pass a copy here to our subscribers
         // to prevent them from observing modifications
         // we are making to it in the future
-        callback([ o, new Map(rolemap) ]);
+        callback([o, new Map(rolemap)]);
       });
 
       let cleanup = forEachMemberAsync(o, (member) => {
@@ -251,16 +252,14 @@ export class AES70Backend extends Backend {
         );
         return () => {
           if (member === null) return;
-          if (key !== null)
-            rolemap.delete(key);
+          if (key !== null) rolemap.delete(key);
           member = null;
           cb();
         };
       });
 
       return () => {
-        if (cleanup)
-        {
+        if (cleanup) {
           runCleanupHandler(cleanup);
           cleanup = null;
         }
@@ -272,7 +271,7 @@ export class AES70Backend extends Backend {
       };
     } else {
       // not a block, so we only care about properties
-      callback([ o ]);
+      callback([o]);
     }
   }
 
@@ -289,7 +288,7 @@ export class AES70Backend extends Backend {
       }
 
       // try property lookup
-      a = [ o ];
+      a = [o];
     }
 
     // actual property lookup
@@ -310,7 +309,11 @@ export class AES70Backend extends Backend {
       const getter = property.getter(o);
 
       if (!getter) {
-        warn('Could not subscribe to private property %o in %o', propertyName, properties);
+        warn(
+          'Could not subscribe to private property %o in %o',
+          propertyName,
+          properties
+        );
         return;
       }
 
@@ -324,8 +327,7 @@ export class AES70Backend extends Backend {
           warn('Failed to subscribe to %o: %o.\n', propertyName, err);
         });
 
-      if (setter)
-        this._setters.set(path, setter);
+      if (setter) this._setters.set(path, setter);
 
       getter().then(
         (x) => {
@@ -339,22 +341,17 @@ export class AES70Backend extends Backend {
         },
         (error) => {
           // NotImplemented
-          if (error.status.value == 8)
-          {
+          if (error.status.value == 8) {
             warn('Fetching %o failed: not implemented.', propertyName);
-          }
-          else
-          {
+          } else {
             warn('Fetching %o produced an error: %o', propertyName, error);
           }
         }
       );
 
       return () => {
-        if (event)
-          event.unsubscribe(callback);
-        if (setter)
-          this._setters.delete(path);
+        if (event) event.unsubscribe(callback);
+        if (setter) this._setters.delete(path);
       };
     } else if (a.length === 2) {
       // meta info
@@ -391,16 +388,19 @@ export class AES70Backend extends Backend {
     //console.log('doSubscribe(%o)', path);
     const seperator = this._seperator;
     const dir = path.endsWith(seperator);
-    const [ parentPath, propertyName ] = splitAtLast(dir ? path.substr(0, path.length - 1) : path, seperator);
+    const [parentPath, propertyName] = splitAtLast(
+      dir ? path.substr(0, path.length - 1) : path,
+      seperator
+    );
 
     // we are at the top level
     if (parentPath === '/') {
-      if (propertyName == "") {
+      if (propertyName == '') {
         return this._observeDirectory(this.device.Root, (a) => {
           this.receive(path, a);
         });
       } else if (toplevelObjects.indexOf(propertyName) !== -1) {
-        const o = this.device[propertyName]
+        const o = this.device[propertyName];
 
         if (!dir) {
           // just pass the object
@@ -428,9 +428,12 @@ export class AES70Backend extends Backend {
           const rolemap = a[1];
 
           if (rolemap.has(propertyName)) {
-            return this._observeDirectory(rolemap.get(propertyName), (value) => {
-              this.receive(path, value);
-            });
+            return this._observeDirectory(
+              rolemap.get(propertyName),
+              (value) => {
+                this.receive(path, value);
+              }
+            );
           }
         }
 
@@ -441,8 +444,7 @@ export class AES70Backend extends Backend {
           this.log('Could not find property %o in %o', propertyName, o);
         }
 
-        if (!isBlock(o))
-          this.receive(path, [ o, property ]);
+        if (!isBlock(o)) this.receive(path, [o, property]);
       };
     } else {
       //console.log('trying to subscribe property %o in %o', propertyName, parentPath);
@@ -455,14 +457,16 @@ export class AES70Backend extends Backend {
     }
 
     // get a directory query for the parent object
-    return this._observeEach(parentPath === seperator ? ('Root' + seperator) : parentPath, callback);
+    return this._observeEach(
+      parentPath === seperator ? 'Root' + seperator : parentPath,
+      callback
+    );
   }
 
   lowSubscribe(path) {
     try {
       const cleanup = this.doSubscribe(path);
-      if (cleanup)
-        this._path_subscriptions.set(path, cleanup);
+      if (cleanup) this._path_subscriptions.set(path, cleanup);
       this._subscribeSuccess(path, path);
     } catch (error) {
       this._subscribeFailure(path, error);
