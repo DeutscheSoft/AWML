@@ -1,3 +1,3 @@
-export * from './options/static.js';
-export * from './options/media.js';
-export * from './options/bind.js';
+export { StaticOption } from './options/static.js';
+export { MediaOption } from './options/media.js';
+export { BindOption } from './options/bind.js';

@@ -11,6 +11,14 @@
     "type": "git",
     "url": "https://github.com/DeutscheSoft/AWML.git"
   },
+  "sideEffects": [
+    "./src/index.sideeffects.js",
+    "./src/options.js",
+    "./src/options/*.js",
+    "./src/backends/*.js",
+    "./src/components.js",
+    "./src/components/*.js"
+  ],
   "author": "Arne Goedeke",
   "license": "GPL-2.0-only"
 }
