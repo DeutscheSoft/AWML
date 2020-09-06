@@ -288,6 +288,88 @@ export class AES70Backend extends Backend {
     }
   }
 
+  _observePropertyWithGetter(o, property, path, index, callback)
+  {
+    let active = true;
+
+    if (property.static) {
+      if (index === 0) {
+        callback(o[property.name]);
+      } else {
+        warn('Static property %o in %o has no Min/Max.', property.name, o.ClassName);
+      }
+      return;
+    }
+
+    const getter = property.getter(o);
+
+    if (!getter) {
+      warn(
+        'Could not subscribe to private property %o in %o',
+        propertyName,
+        properties
+      );
+      return;
+    }
+
+    const event = property.event(o);
+    const setter = index === 0 ? property.setter(o) : null;
+    let eventHandler = null;
+
+    if (event) {
+      eventHandler = (value, changeType) => {
+        switch (index) {
+        case 0: // current
+          if (changeType.value !== 1) return;
+          break;
+        case 1: // min
+          if (changeType.value !== 2) return;
+          break;
+        case 2: // max
+          if (changeType.value !== 3) return;
+          break;
+        default:
+          return;
+        }
+        callback(value);
+      };
+      event.subscribe(eventHandler).catch((err) => {
+        warn('Failed to subscribe to %o: %o.\n', property.name, err);
+      });
+    }
+
+    if (setter) this._setters.set(path, setter);
+
+    getter().then(
+      (x) => {
+        if (!active) return;
+        if (x instanceof OCA.SP.Arguments && index < x.length) {
+          callback(x.item(index));
+        } else if (!index) {
+          callback(x);
+        } else {
+          warn('%o in %o has neither Min nor Max.', property.name, o.ClassName);
+        }
+      },
+      (error) => {
+        if (!active) return;
+        // NotImplemented
+        if (error.status.value == 8) {
+          warn('Fetching %o failed: not implemented.', property.name);
+        } else {
+          warn('Fetching %o produced an error: %o', property.name, error);
+        }
+      }
+    );
+
+    return () => {
+      if (!active) return;
+      if (event) event.unsubscribe(eventHandler);
+      if (setter) this._setters.delete(path);
+      active = false;
+    };
+  }
+
   _observeProperty(a, propertyName, path, callback) {
     //console.log('_observeProperty(%o, %o, %o)', a, propertyName, path);
     const o = a[0];
@@ -314,63 +396,20 @@ export class AES70Backend extends Backend {
         return;
       }
 
-      if (property.static) {
-        callback(o[propertyName]);
-        return;
-      }
-
-      const getter = property.getter(o);
-
-      if (!getter) {
-        warn(
-          'Could not subscribe to private property %o in %o',
-          propertyName,
-          properties
-        );
-        return;
-      }
-
-      //console.log('subscribing property', path);
-
-      const event = property.event(o);
-      const setter = property.setter(o);
-
-      if (event)
-        event.subscribe(callback).catch((err) => {
-          warn('Failed to subscribe to %o: %o.\n', propertyName, err);
-        });
-
-      if (setter) this._setters.set(path, setter);
-
-      getter().then(
-        (x) => {
-          let val;
-          if (x instanceof OCA.SP.Arguments) {
-            val = x.item(0);
-          } else {
-            val = x;
-          }
-          callback(val);
-        },
-        (error) => {
-          // NotImplemented
-          if (error.status.value == 8) {
-            warn('Fetching %o failed: not implemented.', propertyName);
-          } else {
-            warn('Fetching %o produced an error: %o', propertyName, error);
-          }
-        }
-      );
-
-      return () => {
-        if (event) event.unsubscribe(callback);
-        if (setter) this._setters.delete(path);
-      };
+      return this._observePropertyWithGetter(o, property, path, 0, callback);
     } else if (a.length === 2) {
       // meta info
+      const o = a[0];
       const property = a[1];
 
+      // It might be that this property does not exist.
+      // That is not necessarily a permanent error.
       if (!property) return;
+
+      if (propertyName === 'Min' || propertyName === 'Max') {
+        const index = propertyName === 'Min' ? 1 : 2;
+        return this._observePropertyWithGetter(o, property, path, index, callback);
+      }
     }
   }
 
