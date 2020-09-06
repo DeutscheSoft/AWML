@@ -28,6 +28,15 @@ export function registerBackend(name, backend) {
   values.forEach((backendValue) => {
     backendValue.connectBackend(backend);
   });
+
+  const ev = new CustomEvent('AWMLBackendRegistered', {
+    detail: {
+      protocol: name,
+      name: name,
+      backend: backend,
+    },
+  });
+  document.dispatchEvent(ev);
 }
 
 /** @ignore */
@@ -45,6 +54,15 @@ export function unregisterBackend(name, backend) {
   values.forEach((backendValue) => {
     backendValue.disconnectBackend();
   });
+
+  const ev = new CustomEvent('AWMLBackendUnregistered', {
+    detail: {
+      protocol: name,
+      name: name,
+      backend: backend,
+    },
+  });
+  document.dispatchEvent(ev);
 }
 
 /**
