@@ -70,7 +70,7 @@ function isBlock(o) {
   return typeof o === 'object' && typeof o.GetMembers === 'function';
 }
 
-function forEachMemberAsync(block, callback, onError) {
+function forEachMemberAsync(block, callback, onStable, onError) {
   if (typeof callback !== 'function') throw new TypeError('Expected function.');
   if (!onError) onError = (err) => warn('Error while fetching members:', err);
   // ono -> [ object, callback(object) ]
@@ -101,6 +101,8 @@ function forEachMemberAsync(block, callback, onError) {
       members.delete(objectNumber);
       runCleanupHandler(a[1]);
     });
+
+    if (onStable) onStable();
   };
 
   block.OnMembersChanged.subscribe(onMembers);
@@ -213,9 +215,12 @@ export class AES70Backend extends Backend {
     if (isBlock(o)) {
       let rolemap = new Map();
       let pending = 0;
+      let hasChanged = true;
       let cb = throttle(() => {
         if (callback === null) return;
         if (pending !== 0) return;
+        if (!hasChanged) return;
+        hasChanged = false;
         //console.log('rolemap', Array.from(rolemap);
         // Note: we pass a copy here to our subscribers
         // to prevent them from observing modifications
@@ -223,7 +228,7 @@ export class AES70Backend extends Backend {
         callback([o, new Map(rolemap)]);
       });
 
-      let cleanup = forEachMemberAsync(o, (member) => {
+      let memberCallback = (member) => {
         let key = null;
 
         pending++;
@@ -240,6 +245,7 @@ export class AES70Backend extends Backend {
               } while (rolemap.has(key));
             }
             rolemap.set(key, member);
+            hasChanged = true;
             cb();
           },
           (error) => {
@@ -254,9 +260,16 @@ export class AES70Backend extends Backend {
           if (member === null) return;
           if (key !== null) rolemap.delete(key);
           member = null;
+          hasChanged = true;
           cb();
         };
-      });
+      };
+
+      let onStable = () => {
+        cb();
+      };
+
+      let cleanup = forEachMemberAsync(o, memberCallback, onStable);
 
       return () => {
         if (cleanup) {
