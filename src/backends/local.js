@@ -64,18 +64,18 @@ export class LocalBackend extends Backend {
 
     if (this.node !== null) {
       this._pending++;
-      setTimeout(() => {
+      Promise.resolve().then(() => {
         if (!this.isInit) return;
         const data = parseAttribute('json', this.node.textContent, {});
         this._importData(data, false);
         this._maybeOpen();
-      }, 0);
+      });
     }
 
-    setTimeout(() => {
+    Promise.resolve().then(() => {
       if (!this.isInit) return;
       this._maybeOpen();
-    }, 0);
+    });
   }
 
   set(id, value) {
