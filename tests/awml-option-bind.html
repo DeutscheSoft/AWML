@@ -27,10 +27,10 @@
           // without delay
           backendValue.set('bar');
           assertEqual(widget.get('foo'), 'bar');
-          widget.set('interacting', true);
+          widget.startInteracting();
           backendValue.set('flu');
           assertEqual(widget.get('foo'), 'bar');
-          widget.set('interacting', false);
+          widget.stopInteracting();
           assertEqual(widget.get('foo'), 'flu');
 
           // with delay
@@ -39,10 +39,10 @@
 
           backendValue.set('bar');
           assertEqual(widget.get('foo'), 'bar');
-          widget.set('interacting', true);
+          widget.startInteracting();
           backendValue.set('flu');
           assertEqual(widget.get('foo'), 'bar');
-          widget.set('interacting', false);
+          widget.stopInteracting();
           assertEqual(widget.get('foo'), 'bar');
           await delay(110);
           assertEqual(widget.get('foo'), 'flu');
