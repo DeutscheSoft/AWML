@@ -112,6 +112,23 @@
 
           assertEqual(widget.get('foo'), 'barbar');
         }
+        {
+          const widget = widgets[7];
+          const value = getBackendValue('remote:foo');
+
+          // check that interaction does block values from being received
+          // the backend has delay 100 ms
+          widget.startInteracting();
+          widget.userset('foo', 1);
+          await delay(50);
+          widget.userset('foo', 2);
+          widget.stopInteracting();
+          // receive delay timer should start running here.
+          await delay(60);
+          assertEqual(widget.get('foo'), 2);
+          await delay(60);
+          assertEqual(widget.get('foo'), 2);
+        }
       });
     </script>
     <script>
@@ -128,6 +145,7 @@
     <awml-backend type="local" name="test">
       { "foo" : "bar", "bar" : "bar", "flupp" : "bar" }
     </awml-backend>
+    <awml-backend type=local delay=100 name=remote></awml-backend>
   </head>
   <body>
     <test-component>
@@ -174,6 +192,14 @@
         name="foo"
         src="test:bar"
         pipe="pipe_double"
+      ></awml-option>
+    </test-component>
+    <test-component>
+      <awml-option
+        type="bind"
+        name="foo"
+        src="remote:foo"
+        receive-delay=100
       ></awml-option>
     </test-component>
   </body>

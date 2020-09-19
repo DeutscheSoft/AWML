@@ -2,6 +2,54 @@ import { Option } from './option.js';
 import { registerOptionType } from '../components/option.js';
 import { parseAttribute } from '../utils/parse_attribute.js';
 
+function subscribeInteractionChange(widget, timeout, callback)
+{
+  let state = widget.get('interacting');
+  let tid;
+
+  callback(state);
+
+  const sub = widget.subscribe('set_interacting', (value) => {
+    if (value || !(timeout > 0))
+    {
+      if (state == value) return;
+      callback(state = value);
+    }
+    else
+    {
+      if (tid !== void(0))
+        clearTimeout(tid);
+
+      state = value;
+
+      tid = setTimeout(() => {
+        if (state) return;
+        callback(state);
+      }, timeout);
+    }
+  });
+
+  return () => {
+    sub();
+    if (tid !== void(0))
+    {
+      clearTimeout(tid);
+      tid = void(0);
+    }
+  };
+}
+
+function combineSubscriptions(a, b)
+{
+  if (!a && !b) return null;
+  if (!b) return a;
+  if (!a) return b;
+  return () => {
+    a();
+    b();
+  };
+}
+
 export class BindOption extends Option {
   static get needsBackendValue() {
     return true;
@@ -21,34 +69,50 @@ export class BindOption extends Option {
     this.ignoreInteraction = options.ignoreInteraction;
     this.node = options.node;
     this._sub = null;
-    this._interacting_sub = null;
     this._receiving = false;
+    this._hasLastValue = false;
     this._lastValue = null;
+    this._interacting = false;
+
+    let sub1 = null;
+    let sub2 = null;
 
     if (!readonly) {
-      let sub;
-
       if (writeonly) {
-        sub = this.widget.subscribe('userset', (name, value) => {
+        sub1 = this.widget.subscribe('userset', (name, value) => {
           if (name !== this.name) return;
           this.sendValue(value);
           return false;
         });
       } else if (sync) {
-        sub = this.widget.subscribe('set_' + this.name, (value) => {
+        sub1 = this.widget.subscribe('set_' + this.name, (value) => {
           if (this._receiving) return;
           this.sendValue(value);
         });
       } else {
-        sub = this.widget.subscribe('useraction', (name, value) => {
+        sub1 = this.widget.subscribe('useraction', (name, value) => {
           if (name !== this.name) return;
           this.sendValue(value);
           if (preventDefault) return false;
         });
       }
-
-      this._sub = sub;
     }
+
+    if (!this.ignoreInteraction) {
+      sub2 = subscribeInteractionChange(this.widget, this.receiveDelay, (value) => {
+        this._interacting = value;
+
+        if (value || !this._hasLastValue)
+          return;
+
+        const lastValue = this._lastValue;
+        this._lastValue = null;
+        this._hasLastValue = false;
+        this.valueReceived(lastValue);
+      });
+    }
+
+    this._sub = combineSubscriptions(sub1, sub2);
   }
 
   sendValue(value) {
@@ -59,40 +123,12 @@ export class BindOption extends Option {
     this.backendValue.set(value);
   }
 
-  _subscribeInteractionEnd(widget, timeout, callback) {
-    if (!(timeout > 0)) {
-      // if the timeout is zero, we immediately continue with
-      // the new value
-      return widget.once('set_interacting', callback);
-    }
-
-    let sub;
-
-    sub = widget.subscribe('set_interacting', (interacting) => {
-      if (interacting) return;
-
-      setTimeout(() => {
-        if (sub === null) return;
-        if (widget.get('interacting')) return;
-        sub();
-        sub = null;
-        callback();
-      }, timeout);
-    });
-
-    return () => {
-      if (sub === null) return;
-      sub();
-      sub = null;
-    };
-  }
-
   valueReceived(value) {
     if (this._receiving) return;
 
-    // we are waiting for interaction to end
-    if (this._interacting_sub !== null) {
+    if (this._interacting) {
       this._lastValue = value;
+      this._hasLastValue = true;
       return;
     }
 
@@ -101,25 +137,10 @@ export class BindOption extends Option {
     try {
       const widget = this.widget;
 
-      if (!this.ignoreInteraction && widget.get('interacting') === true) {
-        this._lastValue = value;
+      widget.set(this.name, value);
 
-        this._interacting_sub = this._subscribeInteractionEnd(
-          widget,
-          this.receiveDelay,
-          () => {
-            const value = this._lastValue;
-            this._interacting_sub = null;
-            this._lastValue = null;
-            this.valueReceived(value);
-          }
-        );
-      } else {
-        widget.set(this.name, value);
-
-        if (this.afterReceive !== null) {
-          this.afterReceive(this.backendValue, this.widget, value, this);
-        }
+      if (this.afterReceive !== null) {
+        this.afterReceive(this.backendValue, widget, value, this);
       }
     } finally {
       this._receiving = false;
@@ -159,8 +180,6 @@ export class BindOption extends Option {
   destroy() {
     super.destroy();
     let sub = this._sub;
-    if (sub !== null) sub();
-    sub = this._interacting_sub;
     if (sub !== null) sub();
   }
 }
