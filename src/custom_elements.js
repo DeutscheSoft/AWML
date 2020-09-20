@@ -1,0 +1,9 @@
+import './components/attributes.element.js';
+import './components/backend.element.js';
+import './components/class.element.js';
+import './components/clone.element.js';
+import './components/event.element.js';
+import './components/option.element.js';
+import './components/prefix.element.js';
+import './components/styles.element.js';
+import './components/visibility.element.js';

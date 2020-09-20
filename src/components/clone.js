@@ -502,5 +502,3 @@ export class CloneComponent extends PrefixComponentBase {
     this.style.removeProperty('display');
   }
 }
-
-customElements.define('awml-clone', CloneComponent);

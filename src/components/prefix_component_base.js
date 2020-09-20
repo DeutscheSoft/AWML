@@ -1,4 +1,4 @@
-import { BaseComponent } from './base.js';
+import { BaseComponent } from './base_component.js';
 import { collectPrefix, registerPrefixTagName } from '../utils/prefix.js';
 import { getBackendValue } from '../backends.js';
 import { parseAttribute } from '../utils/parse_attribute.js';

@@ -87,8 +87,6 @@ export class HideComponent extends VisibilityComponent {
   }
 }
 
-customElements.define('awml-hide', HideComponent);
-
 /**
  * The `AWML-SHOW` component makes its parent widget visible if the
  * corresponding backend value is true.
@@ -109,5 +107,3 @@ export class ShowComponent extends VisibilityComponent {
     changeVisibility(this._target, !!v);
   }
 }
-
-customElements.define('awml-show', ShowComponent);

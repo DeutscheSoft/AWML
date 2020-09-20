@@ -5,7 +5,7 @@ import {
   getAuxWidget,
   subscribeCustomElement,
 } from '../utils/aux-support.js';
-import { BaseComponent } from './base.js';
+import { BaseComponent } from './base_component.js';
 
 function combine_subscriptions(callbacks) {
   return () => {
@@ -130,5 +130,3 @@ export class EventComponent extends BaseComponent {
     }
   }
 }
-
-customElements.define('awml-event', EventComponent);

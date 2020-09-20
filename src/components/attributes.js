@@ -33,5 +33,3 @@ export class AttributesComponent extends StylesComponentBase {
     }
   }
 }
-
-customElements.define('awml-attributes', AttributesComponent);

@@ -205,5 +205,3 @@ export class OptionComponent extends PrefixComponentBase {
     }
   }
 }
-
-customElements.define('awml-option', OptionComponent);

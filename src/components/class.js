@@ -33,5 +33,3 @@ export class ClassComponent extends StylesComponentBase {
     }
   }
 }
-
-customElements.define('awml-class', ClassComponent);

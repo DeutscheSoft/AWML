@@ -23,3 +23,19 @@ export {
   switchMap,
   switchAll,
 } from './operators.js';
+export {
+  AttributesComponent,
+  BackendComponent,
+  registerBackendType,
+  subscribeBackendType,
+  ClassComponent,
+  CloneComponent,
+  EventComponent,
+  registerOptionType,
+  subscribeOptionType,
+  OptionComponent,
+  PrefixComponent,
+  StylesComponent,
+  HideComponent,
+  ShowComponent,
+} from './components.js';

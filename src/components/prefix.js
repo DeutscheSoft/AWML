@@ -54,5 +54,3 @@ export class PrefixComponent extends StylesComponentBase {
     }
   }
 }
-
-customElements.define('awml-prefix', PrefixComponent);

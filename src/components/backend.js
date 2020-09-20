@@ -1,5 +1,5 @@
 import { error } from '../utils/log.js';
-import { BaseComponent } from './base.js';
+import { BaseComponent } from './base_component.js';
 import { registerBackend, unregisterBackend } from '../backends.js';
 import { Subscriptions } from '../utils/subscriptions.js';
 import { timeout } from '../utils/timeout.js';
@@ -233,5 +233,3 @@ export class BackendComponent extends BaseComponent {
     }
   }
 }
-
-customElements.define('awml-backend', BackendComponent);
