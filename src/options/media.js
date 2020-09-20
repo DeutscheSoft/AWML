@@ -1,5 +1,4 @@
 import { Option } from './option.js';
-import { registerOptionType } from '../components/option.js';
 import { parseAttribute } from '../utils/parse_attribute.js';
 import { warn } from '../utils/log.js';
 
@@ -49,5 +48,3 @@ export class MediaOption extends Option {
     this.query.removeListener(this._handler);
   }
 }
-
-registerOptionType('media', MediaOption);

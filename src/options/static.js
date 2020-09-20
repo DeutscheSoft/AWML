@@ -1,5 +1,4 @@
 import { Option } from './option.js';
-import { registerOptionType } from '../components/option.js';
 import { parseAttribute } from '../utils/parse_attribute.js';
 
 export class StaticOption extends Option {
@@ -23,5 +22,3 @@ export class StaticOption extends Option {
     this.widget.reset(this.name);
   }
 }
-
-registerOptionType('static', StaticOption);

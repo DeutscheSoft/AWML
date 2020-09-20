@@ -1,5 +1,4 @@
 import { Option } from './option.js';
-import { registerOptionType } from '../components/option.js';
 import { parseAttribute } from '../utils/parse_attribute.js';
 
 function subscribeInteractionChange(widget, timeout, callback)
@@ -183,5 +182,3 @@ export class BindOption extends Option {
     if (sub !== null) sub();
   }
 }
-
-registerOptionType('bind', BindOption);
