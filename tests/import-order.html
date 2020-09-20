@@ -1,0 +1,27 @@
+<html>
+  <head>
+    <script type="module">
+      import { ClassComponent } from '../src/index.pure.js';
+      import { assertEqual, define, waitForFrame } from './testing.js';
+
+      window.global = {
+        foo: function() {
+            return ClassComponent;
+        },
+      };
+
+      define(async () => {
+        const div = document.querySelector('div');
+        const awmlClass = div.querySelector('awml-class');
+
+        assertEqual(awmlClass.transformReceive, global.foo);
+      });
+    </script>
+    <script type=module src='../src/index.js'></script>
+  </head>
+  <body>
+    <div>
+      <awml-class transform-receive='global.foo'></awml-class>
+    </div>
+  </body>
+</html>
