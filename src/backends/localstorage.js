@@ -2,7 +2,6 @@ import { parseAttribute } from '../utils/parse_attribute.js';
 import { LocalBackend } from './local.js';
 import { subscribeDOMEvent } from '../utils/subscribe_dom_event.js';
 import { warn } from '../utils/log.js';
-import { registerBackendType } from '../components/backend.js';
 
 export class LocalStorageBackend extends LocalBackend {
   get storage() {
@@ -82,5 +81,3 @@ export class LocalStorageBackend extends LocalBackend {
     super.destroy();
   }
 }
-
-registerBackendType('localstorage', LocalStorageBackend);

@@ -39,3 +39,6 @@ export {
   HideComponent,
   ShowComponent,
 } from './components.js';
+export { LocalBackend } from './backends/local.js';
+export { LocalStorageBackend } from './backends/localstorage.js';
+export { WebSocketBackend } from './backends/websocket.js';

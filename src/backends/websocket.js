@@ -1,6 +1,5 @@
 import { JsonProtocolClientBackend } from './json_protocol_client.js';
 import { subscribeDOMEvent } from '../utils/subscribe_dom_event.js';
-import { registerBackendType } from '../components/backend.js';
 import { getCurrentWebSocketUrl } from '../utils/fetch.js';
 
 export class WebSocketBackend extends JsonProtocolClientBackend {
@@ -60,5 +59,3 @@ export class WebSocketBackend extends JsonProtocolClientBackend {
     this._websocket.close();
   }
 }
-
-registerBackendType('websocket', WebSocketBackend);
