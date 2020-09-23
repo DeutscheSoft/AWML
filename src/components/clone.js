@@ -286,6 +286,22 @@ export class CloneComponent extends PrefixComponentBase {
     this._importScripts = v;
   }
 
+  /**
+   * True if a template has been loaded and is currently being displayed.
+   */
+  get isLoaded() {
+    return this._loaded;
+  }
+
+  /**
+   * Wait for the template to be loaded.
+   */
+  waitForLoad() {
+    if (this.isLoaded) return Promise.resolve();
+
+    return onLoad(this);
+  }
+
   _subscribe() {
     // there is actually no reason to try to subscribe here,
     // we already have the template we are going to load
@@ -413,6 +429,8 @@ export class CloneComponent extends PrefixComponentBase {
           this.log('No template.');
         }
 
+        this._loaded = true;
+
         this.dispatchEvent(new Event('load'));
         if (this._triggerResize !== false) {
           this.log('Triggering resize %d levels up', this._triggerResize);
@@ -421,6 +439,8 @@ export class CloneComponent extends PrefixComponentBase {
       })
       .catch((err) => {
         if (stop) return;
+        this._loaded = false;
+
         this.log('Failed to load template: %o', err);
         this.dispatchEvent(
           new ErrorEvent('error', {
@@ -434,6 +454,7 @@ export class CloneComponent extends PrefixComponentBase {
     return () => {
       if (addedNodes) addedNodes.forEach((node) => node.remove());
       stop = true;
+      this._loaded = false;
     };
   }
 
@@ -450,6 +471,7 @@ export class CloneComponent extends PrefixComponentBase {
     this._templateElement = null;
     this._templateSubscription = null;
     this._value = null;
+    this._loaded = false;
   }
 
   /** @ignore */
