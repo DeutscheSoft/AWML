@@ -2,6 +2,9 @@
  * Subscribes to a DOM event.
  */
 export function subscribeDOMEvent(node, name, callback) {
+  if (typeof callback !== 'function')
+    throw new TypeError('Expected function.');
+
   // make unique
   const cb = (...args) => callback(...args);
 
@@ -18,6 +21,9 @@ export function subscribeDOMEvent(node, name, callback) {
  * Subscribes to a DOM event once.
  */
 export function subscribeDOMEventOnce(node, name, callback) {
+  if (typeof callback !== 'function')
+    throw new TypeError('Expected function.');
+
   // make unique
   const cb = (...args) => {
     node.removeEventListener(name, cb);

@@ -1,4 +1,5 @@
 import { BackendValue } from './backend_value.js';
+import { waitForDOMEvent } from './utils/subscribe_dom_event.js';
 
 const backendValues = new Map();
 const backends = new Map();
@@ -11,6 +12,19 @@ const backends = new Map();
  */
 export function getBackend(name) {
   return backends.get(name);
+}
+
+/**
+ * Waits for a backend with the given name to become available (i.e. `open`).
+ */
+export function waitForBackend(name) {
+  if (backends.has(name)) {
+    return Promise.resolve(backends.get(name));
+  } else {
+    return waitForDOMEvent(document, 'AWMLBackendRegistered').then((ev) => {
+      return waitForBackend(name);
+    });
+  }
 }
 
 /** @ignore */

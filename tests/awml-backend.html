@@ -3,6 +3,7 @@
     <script type="module" src="../src/index.js"></script>
     <script type="module">
       import { define, assertEqual, waitForDOMEvent } from './testing.js';
+      import { waitForBackend } from '../src/index.js';
 
       async function testOpenBehavior(b) {
         if (b.isOpen)
@@ -11,13 +12,16 @@
         const a = await Promise.all([
           waitForDOMEvent(b, 'open'),
           b.whenOpen(),
-          waitForDOMEvent(document, 'AWMLBackendRegistered')
+          waitForDOMEvent(document, 'AWMLBackendRegistered'),
+          waitForBackend(b.name),
         ]);
 
         assertEqual(b.isOpen, true);
 
         assertEqual(a[2].detail.backend, b.backend);
         assertEqual(a[2].detail.name, b.name);
+
+        assertEqual(a[3], b.backend);
       }
 
 

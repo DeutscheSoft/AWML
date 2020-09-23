@@ -1,5 +1,6 @@
 export {
   getBackend,
+  waitForBackend,
   registerBackend,
   unregisterBackend,
   getBackendValues,
