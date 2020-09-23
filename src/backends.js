@@ -23,11 +23,11 @@ export function registerBackend(name, backend) {
 
   const values = backendValues.get(name);
 
-  if (values === void 0) return;
-
-  values.forEach((backendValue) => {
-    backendValue.connectBackend(backend);
-  });
+  if (values !== void 0) {
+    values.forEach((backendValue) => {
+      backendValue.connectBackend(backend);
+    });
+  }
 
   const ev = new CustomEvent('AWMLBackendRegistered', {
     detail: {
@@ -49,11 +49,11 @@ export function unregisterBackend(name, backend) {
 
   const values = backendValues.get(name);
 
-  if (values === void 0) return;
-
-  values.forEach((backendValue) => {
-    backendValue.disconnectBackend();
-  });
+  if (values !== void 0) {
+    values.forEach((backendValue) => {
+      backendValue.disconnectBackend();
+    });
+  }
 
   const ev = new CustomEvent('AWMLBackendUnregistered', {
     detail: {

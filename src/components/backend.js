@@ -2,6 +2,7 @@ import { error } from '../utils/log.js';
 import { BaseComponent } from './base_component.js';
 import { registerBackend, unregisterBackend } from '../backends.js';
 import { Subscriptions } from '../utils/subscriptions.js';
+import { subscribeDOMEventOnce } from '../utils/subscribe_dom_event.js';
 import { timeout } from '../utils/timeout.js';
 
 const backendTypes = new Map();
@@ -57,10 +58,14 @@ export class BackendComponent extends BaseComponent {
     ]);
   }
 
+  /**
+   * The backend name.
+   */
   get name() {
     return this._name;
   }
 
+  /** @ignore */
   set name(v) {
     if (typeof v !== 'string' && v !== null)
       throw new TypeError('Expected string.');
@@ -68,10 +73,15 @@ export class BackendComponent extends BaseComponent {
     this._resubscribe();
   }
 
+  /**
+   * The backend type. Check the `backends/` directory for different backend
+   * types.
+   */
   get type() {
     return this._type;
   }
 
+  /** @ignore */
   set type(v) {
     if (typeof v !== 'string' && v !== null)
       throw new TypeError('Expected string.');
@@ -79,10 +89,15 @@ export class BackendComponent extends BaseComponent {
     this._resubscribe();
   }
 
+  /**
+   * The starting retry interval for reconnects. The actual retry interval
+   * will increase with each failed reconnection attempt.
+   */
   get retryInterval() {
     return this._retryInterval || 500;
   }
 
+  /** @ignore */
   set retryInterval(v) {
     if (typeof v === 'number') {
       if (!(v > 0)) v = null;
@@ -92,12 +107,41 @@ export class BackendComponent extends BaseComponent {
     this._retryInterval = v;
   }
 
+  /**
+   * Returns true is the backend is open.
+   */
   get isOpen() {
     const backend = this._backend;
 
     return backend !== null && backend.isOpen;
   }
 
+  /**
+   * Returns the current backend object. If the backend does not exist or
+   * is not in `open` state, `null` will be returned.
+   */
+  get backend() {
+    return this._backend;
+  }
+
+  /**
+   * Returns a promise that resolves when the backend is in `open` state.
+   */
+  whenOpen()
+  {
+    return new Promise((resolve) => {
+      if (this.isOpen)
+      {
+        resolve();
+      }
+      else
+      {
+        subscribeDOMEventOnce(this, 'open', resolve);
+      }
+    });
+  }
+
+  /** @ignore */
   calculateRetryInterval() {
     const interval = this.retryInterval;
 
@@ -111,6 +155,18 @@ export class BackendComponent extends BaseComponent {
     this._backend = null;
     this._retryInterval = null;
     this._retries = 0;
+  }
+
+  _onOpen(name, backend) {
+    registerBackend(name, backend);
+    this.log('is open.');
+    this.dispatchEvent(
+      new CustomEvent('open', {
+        detail: {
+          backend: backend,
+        },
+      })
+    );
   }
 
   _subscribe() {
@@ -138,21 +194,13 @@ export class BackendComponent extends BaseComponent {
     let registered = false;
 
     if (backend.isOpen) {
-      registerBackend(name, backend);
+      this._onOpen(name, backend);
       registered = true;
     } else if (backend.isInit) {
       subscriptions.add(
         backend.once('open', () => {
           this._retries = 0;
-          this.log('is open.');
-          this.dispatchEvent(
-            new CustomEvent('open', {
-              detail: {
-                backend: backend,
-              },
-            })
-          );
-          registerBackend(name, backend);
+          this._onOpen(name, backend);
           registered = true;
         })
       );
