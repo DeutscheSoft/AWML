@@ -6,8 +6,7 @@
       import { waitForBackend } from '../src/index.js';
 
       async function testOpenBehavior(b) {
-        if (b.isOpen)
-          return;
+        if (b.isOpen) return;
 
         const a = await Promise.all([
           waitForDOMEvent(b, 'open'),
@@ -23,7 +22,6 @@
 
         assertEqual(a[3], b.backend);
       }
-
 
       define(async () => {
         const b = document.querySelector('awml-backend');

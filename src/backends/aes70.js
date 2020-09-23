@@ -288,15 +288,18 @@ export class AES70Backend extends Backend {
     }
   }
 
-  _observePropertyWithGetter(o, property, path, index, callback)
-  {
+  _observePropertyWithGetter(o, property, path, index, callback) {
     let active = true;
 
     if (property.static) {
       if (index === 0) {
         callback(o[property.name]);
       } else {
-        warn('Static property %o in %o has no Min/Max.', property.name, o.ClassName);
+        warn(
+          'Static property %o in %o has no Min/Max.',
+          property.name,
+          o.ClassName
+        );
       }
       return;
     }
@@ -319,17 +322,17 @@ export class AES70Backend extends Backend {
     if (event) {
       eventHandler = (value, changeType) => {
         switch (index) {
-        case 0: // current
-          if (changeType.value !== 1) return;
-          break;
-        case 1: // min
-          if (changeType.value !== 2) return;
-          break;
-        case 2: // max
-          if (changeType.value !== 3) return;
-          break;
-        default:
-          return;
+          case 0: // current
+            if (changeType.value !== 1) return;
+            break;
+          case 1: // min
+            if (changeType.value !== 2) return;
+            break;
+          case 2: // max
+            if (changeType.value !== 3) return;
+            break;
+          default:
+            return;
         }
         callback(value);
       };
@@ -408,7 +411,13 @@ export class AES70Backend extends Backend {
 
       if (propertyName === 'Min' || propertyName === 'Max') {
         const index = propertyName === 'Min' ? 1 : 2;
-        return this._observePropertyWithGetter(o, property, path, index, callback);
+        return this._observePropertyWithGetter(
+          o,
+          property,
+          path,
+          index,
+          callback
+        );
       }
     }
   }

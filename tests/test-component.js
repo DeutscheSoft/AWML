@@ -13,13 +13,11 @@ class TestWidget extends EventTarget {
     this.emit('set_' + name, value, name);
   }
 
-  startInteracting()
-  {
+  startInteracting() {
     this.set('interacting', true);
   }
 
-  stopInteracting()
-  {
+  stopInteracting() {
     this.set('interacting', false);
   }
 

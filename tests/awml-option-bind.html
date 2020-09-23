@@ -145,7 +145,7 @@
     <awml-backend type="local" name="test">
       { "foo" : "bar", "bar" : "bar", "flupp" : "bar" }
     </awml-backend>
-    <awml-backend type=local delay=100 name=remote></awml-backend>
+    <awml-backend type="local" delay="100" name="remote"></awml-backend>
   </head>
   <body>
     <test-component>
@@ -199,7 +199,7 @@
         type="bind"
         name="foo"
         src="remote:foo"
-        receive-delay=100
+        receive-delay="100"
       ></awml-option>
     </test-component>
   </body>

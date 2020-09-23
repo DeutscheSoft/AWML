@@ -5,8 +5,8 @@
       import { assertEqual, define, waitForFrame } from './testing.js';
 
       window.global = {
-        foo: function() {
-            return ClassComponent;
+        foo: function () {
+          return ClassComponent;
         },
       };
 
@@ -17,11 +17,11 @@
         assertEqual(awmlClass.transformReceive, global.foo);
       });
     </script>
-    <script type=module src='../src/index.js'></script>
+    <script type="module" src="../src/index.js"></script>
   </head>
   <body>
     <div>
-      <awml-class transform-receive='global.foo'></awml-class>
+      <awml-class transform-receive="global.foo"></awml-class>
     </div>
   </body>
 </html>

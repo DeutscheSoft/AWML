@@ -1,23 +1,18 @@
 import { Option } from './option.js';
 import { parseAttribute } from '../utils/parse_attribute.js';
 
-function subscribeInteractionChange(widget, timeout, callback)
-{
+function subscribeInteractionChange(widget, timeout, callback) {
   let state = widget.get('interacting');
   let tid;
 
   callback(state);
 
   const sub = widget.subscribe('set_interacting', (value) => {
-    if (value || !(timeout > 0))
-    {
+    if (value || !(timeout > 0)) {
       if (state == value) return;
-      callback(state = value);
-    }
-    else
-    {
-      if (tid !== void(0))
-        clearTimeout(tid);
+      callback((state = value));
+    } else {
+      if (tid !== void 0) clearTimeout(tid);
 
       state = value;
 
@@ -30,16 +25,14 @@ function subscribeInteractionChange(widget, timeout, callback)
 
   return () => {
     sub();
-    if (tid !== void(0))
-    {
+    if (tid !== void 0) {
       clearTimeout(tid);
-      tid = void(0);
+      tid = void 0;
     }
   };
 }
 
-function combineSubscriptions(a, b)
-{
+function combineSubscriptions(a, b) {
   if (!a && !b) return null;
   if (!b) return a;
   if (!a) return b;
@@ -98,17 +91,20 @@ export class BindOption extends Option {
     }
 
     if (!this.ignoreInteraction) {
-      sub2 = subscribeInteractionChange(this.widget, this.receiveDelay, (value) => {
-        this._interacting = value;
+      sub2 = subscribeInteractionChange(
+        this.widget,
+        this.receiveDelay,
+        (value) => {
+          this._interacting = value;
 
-        if (value || !this._hasLastValue)
-          return;
+          if (value || !this._hasLastValue) return;
 
-        const lastValue = this._lastValue;
-        this._lastValue = null;
-        this._hasLastValue = false;
-        this.valueReceived(lastValue);
-      });
+          const lastValue = this._lastValue;
+          this._lastValue = null;
+          this._hasLastValue = false;
+          this.valueReceived(lastValue);
+        }
+      );
     }
 
     this._sub = combineSubscriptions(sub1, sub2);

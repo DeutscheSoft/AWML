@@ -127,15 +127,11 @@ export class BackendComponent extends BaseComponent {
   /**
    * Returns a promise that resolves when the backend is in `open` state.
    */
-  whenOpen()
-  {
+  whenOpen() {
     return new Promise((resolve) => {
-      if (this.isOpen)
-      {
+      if (this.isOpen) {
         resolve();
-      }
-      else
-      {
+      } else {
         subscribeDOMEventOnce(this, 'open', resolve);
       }
     });
