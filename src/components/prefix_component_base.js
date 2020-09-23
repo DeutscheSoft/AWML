@@ -42,8 +42,9 @@ export class PrefixComponentBase extends BaseComponent {
 
     let prefix = this._currentPrefix;
 
-    if (prefix === null)
+    if (prefix === null) {
       this._currentPrefix = prefix = collectPrefix(this, this._srcPrefix);
+    }
 
     return prefix;
   }
@@ -136,6 +137,7 @@ export class PrefixComponentBase extends BaseComponent {
       throw new TypeError('Expected string.');
 
     this._srcPrefix = v;
+    this._currentPrefix = null;
     this._updateEffectiveSrc();
   }
 
@@ -224,6 +226,8 @@ export class PrefixComponentBase extends BaseComponent {
 
       src = prefix + src;
     }
+
+    this.log('Source is %o', src);
 
     this._effectiveSrc = src;
 

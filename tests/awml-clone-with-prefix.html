@@ -1,0 +1,46 @@
+<html>
+  <head>
+    <script type="module" src="../src/index.js"></script>
+    <script type="module">
+      import {
+        assertEqual,
+        define,
+        waitForFrame,
+        waitForDOMEvent,
+        testAttribute,
+      } from './testing.js';
+      define(async () => {
+        const clones = Array.from(
+          document.querySelectorAll('awml-clone')
+        ).filter((clone) => clone.parentNode === document.body);
+
+        assertEqual(clones.length, 2);
+
+        {
+          const clone = clones[0];
+
+          await clone.waitForLoad();
+
+          assertEqual(clone.innerText, 'foo');
+        }
+
+        {
+          const clone = clones[1];
+
+          await clone.waitForLoad();
+
+          assertEqual(clone.innerText, 'bar');
+        }
+      });
+    </script>
+    <awml-backend name="test" type="local">
+      { "prefix1/template": "t1", "prefix2/template": "t2" }
+    </awml-backend>
+    <template id="t1">foo</template>
+    <template id="t2">bar</template>
+  </head>
+  <body prefix-a="test:prefix1/" prefix-b="test:prefix2/">
+    <awml-clone src="template" src-prefix="a"></awml-clone>
+    <awml-clone src="template" src-prefix="b"></awml-clone>
+  </body>
+</html>
