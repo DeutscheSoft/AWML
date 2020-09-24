@@ -182,7 +182,6 @@ export class Backend extends EventTarget {
 
     subscriptions.delete(id);
     this.lowUnsubscribe(id);
-    this._values.delete(id);
     const path = this._idToPath.get(id);
     this._idToPath.delete(id);
     this._pathToId.delete(path);

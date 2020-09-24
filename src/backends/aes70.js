@@ -541,6 +541,7 @@ export class AES70Backend extends Backend {
       m.delete(id);
       runCleanupHandler(sub);
     }
+    this._values.delete(id);
   }
 
   static argumentsFromNode(node) {
