@@ -46,6 +46,13 @@ export class BackendValue extends DynamicValue {
     const backend = this._backend;
     const backendId = this._backendId;
 
+    this.clear();
+
+    if (this._hasRequestedValue) {
+      this._hasRequestedValue = false;
+      this._requestedValue = null;
+    }
+
     if (!backend) return;
     if (backendId === null) return;
 
@@ -66,14 +73,9 @@ export class BackendValue extends DynamicValue {
 
   /** @ignore */
   disconnectBackend() {
-    this._deactivate();
     this._backend = null;
     this._backendId = null;
-
-    if (this._hasRequestedValue) {
-      this._hasRequestedValue = false;
-      this._requestedValue = null;
-    }
+    this._deactivate();
   }
 
   /**
@@ -113,8 +115,7 @@ export class BackendValue extends DynamicValue {
     this._callback = (id, value) => {
       // unsubscribe from the backend
       if (id === false) {
-        this._backendId = null;
-        this._backend = null;
+        this.disconnectBackend();
         return;
       }
 

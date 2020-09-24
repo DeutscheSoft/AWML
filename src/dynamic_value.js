@@ -222,4 +222,12 @@ export class DynamicValue {
   set(value) {
     this._updateValue(value);
   }
+
+  /**
+   * Clears the current value.
+   */
+  clear() {
+    this._hasValue = false;
+    this._value = void 0;
+  }
 }
