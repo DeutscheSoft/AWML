@@ -26,7 +26,8 @@ export class BackendValue extends DynamicValue {
         }
 
         if (result.length === 3) {
-          this._callback(id, result[2]);
+          if (!this._hasValue)
+            this._callback(id, result[2]);
         }
       },
       (err) => {
