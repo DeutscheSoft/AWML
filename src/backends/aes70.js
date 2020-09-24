@@ -210,66 +210,131 @@ export class AES70Backend extends Backend {
     };
   }
 
+  _subscribeMembersAndRoles(block, callback, onError) {
+    if (!isBlock(block)) throw new TypeError('Expected OcaBlock.');
+    if (typeof callback !== 'function') throw new TypeError('Expected function.');
+    if (!onError) onError = (err) => {
+      this.log('Error while fetching block members:', err);
+    };
+
+    // ono -> OcaRoot
+    const members = new Map();
+    // OcaRoot -> string
+    const roles = new Map();
+
+    // Array<OcaRoot>
+    let last_members;
+
+    const device = block.device;
+
+    const publish = () => {
+      // unsubscribed
+      if (callback === null) return;
+
+      const roleNames = new Array(last_members.length);
+
+      for (let i = 0; i < last_members.length; i++)
+      {
+        const o = last_members[i];
+
+        // this may happen if we get a new member list before we manage to fetch
+        // all roles. In that case, we simply abort here and wait for things to
+        // complete.
+        if (!roles.has(o)) return;
+        roleNames[i] = roles.get(o);
+      }
+
+      callback(last_members, roleNames);
+    };
+
+    const onMembers = (a) => {
+      // unsubscribed
+      if (callback === null) return;
+
+      const tasks = [];
+
+      const tmp = a.map((member) => {
+        const objectNumber = member.ONo;
+
+        // we already know this member
+        if (members.has(objectNumber)) {
+          return members.get(objectNumber);
+        } else {
+          const o = device.resolve_object(member);
+          members.set(objectNumber, o);
+          const p = o.GetRole().then(
+            (rolename) => {
+              // the members may have changed since then, simply
+              // ignore this result.
+              if (members.get(objectNumber) === o) {
+                roles.set(o, rolename);
+              }
+            },
+            onError
+          );
+          tasks.push(p);
+          return o;
+        }
+      });
+
+      last_members = tmp;
+
+      // remove all object which have disappeared.
+      const objectNumbers = new Set(a.map(member => member.ONo));
+      const deleted = Array.from(members.keys()).filter(ono => !objectNumbers.has(ono));
+
+      deleted.forEach((ono) => {
+        const o = members.get(ono);
+
+        members.delete(ono);
+        roles.delete(o);
+      });
+
+      if (!tasks.length) {
+        // we are done
+        publish();
+      } else {
+        Promise.all(tasks).then(publish);
+      }
+    };
+
+    block.OnMembersChanged.subscribe(onMembers);
+    block.GetMembers().then(onMembers, onError);
+
+    return () => {
+      // unsubscribe
+      if (callback === null) return;
+      block.OnMembersChanged.unsubscribe(onMembers);
+      callback = null;
+    };
+  }
+
   _observeDirectory(o, callback) {
     //console.log('observeDirectory', o);
     if (isBlock(o)) {
-      let rolemap = new Map();
-      let pending = 0;
-      let hasChanged = true;
-      let cb = throttle(() => {
+      let membersCallback = (members, roles) => {
         if (callback === null) return;
-        if (pending !== 0) return;
-        if (!hasChanged) return;
-        hasChanged = false;
-        //console.log('rolemap', Array.from(rolemap);
-        // Note: we pass a copy here to our subscribers
-        // to prevent them from observing modifications
-        // we are making to it in the future
-        callback([o, new Map(rolemap)]);
-      });
 
-      let memberCallback = (member) => {
-        let key = null;
+        const rolemap = new Map();
 
-        pending++;
-        member.GetRole().then(
-          (role) => {
-            if (member === null) return;
-            if (callback === null) return;
-            pending--;
-            key = role;
-            if (rolemap.has(key)) {
-              let n = 1;
-              do {
-                key = role + n++;
-              } while (rolemap.has(key));
-            }
-            rolemap.set(key, member);
-            hasChanged = true;
-            cb();
-          },
-          (error) => {
-            if (member === null) return;
-            if (callback === null) return;
-            pending--;
-            cb();
-            warn('Failed to fetch Role', error);
+
+        for (let i = 0; i < members.length; i++)
+        {
+          let key = roles[i];
+
+          if (rolemap.has(key)) {
+            let n = 1;
+            do {
+              key = role + n++;
+            } while (rolemap.has(key));
           }
-        );
-        return () => {
-          if (member === null) return;
-          if (key !== null) rolemap.delete(key);
-          member = null;
-          hasChanged = true;
-          cb();
-        };
+          rolemap.set(key, members[i]);
+        }
+
+        callback([ o, rolemap ]);
       };
 
-      let onStable = () => {
-        cb();
-      };
-
-      let cleanup = forEachMemberAsync(o, memberCallback, onStable);
+      let cleanup = this._subscribeMembersAndRoles(o, membersCallback);
 
       return () => {
         if (cleanup) {
@@ -277,9 +342,7 @@ export class AES70Backend extends Backend {
           cleanup = null;
         }
         // cleanup may help
-        cb = null;
         callback = null;
-        rolemap = null;
         o = null;
       };
     } else {
