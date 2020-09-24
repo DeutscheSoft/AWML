@@ -2,201 +2,59 @@ var f = (function(w, AWML) {
   var base = AWML.Backends.base;
   var proto = base.prototype;
 
-  function get_members(o) {
-    return o.GetMembers().then(function(res) {
-      return res.map(o.device.resolve_object.bind(o.device));
-    });
+  if (typeof OCA === 'undefined') {
+    console.warn('Cannot find AES70.js library. Missing a script include?');
   }
 
-  var OCA = w.OCA;
-  var SP = OCA.SP;
-
-  function PropertySync(backend, o, path) {
-    this.o = o;
-    this.backend = backend;
-    this.path = path;
-  }
-  PropertySync.prototype = {
-    resolve: function(name) {
-      /* returns the ID. This is used for the subscription step. */
-      var o = this.o;
-      var p = o.__oca_properties__.find_property(name);
-
-      if (!p) return void(0);
-
-      var id = p.index | (p.level << 16);
-
-      return o.ObjectNumber + ":" + id;
-    },
-    full_path: function(name) {
-      return this.path + "/" + name;
-    },
-    subscribe: function(name) {
-      var o = this.o;
-      var p = o.__oca_properties__.find_property(name);
-
-      if (!p) throw new Error("No such property: "+name);
-
-      var id = this.resolve(name);
-
-      if (p.static) {
-        backend.subscribe_success(path, id);
-        backend.receive(id, this.o[name]);
-        return;
-      }
-
-      var getter = p.getter(o);
-
-      if (!getter) {
-        throw new Error("Property is missing getter.");
-      }
-
-      var ret = [];
-
-      ret.push(getter.call(o)
-        .then(function(val) { 
-            var path = this.full_path(name);
-            this.backend.subscribe_success(path, id);
-
-            if (val instanceof SP.Arguments) {
-              // Assume that [1] is Min and [2] is Max
-
-              var tmp = val.item(1);
-              if (tmp !== void(0)) {
-                this.backend.subscribe_success(path + "/Min", false);
-                this.backend.receive(path + "/Min", tmp);
-              }
-
-              tmp = val.item(2);
-              if (tmp !== void(0)) {
-                this.backend.subscribe_success(path + "/Max", false);
-                this.backend.receive(path + "/Max", tmp);
-              }
-
-              this.backend.receive(id, val.item(0));
-            } else {
-              this.backend.receive(id, val);
-            }
-          }.bind(this)));
-
-      var event = p.event(o);
-
-      if (event)
-      {
-        ret.push(event.subscribe((value, type, id) => {
-          // TODO: check that type is value changed
-          var id = this.resolve(name);
-          this.backend.receive(id, value);
-        }));
-      }
-
-      return Promise.all(ret);
-    },
-    unsubscribe: function(name) {
-      this.subscribed.delete(name);
-
-      if (!this.subscribed.size) {
-        /* FIXME: unsubscribe event handler */
-      }
-    },
-    set: function(name, value) {
-      var o = this.o;
-      var p = o.__oca_properties__.find_property(name);
-
-      if (!p) throw new Error("No such property: "+name);
-
-      var setter = p.setter(o);
-
-      if (p.static || p.readonly || !setter)
-            throw new Error("Trying to modify readonly property.");
-
-      setter(value);
-    },
-  };
-
-  function map_all_objects()
-  {
-    const roles = new Map();
-
-    const get_all_roles = function(tree)
-    {
-      var ret = [];
-
-      for (var i = 0 ; i < tree.length; i++)
-      {
-        var o = tree[i];
-        if (Array.isArray(o))
-        {
-          ret.push(get_all_roles(o));
-        }
-        else
-        {
-          ret.push(o.GetRole().then(function(o, role) { roles.set(o, role); }.bind(this, o)));
-        }
-      }
-
-      return Promise.all(ret);
+  function runCleanupHandler(cleanup) {
+    try {
+      cleanup();
+    } catch (error) {
+      warn('Cleanup handler threw an exception:', error);
     }
+  }
 
-    return this.device.GetDeviceTree()
-      .then(function(tree) {
-        return get_all_roles(tree)
-          .then(
-            function() {
-              const rec = function(tree, path) {
-                const local_roles = new Map();
-                const children = new Map();
+  function splitAtLast(path, seperator) {
+    const pos = path.lastIndexOf(seperator);
 
-                const prefix = (path.length) ? (path + "/") : path;
+    return pos === -1
+      ? [seperator, path]
+      : [path.substr(0, pos + 1), path.substr(pos + 1)];
+  }
 
-                for (var i = 0; i < tree.length; i++)
-                {
-                  if (!Array.isArray(tree[i]))
-                  {
-                    let role = roles.get(tree[i]);
+  const toplevelObjects = [
+    'DeviceManager',
+    'SecurityManager',
+    'FirmwareManager',
+    'SubscriptionManager',
+    'PowerManager',
+    'NetworkManager',
+    'MediaClockManager',
+    'LibraryManager',
+    'AudioProcessingManager',
+    'DeviceTimeManager',
+    'TaskManager',
+    'CodingManager',
+    'DiagnosticManager',
+    'Root',
+  ];
 
-                    if (role === null)
-                    {
-                      role = tree[i].ono.toString();
-                      //console.log("ignoring object", tree[i].ono);
-                      //continue;
-                    }
+  function unCurry(callback) {
+    return (id, value) => {
+      // if we get unsubscribed, we simply abort
+      if (id === false) return;
+      return callback(value);
+    };
+  }
 
-                    if (local_roles.has(role))
-                    {
-                      let cnt = 1;
-
-                      while (local_roles.has(role + cnt)) cnt++;
-
-                      role += cnt;
-                    }
-
-                    local_roles.set(role, tree[i]);
-                  }
-                  else
-                  {
-                    children.set(tree[i-1], tree[i]);
-                  }
-                }
-
-                local_roles.forEach(
-                  function(o, role) {
-                    const path = prefix + role;
-                    this.objects.set(path, new PropertySync(this, o, path));
-                    if (children.has(o))
-                      rec(children.get(o), path);
-                  }.bind(this)
-                );
-              }.bind(this);
-              rec(tree, "");
-            }.bind(this)
-          );
-      }.bind(this));
+  function isBlock(o) {
+    return typeof o === 'object' && typeof o.GetMembers === 'function';
   }
 
   function aes70(options) {
     base.call(this, options);
     this.options = options;
+    this.ws = null;
 
     this.close_cb = function() {
       this.close();
@@ -204,8 +62,6 @@ var f = (function(w, AWML) {
     this.error_cb = function(e) {
       this.error(e);
     }.bind(this);
-
-    this.objects = new Map();
 
     if (options.url)
     {
@@ -219,12 +75,14 @@ var f = (function(w, AWML) {
       this.device = options.device;
       this.open();
     }
+    this._path_subscriptions = new Map();
+    this._setters = new Map();
+    this._seperator = '/';
   }
   aes70.prototype = Object.assign(Object.create(proto), {
     connect: function() {
       try {
-        var ws;
-        ws = new WebSocket(this.url);
+        var ws = new WebSocket(this.url);
         ws.addEventListener('open', function() {
           var options = { };
 
@@ -269,86 +127,441 @@ var f = (function(w, AWML) {
         this.ws = null;
       }
     },
-    open: function() {
-      this.device.on('close', this.close_cb);
-      var m = OCA.Types.OcaManagerDefaultObjectNumbers;
-      for (var name in m) {
-        var ono = m[name];
-        var o = new OCA.RemoteControlClasses["Oca"+name](ono, this.device);
-        this.objects.set(name, new PropertySync(this, o, name));
-      }
-      map_all_objects.call(this)
-        .then(function() {
-          proto.open.call(this);
-        }.bind(this),
-        function(err) {
-          console.error(err);
-          this.error(err);
-        }.bind(this));
-    },
     low_unsubscribe: function(id) {
-      // TODO: we do not care at the moment.
+      const m = this._path_subscriptions;
+      if (m.has(id)) {
+        const sub = m.get(id);
+        m.delete(id);
+        runCleanupHandler(sub);
+      }
+      this._values.delete(id);
     },
     low_subscribe: function(path) {
-      var meta;
-
-      if (path.endsWith("/Min")) {
-        meta = "Min";
-      } else if (path.endsWith("/Max")) {
-        meta = "Max";
-      }
-
-      var tmp = path.split("/");
-      var object_path;
-      var property_name;
-
-      if (meta) {
-        object_path = tmp.slice(0, -2).join("/");
-        property_name = tmp[tmp.length-2];
-      } else {
-        object_path = tmp.slice(0, -1).join("/");
-        property_name = tmp[tmp.length-1];
-      }
-
-      var p = this.objects.get(object_path);
-      var id;
-
-      if (!p || (id = p.resolve(property_name)) === void(0)) {
-
-        p = this.objects.get(path);
-
-        if (p)
-        {
-          this.subscribe_success(path, path);
-          this.receive(path, p.o);
-          return;
-        }
-        else
-        {
-          this.subscribe_fail(path, "No such property.");
-          return;
-        }
-      }
-
       try {
-        p.subscribe(property_name)
-          .catch(function(e) {
-            this.subscribe_fail(path, e.toString());
-          }.bind(this));
-      } catch (e) {
-        console.error(e);
-        this.subscribe_fail(path, e.toString());
+        const cleanup = this.doSubscribe(path);
+        if (cleanup) this._path_subscriptions.set(path, cleanup);
+        this.subscribe_success(path, path);
+      } catch (error) {
+        this.subscribe_fail(path, error);
       }
     },
     set: function(id, value) {
-      var path = this.id2uri.get(id);
-      var tmp = path.split("/");
-      var object_path = tmp.slice(0, -1).join("/");
-      var property_name = tmp[tmp.length-1];
-      var p = this.objects.get(object_path);
+      const setter = this._setters.get(id);
 
-      p.set(property_name, value);
+      if (!setter) {
+        AWML.warn('%o is a readonly property.', id);
+        return;
+      }
+
+      setter(value);
     },
+    // returns CleanupLogic
+    observe: function(path, callback) {
+      if (typeof callback !== 'function')
+        throw new TypeError('Expected function.');
+
+      callback = unCurry(callback);
+
+      let id = null;
+
+      this.subscribe(path, callback).then(
+        (a) => {
+          if (id === false) {
+            this.unsubscribe(a[1], callback);
+            return;
+          } else {
+            id = a[1];
+          }
+
+          if (a.length === 3) {
+            callback(id, a[2]);
+          }
+        },
+        (err) => {
+          warn('Subscription failed:', err);
+        }
+      );
+
+      return () => {
+        if (id !== null) {
+          this.unsubscribe(id, callback);
+        } else {
+          // subscribe is still pending
+          id = false;
+        }
+      };
+    },
+    _subscribeMembersAndRoles: function(block, callback, onError) {
+      if (!isBlock(block)) throw new TypeError('Expected OcaBlock.');
+      if (typeof callback !== 'function') throw new TypeError('Expected function.');
+      if (!onError) onError = (err) => {
+        AWML.log('Error while fetching block members:', err);
+      };
+
+      // ono -> OcaRoot
+      const members = new Map();
+      // OcaRoot -> string
+      const roles = new Map();
+
+      // Array<OcaRoot>
+      let last_members;
+
+      const device = block.device;
+
+      const publish = () => {
+        // unsubscribed
+        if (callback === null) return;
+
+        const roleNames = new Array(last_members.length);
+
+        for (let i = 0; i < last_members.length; i++)
+        {
+          const o = last_members[i];
+
+          // this may happen if we get a new member list before we manage to fetch
+          // all roles. In that case, we simply abort here and wait for things to
+          // complete.
+          if (!roles.has(o)) return;
+          roleNames[i] = roles.get(o);
+        }
+
+        callback(last_members, roleNames);
+      };
+
+      const onMembers = (a) => {
+        // unsubscribed
+        if (callback === null) return;
+
+        const tasks = [];
+
+        const tmp = a.map((member) => {
+          const objectNumber = member.ONo;
+
+          // we already know this member
+          if (members.has(objectNumber)) {
+            return members.get(objectNumber);
+          } else {
+            const o = device.resolve_object(member);
+            members.set(objectNumber, o);
+            const p = o.GetRole().then(
+              (rolename) => {
+                // the members may have changed since then, simply
+                // ignore this result.
+                if (members.get(objectNumber) === o) {
+                  roles.set(o, rolename);
+                }
+              },
+              onError
+            );
+            tasks.push(p);
+            return o;
+          }
+        });
+
+        last_members = tmp;
+
+        // remove all object which have disappeared.
+        const objectNumbers = new Set(a.map(member => member.ONo));
+        const deleted = Array.from(members.keys()).filter(ono => !objectNumbers.has(ono));
+
+        deleted.forEach((ono) => {
+          const o = members.get(ono);
+
+          members.delete(ono);
+          roles.delete(o);
+        });
+
+        if (!tasks.length) {
+          // we are done
+          publish();
+        } else {
+          Promise.all(tasks).then(publish);
+        }
+      };
+
+      block.OnMembersChanged.subscribe(onMembers);
+      block.GetMembers().then(onMembers, onError);
+
+      return () => {
+        // unsubscribe
+        if (callback === null) return;
+        block.OnMembersChanged.unsubscribe(onMembers);
+        callback = null;
+      };
+    },
+    _observeDirectory: function(o, callback) {
+      //console.log('observeDirectory', o);
+      if (isBlock(o)) {
+        let membersCallback = (members, roles) => {
+          if (callback === null) return;
+
+          const rolemap = new Map();
+
+
+          for (let i = 0; i < members.length; i++)
+          {
+            let key = roles[i];
+
+            if (rolemap.has(key)) {
+              let n = 1;
+              do {
+                key = role + n++;
+              } while (rolemap.has(key));
+            }
+            rolemap.set(key, members[i]);
+          }
+
+          callback([ o, rolemap ]);
+        };
+
+        let cleanup = this._subscribeMembersAndRoles(o, membersCallback);
+
+        return () => {
+          if (cleanup) {
+            runCleanupHandler(cleanup);
+            cleanup = null;
+          }
+          // cleanup may help
+          callback = null;
+          o = null;
+        };
+      } else {
+        // not a block, so we only care about properties
+        callback([o]);
+      }
+    },
+    _observePropertyWithGetter: function(o, property, path, index, callback) {
+      let active = true;
+
+      if (property.static) {
+        if (index === 0) {
+          callback(o[property.name]);
+        } else {
+          warn(
+            'Static property %o in %o has no Min/Max.',
+            property.name,
+            o.ClassName
+          );
+        }
+        return;
+      }
+
+      const getter = property.getter(o);
+
+      if (!getter) {
+        warn(
+          'Could not subscribe to private property %o in %o',
+          propertyName,
+          properties
+        );
+        return;
+      }
+
+      const event = property.event(o);
+      const setter = index === 0 ? property.setter(o) : null;
+      let eventHandler = null;
+
+      if (event) {
+        eventHandler = (value, changeType) => {
+          switch (index) {
+            case 0: // current
+              if (changeType.value !== 1) return;
+              break;
+            case 1: // min
+              if (changeType.value !== 2) return;
+              break;
+            case 2: // max
+              if (changeType.value !== 3) return;
+              break;
+            default:
+              return;
+          }
+          callback(value);
+        };
+        event.subscribe(eventHandler).catch((err) => {
+          warn('Failed to subscribe to %o: %o.\n', property.name, err);
+        });
+      }
+
+      if (setter) this._setters.set(path, setter);
+
+      getter().then(
+        (x) => {
+          if (!active) return;
+          if (x instanceof OCA.SP.Arguments && index < x.length) {
+            callback(x.item(index));
+          } else if (!index) {
+            callback(x);
+          } else {
+            warn('%o in %o has neither Min nor Max.', property.name, o.ClassName);
+          }
+        },
+        (error) => {
+          if (!active) return;
+          // NotImplemented
+          if (error.status.value == 8) {
+            warn('Fetching %o failed: not implemented.', property.name);
+          } else {
+            warn('Fetching %o produced an error: %o', property.name, error);
+          }
+        }
+      );
+
+      return () => {
+        if (!active) return;
+        if (event) event.unsubscribe(eventHandler);
+        if (setter) this._setters.delete(path);
+        active = false;
+      };
+    },
+    _observeProperty: function(a, propertyName, path, callback) {
+      //console.log('_observeProperty(%o, %o, %o)', a, propertyName, path);
+      const o = a[0];
+
+      if (isBlock(o) && a[1] instanceof Map) {
+        const rolemap = a[1];
+
+        if (rolemap && rolemap.has(propertyName)) {
+          callback(rolemap.get(propertyName));
+          return;
+        }
+
+        // try property lookup
+        a = [o];
+      }
+
+      // actual property lookup
+      if (a.length === 1) {
+        const properties = o.get_properties();
+        const property = properties.find_property(propertyName);
+
+        if (!property) {
+          AWML.log('Could not find property %o in %o.', propertyName, properties);
+          return;
+        }
+
+        return this._observePropertyWithGetter(o, property, path, 0, callback);
+      } else if (a.length === 2) {
+        // meta info
+        const o = a[0];
+        const property = a[1];
+
+        // It might be that this property does not exist.
+        // That is not necessarily a permanent error.
+        if (!property) return;
+
+        if (propertyName === 'Min' || propertyName === 'Max') {
+          const index = propertyName === 'Min' ? 1 : 2;
+          return this._observePropertyWithGetter(
+            o,
+            property,
+            path,
+            index,
+            callback
+          );
+        }
+      }
+    },
+    _observeEach: function(path, callback) {
+      let lastValue = null;
+      let cleanup = null;
+
+      const cb = (o) => {
+        if (lastValue === o) return;
+        if (cleanup) runCleanupHandler(cleanup);
+
+        cleanup = callback(o);
+      };
+
+      let sub = this.observe(path, cb);
+
+      return () => {
+        if (cleanup) runCleanupHandler(cleanup);
+        if (sub) runCleanupHandler(sub);
+        sub = null;
+        lastValue = null;
+        cleanup = null;
+      };
+    },
+    // Promise<CleanupLogic>
+    doSubscribe: function(path) {
+      //console.log('doSubscribe(%o)', path);
+      const seperator = this._seperator;
+      const dir = path.endsWith(seperator);
+      const [parentPath, propertyName] = splitAtLast(
+        dir ? path.substr(0, path.length - 1) : path,
+        seperator
+      );
+
+      // we are at the top level
+      if (parentPath === '/') {
+        if (propertyName == '') {
+          return this._observeDirectory(this.device.Root, (a) => {
+            this.receive(path, a);
+          });
+        } else if (toplevelObjects.indexOf(propertyName) !== -1) {
+          const o = this.device[propertyName];
+
+          if (!dir) {
+            // just pass the object
+            this.receive(path, o);
+            return;
+          } else {
+            // we got a slash, we subscribe object, rolemap/properties
+            //console.log('trying to subscribe top level %o', path);
+            return this._observeDirectory(o, (a) => {
+              this.receive(path, a);
+            });
+          }
+        }
+      }
+
+      let callback;
+
+      if (dir) {
+        //console.log('trying to subscribe directory %o in %o', propertyName, parentPath);
+        callback = (a) => {
+          //console.log('%o / %o -> %o', parentPath, propertyName, a);
+          const o = a[0];
+
+          if (isBlock(o) && a[1] instanceof Map) {
+            const rolemap = a[1];
+
+            if (rolemap.has(propertyName)) {
+              return this._observeDirectory(
+                rolemap.get(propertyName),
+                (value) => {
+                  this.receive(path, value);
+                }
+              );
+            }
+          }
+
+          // check the properties, this is for meta-info lookup
+          const property = o.get_properties().find_property(propertyName);
+
+          if (!property) {
+            AWML.log('Could not find property %o in %o', propertyName, o);
+          }
+
+          if (!isBlock(o)) this.receive(path, [o, property]);
+        };
+      } else {
+        //console.log('trying to subscribe property %o in %o', propertyName, parentPath);
+        callback = (a) => {
+          return this._observeProperty(a, propertyName, path, (value) => {
+            //console.log('%o -> %o', path, value);
+            this.receive(path, value);
+          });
+        };
+      }
+
+      // get a directory query for the parent object
+      return this._observeEach(
+        parentPath === seperator ? 'Root' + seperator : parentPath,
+        callback
+      );
+    }
   });
 
   AWML.Backends.aes70 = aes70;
