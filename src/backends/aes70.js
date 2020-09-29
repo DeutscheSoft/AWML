@@ -148,10 +148,12 @@ export class AES70Backend extends Backend {
 
   _subscribeMembersAndRoles(block, callback, onError) {
     if (!isBlock(block)) throw new TypeError('Expected OcaBlock.');
-    if (typeof callback !== 'function') throw new TypeError('Expected function.');
-    if (!onError) onError = (err) => {
-      this.log('Error while fetching block members:', err);
-    };
+    if (typeof callback !== 'function')
+      throw new TypeError('Expected function.');
+    if (!onError)
+      onError = (err) => {
+        this.log('Error while fetching block members:', err);
+      };
 
     // ono -> OcaRoot
     const members = new Map();
@@ -169,8 +171,7 @@ export class AES70Backend extends Backend {
 
       const roleNames = new Array(last_members.length);
 
-      for (let i = 0; i < last_members.length; i++)
-      {
+      for (let i = 0; i < last_members.length; i++) {
         const o = last_members[i];
 
         // this may happen if we get a new member list before we manage to fetch
@@ -198,16 +199,13 @@ export class AES70Backend extends Backend {
         } else {
           const o = device.resolve_object(member);
           members.set(objectNumber, o);
-          const p = o.GetRole().then(
-            (rolename) => {
-              // the members may have changed since then, simply
-              // ignore this result.
-              if (members.get(objectNumber) === o) {
-                roles.set(o, rolename);
-              }
-            },
-            onError
-          );
+          const p = o.GetRole().then((rolename) => {
+            // the members may have changed since then, simply
+            // ignore this result.
+            if (members.get(objectNumber) === o) {
+              roles.set(o, rolename);
+            }
+          }, onError);
           tasks.push(p);
           return o;
         }
@@ -216,8 +214,10 @@ export class AES70Backend extends Backend {
       last_members = tmp;
 
       // remove all object which have disappeared.
-      const objectNumbers = new Set(a.map(member => member.ONo));
-      const deleted = Array.from(members.keys()).filter(ono => !objectNumbers.has(ono));
+      const objectNumbers = new Set(a.map((member) => member.ONo));
+      const deleted = Array.from(members.keys()).filter(
+        (ono) => !objectNumbers.has(ono)
+      );
 
       deleted.forEach((ono) => {
         const o = members.get(ono);
@@ -253,9 +253,7 @@ export class AES70Backend extends Backend {
 
         const rolemap = new Map();
 
-
-        for (let i = 0; i < members.length; i++)
-        {
+        for (let i = 0; i < members.length; i++) {
           let key = roles[i];
 
           if (rolemap.has(key)) {
@@ -267,7 +265,7 @@ export class AES70Backend extends Backend {
           rolemap.set(key, members[i]);
         }
 
-        callback([ o, rolemap ]);
+        callback([o, rolemap]);
       };
 
       let cleanup = this._subscribeMembersAndRoles(o, membersCallback);

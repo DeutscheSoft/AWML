@@ -258,17 +258,14 @@ export class Backend extends EventTarget {
         resolve(value);
         this.unsubscribe(id, callback);
       };
-      this.subscribe(path, callback).then(
-        (a) => {
-          const path = a[0];
-          const id = a[1];
+      this.subscribe(path, callback).then((a) => {
+        const path = a[0];
+        const id = a[1];
 
-          if (a.length === 3) {
-            callback(id, a[3]);
-          }
-        },
-        reject
-      );
+        if (a.length === 3) {
+          callback(id, a[3]);
+        }
+      }, reject);
     });
   }
 

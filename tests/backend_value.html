@@ -1,4 +1,3 @@
-
 <html>
   <head>
     <script type="module">
@@ -7,7 +6,7 @@
         getBackendValue,
         LocalBackend,
         registerBackend,
-        unregisterBackend
+        unregisterBackend,
       } from '../src/index.js';
 
       define(async () => {
@@ -17,7 +16,7 @@
 
           registerBackend(backend.name, backend);
 
-          const dv = getBackendValue('local:foo'); 
+          const dv = getBackendValue('local:foo');
 
           dv.set('bar');
 
