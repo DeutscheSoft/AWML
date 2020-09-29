@@ -43,21 +43,6 @@ const toplevelObjects = [
   'Root',
 ];
 
-function throttle(callback) {
-  let dispatched = false;
-  let lastArgs = null;
-
-  return (...args) => {
-    lastArgs = args;
-    if (dispatched) return;
-    dispatched = true;
-    Promise.resolve().then(() => {
-      dispatched = false;
-      callback(...lastArgs);
-    });
-  };
-}
-
 function unCurry(callback) {
   return (id, value) => {
     // if we get unsubscribed, we simply abort
@@ -68,55 +53,6 @@ function unCurry(callback) {
 
 function isBlock(o) {
   return typeof o === 'object' && typeof o.GetMembers === 'function';
-}
-
-function forEachMemberAsync(block, callback, onStable, onError) {
-  if (typeof callback !== 'function') throw new TypeError('Expected function.');
-  if (!onError) onError = (err) => warn('Error while fetching members:', err);
-  // ono -> [ object, callback(object) ]
-  const members = new Map();
-  const device = block.device;
-
-  const onMembers = (a) => {
-    // unsubscribed
-    if (callback === null) return;
-
-    const objectNumbers = new Set();
-
-    a.forEach((member) => {
-      const objectNumber = member.ONo;
-
-      objectNumbers.add(objectNumber);
-
-      // we already know this child
-      if (members.has(objectNumber)) return;
-
-      const o = device.resolve_object(member);
-
-      members.set(objectNumber, [o, callback(o)]);
-    });
-
-    members.forEach((a, objectNumber) => {
-      if (objectNumbers.has(objectNumber)) return;
-      members.delete(objectNumber);
-      runCleanupHandler(a[1]);
-    });
-
-    if (onStable) onStable();
-  };
-
-  block.OnMembersChanged.subscribe(onMembers);
-  block.GetMembers().then(onMembers, onError);
-
-  return () => {
-    // unsubscribe
-    if (callback === null) return;
-    block.OnMembersChanged.unsubscribe(onMembers);
-    const cleanup = Array.from(members.values()).map((a) => a[1]);
-    members.clear();
-    cleanup.forEach(runCleanupHandler);
-    callback = null;
-  };
 }
 
 export class AES70Backend extends Backend {
