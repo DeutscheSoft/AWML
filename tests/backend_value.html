@@ -1,0 +1,40 @@
+
+<html>
+  <head>
+    <script type="module">
+      import { define, delay, assertEqual } from './testing.js';
+      import {
+        getBackendValue,
+        LocalBackend,
+        registerBackend,
+        unregisterBackend
+      } from '../src/index.js';
+
+      define(async () => {
+        {
+          // Test if setting a value connects to the backend.
+          const backend = new LocalBackend({ name: 'local' });
+
+          registerBackend(backend.name, backend);
+
+          const dv = getBackendValue('local:foo'); 
+
+          dv.set('bar');
+
+          // this set needs to subscribe which is in itself an asynchronous
+          // operation.
+
+          assertEqual(await backend.fetch('foo'), 'bar');
+
+          unregisterBackend(backend.name, backend);
+
+          // The data should have been dropped. We are not connected to
+          // the backend anymore.
+          assertEqual(false, dv.hasValue);
+        }
+      });
+    </script>
+    <script type="module" src="../src/index.js"></script>
+  </head>
+  <body></body>
+</html>

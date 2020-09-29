@@ -226,6 +226,52 @@ export class Backend extends EventTarget {
     }
   }
 
+  get(path) {
+    const pathToId = this._pathToId;
+
+    if (pathToId.has(path)) {
+      const id = pathToId.get(path);
+      const values = this._values;
+
+      if (values.has(id)) {
+        return Promise.resolve(values.get(id));
+      }
+    }
+
+    throw new Error('Value does not exist.');
+  }
+
+  fetch(path) {
+    const pathToId = this._pathToId;
+
+    if (pathToId.has(path)) {
+      const id = pathToId.get(path);
+      const values = this._values;
+
+      if (values.has(id)) {
+        return Promise.resolve(values.get(id));
+      }
+    }
+
+    return new Promise((resolve, reject) => {
+      const callback = (id, value) => {
+        resolve(value);
+        this.unsubscribe(id, callback);
+      };
+      this.subscribe(path, callback).then(
+        (a) => {
+          const path = a[0];
+          const id = a[1];
+
+          if (a.length === 3) {
+            callback(id, a[3]);
+          }
+        },
+        reject
+      );
+    });
+  }
+
   static argumentsFromNode(node) {
     const tmp = node.getAttribute('transform-path');
 

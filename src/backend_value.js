@@ -135,7 +135,7 @@ export class BackendValue extends DynamicValue {
    * Sets the value in the backend. If the corresponding backend is currently
    * offline, the value will be kept until it is connected.
    *
-   * @param value
+   * @param value - The new value.
    */
   set(value) {
     this._requestedValue = value;
@@ -146,6 +146,11 @@ export class BackendValue extends DynamicValue {
 
     if (backend && backendId !== null) {
       backend.set(backendId, value);
+    } else {
+      // This will subscribe temporarily and
+      // in the process call backend.set() on
+      // the value we have requested.
+      this.wait();
     }
   }
 }

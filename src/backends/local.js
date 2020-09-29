@@ -40,7 +40,7 @@ export class LocalBackend extends Backend {
 
   constructor(options) {
     super(options);
-    this.delay = options.delay;
+    this.delay = options.delay || 0;
     this._src = options.src || null;
     this._transformData = options.transformData || null;
     this._pending = 1;
