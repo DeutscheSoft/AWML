@@ -90,6 +90,7 @@ var f = (function(w, AWML) {
             options.batch = this.options.batch;
 
           this.device = new OCA.RemoteDevice(new OCA.WebSocketConnection(this.ws, options));
+          this.device.set_keepalive_interval(1);
           this.open();
         }.bind(this));
         ws.addEventListener('close', this.close_cb);
