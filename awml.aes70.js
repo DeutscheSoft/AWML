@@ -10,7 +10,7 @@ var f = (function(w, AWML) {
     try {
       cleanup();
     } catch (error) {
-      warn('Cleanup handler threw an exception:', error);
+      AWML.warn('Cleanup handler threw an exception:', error);
     }
   }
 
@@ -179,7 +179,7 @@ var f = (function(w, AWML) {
           }
         },
         (err) => {
-          warn('Subscription failed:', err);
+          AWML.warn('Subscription failed:', err);
         }
       );
 
@@ -338,7 +338,7 @@ var f = (function(w, AWML) {
         if (index === 0) {
           callback(o[property.name]);
         } else {
-          warn(
+          AWML.warn(
             'Static property %o in %o has no Min/Max.',
             property.name,
             o.ClassName
@@ -350,7 +350,7 @@ var f = (function(w, AWML) {
       const getter = property.getter(o);
 
       if (!getter) {
-        warn(
+        AWML.warn(
           'Could not subscribe to private property %o in %o',
           propertyName,
           properties
@@ -380,7 +380,7 @@ var f = (function(w, AWML) {
           callback(value);
         };
         event.subscribe(eventHandler).catch((err) => {
-          warn('Failed to subscribe to %o: %o.\n', property.name, err);
+          AWML.warn('Failed to subscribe to %o: %o.\n', property.name, err);
         });
       }
 
@@ -394,16 +394,16 @@ var f = (function(w, AWML) {
           } else if (!index) {
             callback(x);
           } else {
-            warn('%o in %o has neither Min nor Max.', property.name, o.ClassName);
+            AWML.warn('%o in %o has neither Min nor Max.', property.name, o.ClassName);
           }
         },
         (error) => {
           if (!active) return;
           // NotImplemented
           if (error.status.value == 8) {
-            warn('Fetching %o failed: not implemented.', property.name);
+            AWML.warn('Fetching %o failed: not implemented.', property.name);
           } else {
-            warn('Fetching %o produced an error: %o', property.name, error);
+            AWML.warn('Fetching %o produced an error: %o', property.name, error);
           }
         }
       );
