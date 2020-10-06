@@ -93,6 +93,7 @@ export class EmberPlusBackend extends Backend {
         try {
           const connection = new EmberPlus.WebSocketConnection(this._websocket);
 
+          if (options.batch) connection.batch = options.batch;
           connection.setKeepaliveInterval(1000);
           this._device = new EmberPlus.Device(connection);
 
@@ -237,13 +238,16 @@ export class EmberPlusBackend extends Backend {
                      propertyName);
           }
         }
-      } else {
+      } else if (node instanceof EmberPlus.InternalNode) {
         // Special meaning, this is not a child
         if (propertyName.startsWith('$') && !dir) {
           const tmp = propertyName.substr(1);
 
           if (NodeProperties.includes(tmp)) {
             return node.observeProperty(tmp, callback);
+          } else {
+            this.log('Unknown node property %o', tmp);
+            return;
           }
         }
 
@@ -259,12 +263,15 @@ export class EmberPlusBackend extends Backend {
         {
           const child = node.children[pos];
 
-          if (dir && !(child instanceof EmberPlus.Parameter)) {
+          if (dir && child instanceof EmberPlus.InternalNode) {
             return this._device.observeDirectory(child, callback);
           } else {
             this.receive(path, child);
           }
         }
+      } else {
+        this.log('Cannot find property %o inside of %o.',
+                 propertyName, node);
       }
     };
 
