@@ -39,7 +39,30 @@ const NodeProperties = [
   'number',
   'numericPath',
   'key',
+  'isOnline'
+];
+
+const ParameterProperties = [
+  'identifier',
+  'number',
+  'numericPath',
+  'key',
+  'description',
+  'value',
+  'minimum',
+  'maximum',
+  'access',
+  'format',
+  'enumeration',
+  'factor',
   'isOnline',
+  'formula',
+  'step',
+  'default',
+  'type',
+  'streamIdentifier',
+  'enumMap',
+  'streamDescriptor'
 ];
 
 export class EmberPlusBackend extends Backend {
@@ -70,6 +93,7 @@ export class EmberPlusBackend extends Backend {
         try {
           const connection = new EmberPlus.WebSocketConnection(this._websocket);
 
+          connection.setKeepaliveInterval(1000);
           this._device = new EmberPlus.Device(connection);
 
           this.open();
@@ -159,15 +183,12 @@ export class EmberPlusBackend extends Backend {
 
   // Promise<CleanupLogic>
   doSubscribe(path) {
-    console.log('doSubscribe(%o)', path);
     const delimiter = this._delimiter;
     const dir = path.endsWith(delimiter);
     const [parentPath, propertyName] = splitAtLast(
       dir ? path.substr(0, path.length - 1) : path,
       delimiter
     );
-
-    console.log(dir, parentPath, propertyName);
 
     if (parentPath === '/' && propertyName === '')
     {
@@ -178,14 +199,43 @@ export class EmberPlusBackend extends Backend {
     }
 
     const cb = (node) => {
+      if (node === null) {
+        // node disappeared (e.g. went offline)
+        this._setters.delete(path);
+        this.receive(path, void 0);
+        return;
+      }
+
+      const callback = (value) => {
+        this.receive(path, value);
+      };
+
       if (node instanceof EmberPlus.Parameter) {
         if (dir) {
           this.log('Could not list directory for child %o in parameter Node %o',
                    parameterName, node);
         } else {
-          return node.observeProperty(propertyName, (value) => {
-            this.receive(path, value);
-          });
+          if (ParameterProperties.includes(propertyName)) {
+            if (propertyName === 'value') {
+              this._setters.set(path, (value) => {
+                this._device.setValue(node, value);
+              });
+            }
+
+            return node.observeProperty(propertyName, callback);
+          } else if (propertyName === 'effectiveValue') {
+            this._setters.set(path, (value) => {
+              this._device.setEffectiveValue(node, value);
+            });
+            return node.observeEffectiveValue(callback);
+          } else if (propertyName === 'effectiveMinimum') {
+            return node.observeEffectiveMinimum(callback);
+          } else if (propertyName === 'effectiveMaximum') {
+            return node.observeEffectiveMaximum(callback);
+          } else {
+            this.log('Property %o does not exist on Parameter Node.',
+                     propertyName);
+          }
         }
       } else {
         // Special meaning, this is not a child
@@ -193,9 +243,7 @@ export class EmberPlusBackend extends Backend {
           const tmp = propertyName.substr(1);
 
           if (NodeProperties.includes(tmp)) {
-            return node.observeProperty(tmp, (value) => {
-              this.receive(path, value);
-            });
+            return node.observeProperty(tmp, callback);
           }
         }
 
@@ -212,9 +260,7 @@ export class EmberPlusBackend extends Backend {
           const child = node.children[pos];
 
           if (dir && !(child instanceof EmberPlus.Parameter)) {
-            return this._device.observeDirectory(child, (_child) => {
-              this.receive(path, _child);
-            });
+            return this._device.observeDirectory(child, callback);
           } else {
             this.receive(path, child);
           }
