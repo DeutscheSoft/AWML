@@ -214,7 +214,7 @@ export class EmberPlusBackend extends Backend {
       if (node instanceof EmberPlus.Parameter) {
         if (dir) {
           this.log('Could not list directory for child %o in parameter Node %o',
-                   parameterName, node);
+                   propertyName, node);
         } else {
           if (ParameterProperties.includes(propertyName)) {
             if (propertyName === 'value') {
@@ -257,7 +257,7 @@ export class EmberPlusBackend extends Backend {
         if (pos === -1)
         {
           this.log('Could not find child %o in node children %o',
-                   parameterName, node.children);
+                   propertyName, node.children);
         }
         else
         {
