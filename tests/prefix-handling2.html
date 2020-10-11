@@ -1,0 +1,85 @@
+<html>
+  <head>
+    <script type="module">
+      import { define, assertEqual, assertEq } from './testing.js';
+      import { getBackendValue } from '../src/index.js';
+
+      define(async () => {
+        const components = Array.from(
+          document.querySelectorAll('test-component')
+        );
+
+        {
+          const widget = components[0].auxWidget;
+
+          assertEqual(widget.get('foo'), 1);
+          assertEqual(widget.get('bar'), 4);
+        }
+
+        {
+          const widget = components[1].auxWidget;
+          assertEq(widget.get('foo'), [1, 1]);
+        }
+
+        {
+          const widget = components[2].auxWidget;
+          assertEq(widget.get('foo'), [1, 7]);
+        }
+
+        {
+          const widget = components[3].auxWidget;
+          assertEq(widget.get('foo'), [1, 4]);
+        }
+      });
+    </script>
+    <script type="module" src="../src/index.js"></script>
+    <script type="module" src="./test-component.js"></script>
+    <awml-backend type="local" name="test">
+      { "1/1/foo" : 1, "1/2/foo" : 2, "1/3/foo" : 3, "2/1/foo" : 4, "2/2/foo" :
+      5, "2/3/foo" : 6, "3/1/foo" : 7, "3/2/foo" : 8, "3/3/foo" : 9, "4/1/foo" :
+      10, "4/2/foo" : 11, "4/3/foo" : 12 }
+    </awml-backend>
+  </head>
+  <body prefix-a="test:1/" prefix-b="test:2/" prefix="test:3/">
+    <div prefix-a="1/" prefix-b="1/" prefix="1/">
+      <test-component>
+        <awml-option
+          type="bind"
+          src-prefix="a"
+          name="foo"
+          src="foo"
+        ></awml-option>
+        <awml-option
+          type="bind"
+          src-prefix="b"
+          name="bar"
+          src="foo"
+        ></awml-option>
+      </test-component>
+      <test-component>
+        <awml-option
+          type="bind"
+          src-prefix="a"
+          name="foo"
+          src="foo,foo"
+        ></awml-option>
+      </test-component>
+      <test-component>
+        <awml-option
+          type="bind"
+          src-prefix="a,"
+          name="foo"
+          src="foo,foo"
+        ></awml-option>
+      </test-component>
+      <test-component>
+        <awml-option
+          type="bind"
+          src-prefix="a,b"
+          name="foo"
+          src="foo,foo"
+        ></awml-option>
+      </test-component>
+    </div>
+  </body>
+</html>

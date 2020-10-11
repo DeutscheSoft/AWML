@@ -43,7 +43,15 @@ export class PrefixComponentBase extends BaseComponent {
     let prefix = this._currentPrefix;
 
     if (prefix === null) {
-      this._currentPrefix = prefix = collectPrefix(this, this._srcPrefix);
+      const srcPrefix = this._srcPrefix;
+
+      if (Array.isArray(srcPrefix)) {
+        prefix = srcPrefix.map((handle) => collectPrefix(this, handle));
+      } else {
+        prefix = collectPrefix(this, srcPrefix);
+      }
+
+      this._currentPrefix = prefix;
     }
 
     return prefix;
@@ -133,8 +141,8 @@ export class PrefixComponentBase extends BaseComponent {
     return this._srcPrefix;
   }
   set srcPrefix(v) {
-    if (typeof v !== 'string' && v !== null)
-      throw new TypeError('Expected string.');
+    if (typeof v !== 'string' && v !== null && !Array.isArray(v))
+      throw new TypeError('Expected string|string[].');
 
     this._srcPrefix = v;
     this._currentPrefix = null;
@@ -192,40 +200,59 @@ export class PrefixComponentBase extends BaseComponent {
     registerPrefixTagName(this.tagName);
   }
 
+  _compileSrc(src) {
+    if (src === null) return null;
+
+    if (!src.includes(',')) {
+      if (src.includes(':')) return src;
+
+      const prefix = this.currentPrefix;
+
+      if (Array.isArray(prefix)) {
+        this.log('src-prefix is a list and src not. Giving up.');
+        return null;
+      }
+
+      if (!prefix.includes(':')) return null;
+
+      return prefix + src;
+    }
+
+    let prefix = null;
+    const a = src.split(',');
+
+    for (let i = 0; i < a.length; i++) {
+      const tmp = a[i];
+
+      if (tmp.includes(':')) continue;
+
+      if (prefix === null) {
+        prefix = this.currentPrefix;
+        if (!Array.isArray(prefix)) {
+          prefix = new Array(a.length).fill(prefix);
+        } else if (prefix.length !== a.length) {
+          this.log(
+            'src-prefix and src arrays have different number of entries. Giving up.'
+          );
+          return null;
+        }
+      }
+
+      const p = prefix[i];
+
+      if (!p.includes(':')) return null;
+
+      a[i] = p + tmp;
+    }
+
+    return a;
+  }
+
   get effectiveSrc() {
     if (!this.isConnected) return null;
     if (this._effectiveSrc !== null) return this._effectiveSrc;
 
-    let src = this._src;
-
-    if (src === null) return null;
-
-    if (src.includes(',')) {
-      const a = src.split(',');
-      let prefix = null;
-
-      for (let i = 0; i < a.length; i++) {
-        const tmp = a[i];
-
-        if (tmp.includes(':')) continue;
-
-        if (prefix === null) {
-          prefix = this.currentPrefix;
-
-          if (!prefix.includes(':')) return null;
-        }
-
-        a[i] = prefix + tmp;
-      }
-
-      src = a;
-    } else if (!src.includes(':')) {
-      const prefix = this.currentPrefix;
-
-      if (!prefix.includes(':')) return null;
-
-      src = prefix + src;
-    }
+    const src = this._compileSrc(this._src);
 
     this.log('Source is %o', src);
 
@@ -311,7 +338,12 @@ export class PrefixComponentBase extends BaseComponent {
   }
 
   _updatePrefix(handle) {
-    if (handle !== this._srcPrefix) return;
+    const srcPrefix = this._srcPrefix;
+
+    if (Array.isArray(srcPrefix)) {
+      if (!srcPrefix.includes(handle)) return;
+    } else if (handle !== srcPrefix) return;
+
     this._currentPrefix = null;
     this._updateEffectiveSrc();
   }
@@ -338,7 +370,12 @@ export class PrefixComponentBase extends BaseComponent {
         this.src = newValue;
         break;
       case 'src-prefix':
-        this.srcPrefix = newValue;
+        {
+          if (newValue.includes(',')) {
+            newValue = newValue.split(',').map((s) => (s === '' ? null : s));
+          }
+          this.srcPrefix = newValue;
+        }
         break;
       case 'transform-receive':
         this.transformReceive = parseAttribute('javascript', newValue, null);
