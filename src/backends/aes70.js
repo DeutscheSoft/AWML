@@ -55,11 +55,43 @@ function isBlock(o) {
   return typeof o === 'object' && typeof o.GetMembers === 'function';
 }
 
+/**
+ * This class implements a backend for AES70 devices. It uses AES70.js
+ * [https://github.com/DeutscheSoft/AES70.js] which is required to be loaded
+ * as one global `OCA` symbol. It is usually enough to include `AES70.es5.js`
+ * alongside this backend.
+ *
+ * The paths uses to represent objects and properties of the AES70 device in
+ * this backend follow these rules.
+ *
+ * - The path of an object is given by the concatenation of all role names up
+ *   to the root block delimited by `/`.
+ * - The path of a property is given by the paths of the corresponding object
+ *   concatenated by `/` and the property name.
+ * - The path for minimum and maximum values for a property (if defined) are
+ *   given by the properties path followed by `/Min` and `/Max~, respectively.
+ *
+ * Furthermore, it is possible to subscribe to directory contents inside of
+ * blocks. These are given by the path of the object followed by a single `/`.
+ * This paths will emit an array with two elements, the first the block itself
+ * and the second a `Map` which contains all children by their role name in
+ * order. For example, the content of the root block can be subscribed as the
+ * path `/`.
+ *
+ * Note that AES70 does not guarantee, only recommend, that all siblings of a
+ * block have unique role names. In order to generate unique path names, this
+ * backend will make object paths unique by appending `1`, `2`, etc..
+ *
+ */
 export class AES70Backend extends Backend {
+  /** @internal */
   get src() {
     return this._src;
   }
 
+  /**
+   * The OCA.RemoteDevice object.
+   */
   get device() {
     return this._device;
   }
@@ -109,7 +141,10 @@ export class AES70Backend extends Backend {
     setter(value);
   }
 
-  // returns CleanupLogic
+  /**
+   * @internal
+   * @returns CleanupLogic
+   */
   observe(path, callback) {
     if (typeof callback !== 'function')
       throw new TypeError('Expected function.');
@@ -146,6 +181,7 @@ export class AES70Backend extends Backend {
     };
   }
 
+  /** @internal */
   _subscribeMembersAndRoles(block, callback, onError) {
     if (!isBlock(block)) throw new TypeError('Expected OcaBlock.');
     if (typeof callback !== 'function')
@@ -245,6 +281,7 @@ export class AES70Backend extends Backend {
     };
   }
 
+  /** @internal */
   _observeDirectory(o, callback) {
     //console.log('observeDirectory', o);
     if (isBlock(o)) {
@@ -285,6 +322,7 @@ export class AES70Backend extends Backend {
     }
   }
 
+  /** @internal */
   _observePropertyWithGetter(o, property, path, index, callback) {
     let active = true;
 
@@ -370,6 +408,7 @@ export class AES70Backend extends Backend {
     };
   }
 
+  /** @internal */
   _observeProperty(a, propertyName, path, callback) {
     //console.log('_observeProperty(%o, %o, %o)', a, propertyName, path);
     const o = a[0];
@@ -419,6 +458,7 @@ export class AES70Backend extends Backend {
     }
   }
 
+  /** @internal */
   _observeEach(path, callback) {
     let lastValue = null;
     let cleanup = null;
@@ -441,7 +481,10 @@ export class AES70Backend extends Backend {
     };
   }
 
-  // Promise<CleanupLogic>
+  /**
+   * @internal
+   * @returns Promise<CleanupLogic>
+   */
   doSubscribe(path) {
     //console.log('doSubscribe(%o)', path);
     const seperator = this._seperator;
@@ -521,6 +564,7 @@ export class AES70Backend extends Backend {
     );
   }
 
+  /** @internal */
   lowSubscribe(path) {
     try {
       const cleanup = this.doSubscribe(path);
@@ -531,6 +575,7 @@ export class AES70Backend extends Backend {
     }
   }
 
+  /** @internal */
   lowUnsubscribe(id) {
     const m = this._path_subscriptions;
     if (m.has(id)) {
@@ -541,6 +586,7 @@ export class AES70Backend extends Backend {
     this._values.delete(id);
   }
 
+  /** @internal */
   static argumentsFromNode(node) {
     const options = Backend.argumentsFromNode(node);
 
