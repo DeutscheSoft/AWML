@@ -223,12 +223,14 @@ export class EmberPlusBackend extends Backend {
               });
             }
 
-            return node.observeProperty(propertyName, callback);
+            return this._device.observeProperty(node, propertyName, callback);
           } else if (propertyName === 'effectiveValue') {
             this._setters.set(path, (value) => {
               this._device.setEffectiveValue(node, value);
             });
-            return node.observeEffectiveValue(callback);
+            return this._device.observerProperty(node, 'value', (value) => {
+              callback(node.effectiveValue);
+            });
           } else if (propertyName === 'effectiveMinimum') {
             return node.observeEffectiveMinimum(callback);
           } else if (propertyName === 'effectiveMaximum') {
