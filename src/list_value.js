@@ -95,7 +95,7 @@ export class ListValue extends DynamicValue {
     this._partial = !!partial;
     this._debounce = debounce > 0 ? debounce : 0;
     this._debounce_id = -1;
-    this._readonly = values.every((value) => typeof value.set === 'function');
+    this._readonly = !values.every((value) => typeof value.set === 'function');
   }
 
   /**

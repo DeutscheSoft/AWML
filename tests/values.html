@@ -37,6 +37,11 @@
           assertEqual(listv.hasValue, false);
           v2.set(23);
           assertEqual(listv.hasValue, true);
+
+          listv.set([ 42, 43 ]);
+
+          assertEqual(v1.value, 42);
+          assertEqual(v2.value, 43);
         }
 
         {
