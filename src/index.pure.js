@@ -44,4 +44,5 @@ export {
 export { LocalBackend } from './backends/local.js';
 export { LocalStorageBackend } from './backends/localstorage.js';
 export { WebSocketBackend } from './backends/websocket.js';
+export { DynamicValuesBackend } from './backends/dynamic_values.js';
 export { StaticOption, MediaOption, BindOption } from './options.js';
