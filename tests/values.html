@@ -5,7 +5,7 @@
       import {
         DynamicValue,
         ListValue,
-        EventTargetValue,
+        fromDOMEvent,
       } from '../src/index.js';
 
       define(async () => {
@@ -177,11 +177,11 @@
         }
 
         {
-          // EventTargetValue
+          // fromDOMEvent
           const div = document.createElement('div');
 
           {
-            const v1 = new EventTargetValue(div, 'click');
+            const v1 = fromDOMEvent(div, 'click');
 
             const p = v1.wait();
             const ev = new CustomEvent('click');
@@ -191,7 +191,7 @@
           }
 
           {
-            const v1 = new EventTargetValue(div, 'click', true);
+            const v1 = fromDOMEvent(div, 'click', true);
 
             const p = v1.wait();
             const ev = new CustomEvent('click', {

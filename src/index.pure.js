@@ -14,10 +14,11 @@ export {
 export { collectPrefix, setPrefix, setPrefixBlock } from './utils/prefix.js';
 export { DynamicValue } from './dynamic_value.js';
 export { ListValue } from './list_value.js';
-export { EventTargetValue } from './event_target_value.js';
 export {
   combineLatest,
   filter,
+  fromSubscription,
+  fromDOMEvent,
   map,
   reduce,
   resolve,
