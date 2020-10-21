@@ -39,7 +39,7 @@ const NodeProperties = [
   'number',
   'numericPath',
   'key',
-  'isOnline'
+  'isOnline',
 ];
 
 const ParameterProperties = [
@@ -62,7 +62,7 @@ const ParameterProperties = [
   'type',
   'streamIdentifier',
   'enumMap',
-  'streamDescriptor'
+  'streamDescriptor',
 ];
 
 export class EmberPlusBackend extends Backend {
@@ -77,10 +77,9 @@ export class EmberPlusBackend extends Backend {
   constructor(options) {
     super(options);
 
-    const args = [ options.url ];
+    const args = [options.url];
 
-    if (options.protocol !== null)
-      args.push(options.protocol);
+    if (options.protocol !== null) args.push(options.protocol);
 
     const websocket = new WebSocket(...args);
     this._websocket = websocket;
@@ -191,8 +190,7 @@ export class EmberPlusBackend extends Backend {
       delimiter
     );
 
-    if (parentPath === '/' && propertyName === '')
-    {
+    if (parentPath === '/' && propertyName === '') {
       // root Directory subscription
       return this._device.observeDirectory(this._device.root, (node) => {
         this.receive(path, node);
@@ -213,8 +211,11 @@ export class EmberPlusBackend extends Backend {
 
       if (node instanceof EmberPlus.Parameter) {
         if (dir) {
-          this.log('Could not list directory for child %o in parameter Node %o',
-                   propertyName, node);
+          this.log(
+            'Could not list directory for child %o in parameter Node %o',
+            propertyName,
+            node
+          );
         } else {
           if (ParameterProperties.includes(propertyName)) {
             if (propertyName === 'value') {
@@ -236,8 +237,10 @@ export class EmberPlusBackend extends Backend {
           } else if (propertyName === 'effectiveMaximum') {
             return node.observeEffectiveMaximum(callback);
           } else {
-            this.log('Property %o does not exist on Parameter Node.',
-                     propertyName);
+            this.log(
+              'Property %o does not exist on Parameter Node.',
+              propertyName
+            );
           }
         }
       } else if (node instanceof EmberPlus.InternalNode) {
@@ -256,13 +259,13 @@ export class EmberPlusBackend extends Backend {
         const childNames = node.children.map((child) => child.identifier);
         const pos = childNames.indexOf(propertyName);
 
-        if (pos === -1)
-        {
-          this.log('Could not find child %o in node children %o',
-                   propertyName, node.children);
-        }
-        else
-        {
+        if (pos === -1) {
+          this.log(
+            'Could not find child %o in node children %o',
+            propertyName,
+            node.children
+          );
+        } else {
           const child = node.children[pos];
 
           if (dir && child instanceof EmberPlus.InternalNode) {
@@ -272,8 +275,7 @@ export class EmberPlusBackend extends Backend {
           }
         }
       } else {
-        this.log('Cannot find property %o inside of %o.',
-                 propertyName, node);
+        this.log('Cannot find property %o inside of %o.', propertyName, node);
       }
     };
 
@@ -320,7 +322,9 @@ export class EmberPlusBackend extends Backend {
       url = src;
     }
 
-    const batch = node.hasAttribute('batch') ? parseInt(node.getAttribute('batch')) : 0;
+    const batch = node.hasAttribute('batch')
+      ? parseInt(node.getAttribute('batch'))
+      : 0;
 
     const protocol = node.getAttribute('protocol');
 

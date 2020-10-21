@@ -29,7 +29,7 @@ export class DynamicValuesBackend extends Backend {
 
       this._cleanupHandlers.set(path, sub);
     } else {
-      this._subscribeFailure(new Error('No such parameter.'));  
+      this._subscribeFailure(new Error('No such parameter.'));
     }
   }
 
@@ -37,7 +37,7 @@ export class DynamicValuesBackend extends Backend {
     const path = id;
     const sub = this._cleanupHandlers.get(path);
 
-    console.log("Unsubscribe", id);
+    console.log('Unsubscribe', id);
 
     this._cleanupHandlers.delete(path);
 

@@ -11,9 +11,13 @@ import { fromSubscription } from './from_subscription.js';
  * @param {bool} [stopPropagation=false] If true, stopPropagation() is called on
  *      each event.
  */
-export function fromDOMEvent(eventTarget, eventName, preventDefault, stopPropagation) {
-  if (typeof eventName !== 'string')
-    throw new TypeError('Expected string.');
+export function fromDOMEvent(
+  eventTarget,
+  eventName,
+  preventDefault,
+  stopPropagation
+) {
+  if (typeof eventName !== 'string') throw new TypeError('Expected string.');
 
   preventDefault = !!preventDefault;
   stopPropagation = !!stopPropagation;
