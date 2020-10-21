@@ -23,7 +23,6 @@ export class DynamicValuesBackend extends Backend {
     if (dv) {
       this._subscribeSuccess(path, path);
       const sub = dv.subscribe((value) => {
-        console.log(path, value);
         this.receive(path, value);
       });
 
@@ -36,8 +35,6 @@ export class DynamicValuesBackend extends Backend {
   lowUnsubscribe(id) {
     const path = id;
     const sub = this._cleanupHandlers.get(path);
-
-    console.log('Unsubscribe', id);
 
     this._cleanupHandlers.delete(path);
 
