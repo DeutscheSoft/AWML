@@ -133,19 +133,34 @@ export function printBackendValues(backendName, match, timeout) {
   }
   const listbind = new ListValue(values, true, timeout || 1000);
   
+  console.log("%c### Reading from backend %c\"%s\"%c (timeout: %ims)",
+    "color:#2CB9FE", "color:#FFAB0F", backendName,
+    "color:#2CB9FE", timeout || 1000);
   listbind.wait().then(function (result) {
     for (let i = 0, m = keys.length; i < m; ++i) {
       //const spaces = new Array(chars - keys[i].length + 1).join(" ");
+      const URI = keys[i].substr(backendName.length + 1);
       switch (typeof result[i]) {
         case "undefined":
-          console.log("%s : %c%s", keys[i], "color:#aa0000", result[i]); break;
+          console.log("%s : %c%s", URI, "color:#808080", result[i]); break;
         case "object":
-          console.log("%s : %c%O", keys[i], "color:#aa0000", result[i]); break;
+          if (result[i] === null)
+            console.log("%s : %c%O", "color:#FFAB0F", URI, result[i]);
+          else
+            console.log("%s : %O", URI, result[i]);
+          break;
+        case "boolean":
+          console.log("%s : %c%s", URI, result[i] ? "color:#00CF75" : "color:#AA0044", result[i]); break;
+        case "number":
+          console.log("%s : %c%s", URI, "color:#A261FF", result[i]); break;
+        case "string":
+          console.log("%s : %c\"%s\"", URI, "color:#2CB9FE", result[i]); break;
         default:
-          console.log("%s : %c%s", keys[i], "color:#00aa00", result[i]); break;
+          console.log("%s : %c%s", URI, "color:#2CB9FE", result[i]); break;
       }
     }
   });
+  return keys.length;
 }
 
 /**
