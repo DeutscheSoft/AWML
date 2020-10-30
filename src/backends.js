@@ -1,5 +1,7 @@
 import { BackendValue } from './backend_value.js';
+import { ListValue } from './list_value.js';
 import { waitForDOMEvent } from './utils/subscribe_dom_event.js';
+import { combineLatest } from './operators/combineLatest.js';
 
 const backendValues = new Map();
 const backends = new Map();
@@ -95,6 +97,45 @@ export function getBackendValues(backendName) {
   backendValues.set(backendName, result);
 
   return result;
+}
+
+/**
+ * Print a sorted Map of all backend values which currently exist for the given
+ * backend name.
+ *
+ * @param {string} backendName - Name of the backend
+ * @param {string} match - Match parameter URI against this regular expression
+ * @param {number} timeout - Timeout in milliseconds the subscription should
+ *   wait for the results, default is 1000.
+ */
+export function printBackendValues(backendName, match, timeout) {
+  let backend = backendValues.get(backendName);
+
+  if (backend == void 0)
+    backend = new Map();
+  
+  const keys = [...backend.keys()];
+  keys.sort(function (a, b) {
+    return a.localeCompare(b);
+  });
+  
+  const list = [];
+  for (let i = 0, m = keys.length; i < m; ++i)
+    list.push(backend.get(keys[i]));
+  const listbind = new ListValue(list, true, timeout || 1000);
+  
+  listbind.wait().then(function (result) {
+    for (let i = 0, m = keys.length; i < m; ++i) {
+      if (match) {
+        if (!keys[i].match(match))
+          continue;
+      }
+      if (typeof result[i] == "undefined")
+        console.log("%s : %c%s", keys[i], "color:#990000", result[i]);
+      else
+        console.log("%s : %c%s", keys[i], "color:#009900", result[i]);
+    }
+  });
 }
 
 /**

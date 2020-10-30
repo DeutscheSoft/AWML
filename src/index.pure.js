@@ -4,6 +4,7 @@ export {
   registerBackend,
   unregisterBackend,
   getBackendValues,
+  printBackendValues,
   getBackendValue,
   getBackends,
 } from './backends.js';
