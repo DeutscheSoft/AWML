@@ -114,26 +114,36 @@ export function printBackendValues(backendName, match, timeout) {
   if (backend == void 0)
     backend = new Map();
   
-  const keys = [...backend.keys()];
-  keys.sort(function (a, b) {
+  const _keys = [...backend.keys()];
+  _keys.sort(function (a, b) {
     return a.localeCompare(b);
   });
   
-  const list = [];
-  for (let i = 0, m = keys.length; i < m; ++i)
-    list.push(backend.get(keys[i]));
-  const listbind = new ListValue(list, true, timeout || 1000);
+  const values = [];
+  const keys = [];
+  //let chars = 0;
+  for (let i = 0, m = _keys.length; i < m; ++i) {
+    if (match) {
+      if (!_keys[i].match(match))
+        continue;
+    }
+    values.push(backend.get(_keys[i]));
+    keys.push(_keys[i]);
+    //chars = Math.max(chars, _keys[i].length);
+  }
+  const listbind = new ListValue(values, true, timeout || 1000);
   
   listbind.wait().then(function (result) {
     for (let i = 0, m = keys.length; i < m; ++i) {
-      if (match) {
-        if (!keys[i].match(match))
-          continue;
+      //const spaces = new Array(chars - keys[i].length + 1).join(" ");
+      switch (typeof result[i]) {
+        case "undefined":
+          console.log("%s : %c%s", keys[i], "color:#aa0000", result[i]); break;
+        case "object":
+          console.log("%s : %c%O", keys[i], "color:#aa0000", result[i]); break;
+        default:
+          console.log("%s : %c%s", keys[i], "color:#00aa00", result[i]); break;
       }
-      if (typeof result[i] == "undefined")
-        console.log("%s : %c%s", keys[i], "color:#990000", result[i]);
-      else
-        console.log("%s : %c%s", keys[i], "color:#009900", result[i]);
     }
   });
 }
