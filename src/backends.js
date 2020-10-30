@@ -110,6 +110,7 @@ export function getBackendValues(backendName) {
  */
 export function printBackendValues(backendName, match, timeout) {
   let backend = backendValues.get(backendName);
+  const defto = 100;
 
   if (backend == void 0)
     backend = new Map();
@@ -131,11 +132,11 @@ export function printBackendValues(backendName, match, timeout) {
     keys.push(_keys[i]);
     //chars = Math.max(chars, _keys[i].length);
   }
-  const listbind = new ListValue(values, true, timeout || 1000);
+  const listbind = new ListValue(values, true, timeout || defto);
   
   console.log("%c### Reading from backend %c\"%s\"%c (timeout: %ims)",
     "color:#2CB9FE", "color:#FFAB0F", backendName,
-    "color:#2CB9FE", timeout || 1000);
+    "color:#2CB9FE", timeout || defto);
   listbind.wait().then(function (result) {
     for (let i = 0, m = keys.length; i < m; ++i) {
       //const spaces = new Array(chars - keys[i].length + 1).join(" ");
