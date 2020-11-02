@@ -15,10 +15,11 @@ export {
 export { collectPrefix, setPrefix, setPrefixBlock } from './utils/prefix.js';
 export { DynamicValue } from './dynamic_value.js';
 export { ListValue } from './list_value.js';
-export { EventTargetValue } from './event_target_value.js';
 export {
   combineLatest,
   filter,
+  fromSubscription,
+  fromDOMEvent,
   map,
   reduce,
   resolve,
@@ -44,4 +45,5 @@ export {
 export { LocalBackend } from './backends/local.js';
 export { LocalStorageBackend } from './backends/localstorage.js';
 export { WebSocketBackend } from './backends/websocket.js';
+export { DynamicValuesBackend } from './backends/dynamic_values.js';
 export { StaticOption, MediaOption, BindOption } from './options.js';
