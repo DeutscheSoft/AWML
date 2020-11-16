@@ -3,6 +3,7 @@ import { registerBackendType } from '../components/backend.js';
 import { warn } from '../utils/log.js';
 import { subscribeDOMEvent } from '../utils/subscribe_dom_event.js';
 import { getCurrentWebSocketUrl } from '../utils/fetch.js';
+import { parseAttribute } from '../utils/parse_attribute.js';
 
 /* global OCA */
 
@@ -66,33 +67,73 @@ const ParameterProperties = [
 ];
 
 export class EmberPlusBackend extends Backend {
-  get src() {
-    return this._src;
+  get url() {
+    return this.options.url;
+  }
+
+  get protocol() {
+    return this.options.protocol;
   }
 
   get device() {
     return this._device;
   }
 
+  get fetchUrl() {
+    return this.options.fetchUrl || this.fetchUrlDefault;
+  }
+
+  fetchUrlDefault() {
+    return this.url;
+  }
+
+  get batch() {
+    return this.options.batch;
+  }
+
   constructor(options) {
     super(options);
 
-    const args = [options.url];
-
-    if (options.protocol !== null) args.push(options.protocol);
-
-    const websocket = new WebSocket(...args);
-    this._websocket = websocket;
+    this._websocket = null;
     this._device = null;
     this._path_subscriptions = new Map();
     this._setters = new Map();
     this._delimiter = '/';
+
+    Promise.resolve(this.fetchUrl())
+      .then((url) => this.connect(url))
+      .catch((err) => {
+        if (!this.isInit) return;
+        this.error(err);
+      });
+  }
+
+  connect(src) {
+    if (!this.isInit) return;
+
+    let url;
+
+    if (src === null) {
+      url = getCurrentWebSocketUrl().href;
+    } else if (src.startsWith('/')) {
+      const current = getCurrentWebSocketUrl();
+      url = new URL(src, current).href;
+    } else {
+      url = src;
+    }
+
+    const args = [url];
+
+    if (this.protocol !== null) args.push(this.protocol);
+
+    const websocket = new WebSocket(...args);
+    this._websocket = websocket;
     this.addSubscription(
       subscribeDOMEvent(websocket, 'open', () => {
         try {
           const connection = new EmberPlus.WebSocketConnection(this._websocket);
 
-          if (options.batch) connection.batch = options.batch;
+          if (this.batch) connection.batch = this.batch;
           connection.setKeepaliveInterval(1000);
           this._device = new EmberPlus.Device(connection);
 
@@ -311,26 +352,22 @@ export class EmberPlusBackend extends Backend {
 
     const src = node.getAttribute('src');
 
-    let url;
-
-    if (src === null) {
-      url = getCurrentWebSocketUrl().href;
-    } else if (src.startsWith('/')) {
-      const current = getCurrentWebSocketUrl();
-      url = new URL(src, current).href;
-    } else {
-      url = src;
-    }
-
     const batch = node.hasAttribute('batch')
       ? parseInt(node.getAttribute('batch'))
       : 0;
 
     const protocol = node.getAttribute('protocol');
 
-    options.url = url;
+    options.url = src;
     options.batch = batch;
     options.protocol = protocol;
+    options.fetchUrl = null;
+
+    {
+      const tmp = node.getAttribute('fetch-url');
+      const fetchUrl = tmp ? parseAttribute('javascript', tmp, null) : null;
+      options.fetchUrl = fetchUrl;
+    }
 
     return options;
   }
