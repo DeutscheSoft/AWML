@@ -205,6 +205,7 @@ export class Backend extends EventTarget {
     this._values = null;
     this._subscriptions = null;
     this._pendingSubscribers = null;
+    this._state = null;
   }
 
   receive(id, value) {
