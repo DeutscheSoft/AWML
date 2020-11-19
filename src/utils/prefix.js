@@ -132,7 +132,7 @@ export function printPrefixes(node, match) {
   for (; node && node.attributes; node = node.parentNode) {
     const attrs = node.attributes;
     for (let i = 0; i < attrs.length; ++i) {
-      const pmatch = attrs[i].name.match(/prefix[\-]?([a-zA-Z0\-9_]*)$/);
+      const pmatch = attrs[i].name.match(/prefix[\-]?([a-zA-Z0-9_]*)$/);
       if (pmatch && prefixes.indexOf(pmatch[1]) < 0 && (!match || (match && pmatch[1].match(match)))) {
         prefixes.push(pmatch[1]);
         chars = Math.max(chars, pmatch[1].length);
