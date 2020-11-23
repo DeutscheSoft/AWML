@@ -10,7 +10,7 @@ export class AttributesComponent extends StylesComponentBase {
   }
 
   applyState(v) {
-    const target = this._target;
+    const target = this.target;
 
     if (typeof v === 'object') {
       for (const name in v) {
@@ -22,7 +22,7 @@ export class AttributesComponent extends StylesComponentBase {
   }
 
   removeState(v) {
-    const target = this._target;
+    const target = this.target;
 
     if (typeof v === 'object') {
       for (const name in v) {

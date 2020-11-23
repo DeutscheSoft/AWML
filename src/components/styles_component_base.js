@@ -40,6 +40,16 @@ export class StylesComponentBase extends RedrawComponentBase {
     this._triggerResize = v;
   }
 
+  get target() {
+    let target = this._target;
+
+    if (target === null) {
+      this._target = target = this.parentNode;
+    }
+
+    return target;
+  }
+
   /** @ignore */
   static get observedAttributes() {
     return RedrawComponentBase.observedAttributes.concat(['trigger-resize']);
@@ -66,7 +76,7 @@ export class StylesComponentBase extends RedrawComponentBase {
 
     if (state === prevState) return;
 
-    this.log('Applying state %o to %o', state, this._target);
+    this.log('Applying state %o to %o', state, this.target);
 
     this.updateState(prevState, state);
     this._state = state;
@@ -84,12 +94,6 @@ export class StylesComponentBase extends RedrawComponentBase {
   }
 
   /** @ignore */
-  connectedCallback() {
-    this._target = this.parentNode;
-    super.connectedCallback();
-  }
-
-  /** @ignore */
   disconnectedCallback() {
     super.disconnectedCallback();
 
@@ -101,6 +105,13 @@ export class StylesComponentBase extends RedrawComponentBase {
     this.removeState(state);
     this._state = null;
     this._target = null;
+  }
+
+  /** @ignore */
+  connectedCallback() {
+    // Note: this initializes this._target
+    this.target;
+    super.connectedCallback();
   }
 
   /** @ignore */

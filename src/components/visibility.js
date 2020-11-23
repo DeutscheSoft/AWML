@@ -24,7 +24,7 @@ export class VisibilityComponent extends StylesComponentBase {
   }
 
   _determineVisibilityMode() {
-    const target = this._target;
+    const target = this.target;
     const widget = target.auxWidget;
 
     if (widget !== void 0) {
@@ -41,7 +41,7 @@ export class VisibilityComponent extends StylesComponentBase {
   }
 
   _updateVisibility(mode, hidden) {
-    const target = this._target;
+    const target = this.target;
     const widget = target.auxWidget;
 
     switch (mode) {
@@ -80,7 +80,7 @@ export class VisibilityComponent extends StylesComponentBase {
   }
 
   _changeVisibility(hidden) {
-    const target = this._target;
+    const target = this.target;
     const widget = target.auxWidget;
 
     const currentMode = this._determineVisibilityMode();
@@ -101,8 +101,10 @@ export class VisibilityComponent extends StylesComponentBase {
 
   /** @ignore */
   triggerDraw() {
-    const target = this._target;
+    const target = this.target;
     const widget = target.auxWidget;
+
+    if (!this.isConnected) return;
 
     // if our target is an aux widget, we apply the display state immediately.
     // aux widgets have their own redraw dispatching logic.
@@ -110,7 +112,6 @@ export class VisibilityComponent extends StylesComponentBase {
 
     this.log('executing redraw immediately on %o', target);
     this._willDraw = false;
-    if (!this.isConnected) return;
     this.redraw();
   }
 

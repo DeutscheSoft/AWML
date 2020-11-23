@@ -27,11 +27,11 @@ export class PrefixComponent extends StylesComponentBase {
   }
 
   applyState(v) {
-    setPrefix(this._target, v, this._handle);
+    setPrefix(this.target, v, this._handle);
   }
 
   removeState(v) {
-    removePrefix(this._target, this._handle);
+    removePrefix(this.target, this._handle);
   }
 
   /** @ignore */

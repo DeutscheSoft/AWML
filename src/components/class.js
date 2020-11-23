@@ -10,7 +10,7 @@ export class ClassComponent extends StylesComponentBase {
   }
 
   applyState(v) {
-    const classList = this._target.classList;
+    const classList = this.target.classList;
 
     if (typeof v === 'string') {
       classList.add(v);
@@ -22,7 +22,7 @@ export class ClassComponent extends StylesComponentBase {
   }
 
   removeState(v) {
-    const classList = this._target.classList;
+    const classList = this.target.classList;
 
     if (typeof v === 'string') {
       classList.remove(v);
