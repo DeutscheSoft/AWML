@@ -151,6 +151,15 @@ export class EmberPlusBackend extends Backend {
     );
   }
 
+  destroy() {
+    super.destroy();
+
+    const device = this._device;
+
+    if (device)
+      device.close();
+  }
+
   set(id, value) {
     const setter = this._setters.get(id);
 
