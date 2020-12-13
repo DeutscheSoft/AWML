@@ -19,6 +19,12 @@ export class BaseComponent extends HTMLElement {
      */
     this.debug = false;
     this._subscription = null;
+
+    /*
+     * This property is true if the connectedCallback() has run
+     * while this.isConnected was true.
+     */
+    this._connected = false;
   }
 
   /**
@@ -33,9 +39,12 @@ export class BaseComponent extends HTMLElement {
   connectedCallback() {
     this.style.display = 'none';
 
+    if (!this.isConnected) return;
+    this._connected = true;
+
     // we only want to subscribe here if we are not yet subscribed
     // and if we are connected to the dom
-    if (this.isConnected && this._subscription === null) {
+    if (this._subscription === null) {
       this._subscription = this._subscribe();
     }
   }
@@ -50,7 +59,7 @@ export class BaseComponent extends HTMLElement {
   /** @ignore */
   _resubscribe() {
     this._unsubscribe();
-    if (!this.isConnected) return;
+    if (!this.isConnected || !this._connected) return;
     this._subscription = this._subscribe();
   }
 
@@ -61,6 +70,7 @@ export class BaseComponent extends HTMLElement {
 
   /** @ignore */
   disconnectedCallback() {
+    this._connected = false;
     this._unsubscribe();
   }
 
