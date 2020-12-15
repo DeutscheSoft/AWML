@@ -57,6 +57,7 @@ export class BackendValue extends DynamicValue {
     if (backendId === null) return;
 
     try {
+      this._backendId = null;
       backend.unsubscribe(backendId, this._callback);
     } catch (err) {
       warn(err);
