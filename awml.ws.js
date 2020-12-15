@@ -10,7 +10,14 @@ module.exports = function(w, AWML) {
     this.ws = ws;
     ServerBackend.call(this, backend);
     this.message_cb = function(data) {
-      this.message(JSON.parse(data));
+      let message;
+      try {
+        message = JSON.parse(data);
+        this.message(message);
+      } catch (err) {
+        console.error('Message %o generated an error: %o', message || data, err);
+        this.destroy();
+      }
     }.bind(this);
     this.close_cb = function() {
       try
