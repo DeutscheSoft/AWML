@@ -818,6 +818,7 @@ var f = (function(w, AWML) {
         backend.clear(); 
       } else {
         for (var uri in d) {
+          if (!d.hasOwnProperty(uri)) return;
           if (d[uri]) {
             backend.subscribe(uri, this._change_cb)
               .then(
@@ -840,9 +841,13 @@ var f = (function(w, AWML) {
                 }.bind(this));
           } else {
             /* unsubscribe happens per id */
-            var id = parseInt(uri);
-            backend.unsubscribe(id, this._change_cb);
-            this.subscriptions.delete(id);
+            try {
+              var id = parseInt(uri);
+              backend.unsubscribe(id, this._change_cb);
+              this.subscriptions.delete(id);
+            } catch (err) {
+              console.error('Unsubscribe failed:', err);
+            }
           }
         }
       }
