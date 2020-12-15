@@ -7,11 +7,8 @@ export function isCustomElement(node) {
 
 /** @ignore */
 export function maybeAuxElement(node) {
-  if (!isCustomElement(node)) return false;
-
-  return (
-    node.auxWidget !== void 0 || !customElements.get(node.tagName.toLowerCase())
-  );
+  return node.auxWidget !== void 0 ||
+    (isCustomElement(node) && !customElements.get(node.tagName.toLowerCase()));
 }
 
 /** @ignore */
