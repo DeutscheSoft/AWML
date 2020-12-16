@@ -71,6 +71,10 @@ export class LocalBackend extends Backend {
       });
     }
 
+    if (options.data !== null) {
+      this._importData(options.data, false);
+    }
+
     Promise.resolve().then(() => {
       if (!this.isInit) return;
       this._maybeOpen();
@@ -98,11 +102,13 @@ export class LocalBackend extends Backend {
 
   static argumentsFromNode(node) {
     const options = Backend.argumentsFromNode(node);
-    const tmp = node.getAttribute('transform-data');
+    const transformData = node.getAttribute('transform-data');
+    const data = node.getAttribute('data');
 
     options.delay = parseInt(node.getAttribute('delay')) || 0;
     options.src = node.getAttribute('src');
-    options.transformData = parseAttribute('javascript', tmp, null);
+    options.transformData = parseAttribute('javascript', transformData, null);
+    options.data = parseAttribute('javascript', data, null);
 
     return options;
   }
