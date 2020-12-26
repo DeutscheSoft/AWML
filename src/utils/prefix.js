@@ -133,7 +133,11 @@ export function printPrefixes(node, match) {
     const attrs = node.attributes;
     for (let i = 0; i < attrs.length; ++i) {
       const pmatch = attrs[i].name.match(/prefix[\-]?([a-zA-Z0-9_]*)$/);
-      if (pmatch && prefixes.indexOf(pmatch[1]) < 0 && (!match || (match && pmatch[1].match(match)))) {
+      if (
+        pmatch &&
+        prefixes.indexOf(pmatch[1]) < 0 &&
+        (!match || (match && pmatch[1].match(match)))
+      ) {
         prefixes.push(pmatch[1]);
         chars = Math.max(chars, pmatch[1].length);
       }
@@ -141,7 +145,13 @@ export function printPrefixes(node, match) {
   }
   prefixes.sort((a, b) => a.localeCompare(b));
   for (let i = 0, m = prefixes.length; i < m; ++i) {
-    const spaces = new Array(chars - prefixes[i].length + 1).join(" ");
-    console.log("%s%s : %c%s", prefixes[i], spaces, "color:#FFDE7A", collectPrefix(N, prefixes[i]));
+    const spaces = new Array(chars - prefixes[i].length + 1).join(' ');
+    console.log(
+      '%s%s : %c%s',
+      prefixes[i],
+      spaces,
+      'color:#FFDE7A',
+      collectPrefix(N, prefixes[i])
+    );
   }
 }

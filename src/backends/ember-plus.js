@@ -156,8 +156,7 @@ export class EmberPlusBackend extends Backend {
 
     const device = this._device;
 
-    if (device)
-      device.close();
+    if (device) device.close();
   }
 
   set(id, value) {
