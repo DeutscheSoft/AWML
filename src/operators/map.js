@@ -61,7 +61,7 @@ export function map(dv, transform, inverse) {
  * This is similar to Array.reduce().
  *
  * @param {DynamicValue} dv
- * @param {function(*, *:*)} transform
+ * @param {function(value: *, accumulator: *): *} transform
  *      Transformation function. Is called with each value and the
  *      accumulator.
  * @param initialValue
