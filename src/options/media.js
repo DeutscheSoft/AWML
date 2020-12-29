@@ -1,10 +1,12 @@
 import { Option } from './option.js';
 import { parseAttribute } from '../utils/parse_attribute.js';
 import { warn } from '../utils/log.js';
+import { getAuxWidget } from '../utils/aux-support.js';
 
 export class MediaOption extends Option {
-  constructor(options) {
+  constructor(options, component) {
     super(options);
+    this.widget = getAuxWidget(component);
     this.values = options.values;
     this.query = options.query;
     this._handler = () => {

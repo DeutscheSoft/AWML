@@ -1,9 +1,12 @@
 import { Option } from './option.js';
 import { parseAttribute } from '../utils/parse_attribute.js';
+import { getAuxWidget } from '../utils/aux-support.js';
 
 export class StaticOption extends Option {
-  constructor(options) {
+  constructor(options, component) {
     super(options);
+
+    this.widget = getAuxWidget(component);
 
     this.widget.set(this.name, options.value);
   }

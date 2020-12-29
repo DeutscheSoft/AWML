@@ -1,36 +1,7 @@
 import { Option } from './option.js';
 import { parseAttribute } from '../utils/parse_attribute.js';
-
-function subscribeInteractionChange(widget, timeout, callback) {
-  let state = widget.get('interacting');
-  let tid;
-
-  callback(state);
-
-  const sub = widget.subscribe('set_interacting', (value) => {
-    if (value || !(timeout > 0)) {
-      if (state == value) return;
-      callback((state = value));
-    } else {
-      if (tid !== void 0) clearTimeout(tid);
-
-      state = value;
-
-      tid = setTimeout(() => {
-        if (state) return;
-        callback(state);
-      }, timeout);
-    }
-  });
-
-  return () => {
-    sub();
-    if (tid !== void 0) {
-      clearTimeout(tid);
-      tid = void 0;
-    }
-  };
-}
+import { bindingFromComponent } from '../utils/aux-support.js';
+import { connect } from '../operators/connect.js';
 
 function combineSubscriptions(a, b) {
   if (!a && !b) return null;
@@ -47,67 +18,35 @@ export class BindOption extends Option {
     return true;
   }
 
-  constructor(options) {
+  constructor(options, component) {
     super(options);
 
     this.backendValue = options.backendValue;
-    const readonly = options.readonly;
-    const writeonly = options.writeonly;
-    const sync = options.sync;
-    const preventDefault = options.preventDefault;
     this.transformSend = options.transformSend;
-    this.afterReceive = options.afterReceive;
-    this.receiveDelay = options.receiveDelay;
-    this.ignoreInteraction = options.ignoreInteraction;
     this.node = options.node;
-    this._sub = null;
-    this._receiving = false;
-    this._hasLastValue = false;
-    this._lastValue = null;
-    this._interacting = false;
+    this.transformReceive = this.node.transformReceive;
 
-    let sub1 = null;
-    let sub2 = null;
+    const dv = bindingFromComponent(component, this.name, {
+      readonly: options.writeonly,
+      writeonly: options.readonly,
+      sync: options.sync,
+      preventDefault: options.preventDefault,
+      ignoreInteraction: options.ignoreInteraction,
+      receiveDelay: options.receiveDelay,
+    });
 
-    if (!readonly) {
-      if (writeonly) {
-        sub1 = this.widget.subscribe('userset', (name, value) => {
-          if (name !== this.name) return;
-          this.sendValue(value);
-          return false;
-        });
-      } else if (sync) {
-        sub1 = this.widget.subscribe('set_' + this.name, (value) => {
-          if (this._receiving) return;
-          this.sendValue(value);
-        });
-      } else {
-        sub1 = this.widget.subscribe('useraction', (name, value) => {
-          if (name !== this.name) return;
-          this.sendValue(value);
-          if (preventDefault) return false;
-        });
-      }
+    if (typeof dv.then === 'function') {
+      return dv;
     }
 
-    if (!this.ignoreInteraction) {
-      sub2 = subscribeInteractionChange(
-        this.widget,
-        this.receiveDelay,
-        (value) => {
-          this._interacting = value;
-
-          if (value || !this._hasLastValue) return;
-
-          const lastValue = this._lastValue;
-          this._lastValue = null;
-          this._hasLastValue = false;
-          this.valueReceived(lastValue);
-        }
-      );
-    }
-
-    this._sub = combineSubscriptions(sub1, sub2);
+    this._sub = connect(
+      options.backendValue,
+      true,
+      this.receiveValue.bind(this),
+      dv,
+      false,
+      this.sendValue.bind(this)
+    );
   }
 
   sendValue(value) {
@@ -115,31 +54,21 @@ export class BindOption extends Option {
       value = this.transformSend(value);
     }
     this.node.log('Sending value %o', value);
-    this.backendValue.set(value);
+    return value;
   }
 
-  valueReceived(value) {
-    if (this._receiving) return;
+  receiveValue(value) {
+    const transformReceive = this.transformReceive;
 
-    if (this._interacting) {
-      this._lastValue = value;
-      this._hasLastValue = true;
-      return;
+    if (transformReceive !== null) {
+      const tmp = transformReceive.call(this.backendValue, value, this.node);
+      this.node.log('Received value %o -> %o', value, tmp);
+      value = tmp;
+    } else {
+      this.node.log('Received value %o', value);
     }
 
-    this._receiving = true;
-
-    try {
-      const widget = this.widget;
-
-      widget.set(this.name, value);
-
-      if (this.afterReceive !== null) {
-        this.afterReceive(this.backendValue, widget, value, this);
-      }
-    } finally {
-      this._receiving = false;
-    }
+    return value;
   }
 
   static optionsFromNode(node) {
@@ -156,11 +85,17 @@ export class BindOption extends Option {
       node.getAttribute('transform-send'),
       null
     );
-    options.afterReceive = parseAttribute(
+
+    const afterReceive = parseAttribute(
       'javascript',
       node.getAttribute('after-receive'),
       null
     );
+
+    if (afterReceive) {
+      error('Support for after-received has been dropped.');
+    }
+
     options.receiveDelay = parseAttribute(
       'int',
       node.getAttribute('receive-delay'),

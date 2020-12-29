@@ -1,0 +1,313 @@
+import { BaseComponent } from './base_component.js';
+import { DOMTemplate } from '../utils/dom_template.js';
+import { warn } from '../utils/log.js';
+import { bindingFromComponent } from '../utils/aux-support.js';
+import { fromSubscription } from '../operators/from_subscription.js';
+
+let redrawQueue = [];
+let oldQueue = [];
+
+function redraw() {
+  const q = redrawQueue;
+  redrawQueue = oldQueue;
+
+  q.forEach((cb) => {
+    try {
+      cb();
+    } catch (err) {
+      warn('redraw callback generated an exception.', err);
+    }
+  });
+  q.length = 0;
+}
+
+function requestRedraw(cb) {
+  redrawQueue.push(cb);
+
+  if (redrawQueue.length === 1) {
+    requestAnimationFrame(redraw);
+  }
+}
+
+function bindingFromProperty(component, name, options) {
+  let recurse = false;
+
+  const subscribeFun = !options.writeonly
+    ? function (cb) {
+        return component.subscribeEvent(name + 'Changed', (value) => {
+          if (recurse) return;
+          cb(value);
+        });
+      }
+    : null;
+
+  const setFun = !options.readonly
+    ? function (value) {
+        if (recurse) return;
+        recurse = true;
+        try {
+          component[name] = value;
+        } catch (err) {
+          throw err;
+        } finally {
+          recurse = false;
+        }
+      }
+    : null;
+
+  return fromSubscription(subscribeFun, setFun);
+}
+
+/**
+ * TemplateComponent is a base class for components using DOM templates.
+ */
+export class TemplateComponent extends HTMLElement {
+  constructor(template) {
+    super();
+    this._template = template.clone();
+    this._attached = false;
+    this._redrawRequested = false;
+    this._redraw = this.redraw.bind(this);
+    this._whenAttached = null;
+    this._eventHandlers = null;
+  }
+
+  /**
+   * @internal
+   */
+  connectedCallback() {
+    if (this._attached) return;
+    if (!this.isConnected) return;
+    this._attached = true;
+    this.appendChild(this._template.fragment);
+
+    const whenAttached = this._whenAttached;
+
+    if (whenAttached !== null) {
+      this._whenAttached = null;
+      whenAttached();
+    }
+  }
+
+  /**
+   * Returns a promise which resolves when the DOM template has been attached.
+   */
+  whenAttached() {
+    return new Promise((resolve) => {
+      if (this._attached) {
+        resolve();
+      } else {
+        this._whenAttached = resolve;
+      }
+    });
+  }
+
+  /**
+   * Subscribe to the given event.
+   *
+   * @param {String} name
+   *    The event name.
+   * @param {Function} cb
+   *    The event handler.
+   */
+  subscribeEvent(name, cb) {
+    if (typeof name !== 'string') throw new TypeError('Expected string.');
+
+    if (typeof cb !== 'function') throw new TypeError('Expected function.');
+
+    let subscribers = this._eventHandlers;
+
+    if (subscribers === null) {
+      this._eventHandlers = subscribers = new Map();
+    }
+
+    let q = subscribers.get(name);
+
+    if (!q) {
+      subscribers.set(name, (q = [cb]));
+    } else {
+      if (q.indexOf(cb) !== -1) throw new Error('Already subscribed.');
+      q.push(cb);
+    }
+
+    return () => {
+      if (cb === null) return;
+      const subscribers = this._eventHandlers;
+      const q = subscribers.get(name).filter((_cb) => _cb !== cb);
+
+      if (q.length) {
+        subscribers.set(name, q);
+      } else {
+        subscribers.delete(name);
+      }
+
+      cb = null;
+    };
+  }
+
+  /**
+   * Emits an event. See subscribeEvent().
+   */
+  emit(name, ev) {
+    const subscribers = this._eventHandlers;
+
+    if (subscribers === null) return;
+
+    const q = subscribers.get(name);
+
+    if (!q) return;
+
+    for (let i = 0; i < q.length; i++) {
+      const cb = q[i];
+      try {
+        cb(ev);
+      } catch (err) {
+        warn(err);
+      }
+    }
+  }
+
+  /**
+   * Mark a certain property as changed and (if necessary) trigger
+   * redraw() to be called in the next rendering frame.
+   *
+   * @param {String} propertyName
+   *    The name of the property which changed.
+   */
+  triggerUpdate(propertyName) {
+    if (this._redrawRequested) return;
+    this._redrawRequested = true;
+    requestRedraw(this._redraw);
+  }
+
+  /**
+   * Called in a rendering frame and updates the DOM.
+   */
+  redraw() {
+    this._redrawRequested = false;
+    this._template.update(this);
+    this.emit('redraw');
+  }
+
+  /**
+   * Internal method called when a binding is created. This is used by
+   * BindOption to create binding with template components.
+   *
+   * @param {String} name
+   *    The binding name.
+   * @param {Object} options
+   *    The binding options. See bindingFromComponent for option values.
+   * @returns {DynamicValue}
+   *    Returns a dynamic value which represents the given binding.
+   */
+  awmlCreateBinding(name, options) {
+    if (!this._attached) return this.whenAttached();
+
+    const template = this._template;
+
+    const alias = template.optionReferences.get(name);
+
+    if (alias) return bindingFromComponent(alias[0], alias[1], options);
+
+    const dependencies = template.dependencies;
+
+    if (dependencies.includes(name)) {
+      if (options.preventDefault)
+        throw new Error(
+          'preventDefault is not supported for template reference bindings.'
+        );
+
+      if (!options.sync)
+        throw new Error(
+          'sync is required for for template reference bindings.'
+        );
+
+      return bindingFromProperty(this, name, options);
+    }
+
+    const pos = name.indexOf('.');
+
+    if (pos !== -1) {
+      const references = this._template.references;
+      const childName = name.substr(0, pos);
+
+      if (references.has(childName)) {
+        return bindingFromComponent(
+          references.get(childName),
+          name.substr(pos + 1),
+          options
+        );
+      }
+    }
+
+    throw new Error('No such option in component: ' + name);
+  }
+
+  /**
+   * Creates a component class from a template string.
+   *
+   * @param {String} input
+   *    The template string.
+   * @returns {class}
+   *    A subclass of TemplateComponent which - when instantiated - will
+   *    clone template.
+   */
+  static fromString(input) {
+    const template = DOMTemplate.fromString(input);
+    const referenceNames = Array.from(template.references.keys());
+    const dependencies = template.dependencies;
+
+    const component = class extends TemplateComponent {
+      constructor() {
+        super(template);
+
+        const tpl = this._template;
+
+        if (referenceNames.length) {
+          const references = tpl.references;
+
+          for (let i = 0; i < referenceNames.length; i++) {
+            const name = referenceNames[i];
+
+            this['_' + name] = references.get(name);
+          }
+        }
+
+        dependencies.forEach((name) => {
+          if (referenceNames.includes(name)) return;
+          this['_' + name] = void 0;
+        });
+      }
+    };
+
+    referenceNames.forEach((name) => {
+      const privName = '_' + name;
+
+      Object.defineProperty(component.prototype, name, {
+        enumerable: true,
+        get: function () {
+          return this[privName];
+        },
+      });
+    });
+
+    dependencies.forEach((name) => {
+      if (referenceNames.includes(name)) return;
+      const privName = '_' + name;
+      const evName = name + 'Changed';
+      Object.defineProperty(component.prototype, name, {
+        enumerable: true,
+        get: function () {
+          return this[privName];
+        },
+        set: function (value) {
+          this[privName] = value;
+          this.triggerUpdate(name);
+          this.emit(evName, value);
+        },
+      });
+    });
+
+    return component;
+  }
+}

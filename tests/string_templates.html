@@ -1,0 +1,60 @@
+<html>
+  <head>
+    <script type="module">
+      import { define, assertEq, assertEqual } from './testing.js';
+      import { tokenizeTemplate } from '../src/utils/tokenize_template.js';
+      import { StringTemplate } from '../src/utils/string_template.js';
+
+      define(async () => {
+        assertEq([], tokenizeTemplate(''));
+
+        {
+          const template = 'foo {{ }} bar';
+          const tokens = tokenizeTemplate(template);
+
+          assertEqual(tokens[0], 'foo ');
+          assertEqual(tokens[1].expression, ' ');
+          assertEqual(tokens[2], ' bar');
+        }
+
+        {
+          const template = 'foo {{ bar';
+          assertEq(tokenizeTemplate(template), [template]);
+        }
+
+        {
+          const template = 'foo {{ if (a) { return "1"; } }} bar';
+          const tokens = tokenizeTemplate(template);
+
+          assertEqual(tokens[0], 'foo ');
+          assertEqual(tokens[1].expression, ' if (a) { return "1"; } ');
+          assertEqual(tokens[2], ' bar');
+        }
+
+        {
+          const template = StringTemplate.fromString('foo {{ this.bar }} bar');
+
+          assertEqual(template.update({ bar: 42 }), true);
+
+          assertEqual(template.get(), 'foo 42 bar');
+
+          // test that calling update again produces no changes in output
+          assertEqual(template.update({ bar: 42 }), false);
+
+          assertEqual(template.update({ bar: 43 }), true);
+          assertEqual(template.get(), 'foo 43 bar');
+
+          // check that clone() works
+          const template2 = template.clone();
+          assertEqual(template2.update({ bar: 43 }), true);
+          assertEqual(template2.get(), template.get());
+
+          assertEq(template.dependencies, ['bar']);
+          assertEq(template.dependencies, template2.dependencies);
+        }
+      });
+    </script>
+    <script type="module" src="../src/index.js"></script>
+  </head>
+  <body></body>
+</html>

@@ -1,0 +1,123 @@
+<html>
+  <head>
+    <script>
+      var initialValues = {
+        'channel1/Gain': 42.0,
+      };
+    </script>
+
+    <script type="module" src="../src/index.js"></script>
+    <script type="module" src="test-component.js"></script>
+    <script type="module">
+      import { assertEqual, define, waitForFrame } from './testing.js';
+      import { TemplateComponent } from '../src/components/template.js';
+      import { getBackendValue } from '../src/index.pure.js';
+
+      const myTemplate = `
+        <div [style.color]={{ this.color }} className={{ this.myClass }}>Hello World {{ this.name }}!</div>
+        <button (click)={{ this.onClick }}>click me</button>
+        <test-component #child1 $gain=bar></test-component>
+      `;
+
+      class MyComponent extends TemplateComponent.fromString(myTemplate) {
+        constructor() {
+          super();
+          this.name = 'foo';
+          this.color = 'black';
+          this.onClick = (ev) => {
+            this.name += '!!';
+          };
+        }
+      }
+
+      customElements.define('my-component', MyComponent);
+
+      define(async () => {
+        await waitForFrame();
+
+        const myComponent = document.querySelector('my-component');
+        const div = myComponent.querySelector('div');
+        const button = myComponent.querySelector('button');
+        const testComponent = myComponent.child1;
+        const widget = testComponent.auxWidget;
+
+        {
+          // inputs
+          assertEqual(div.style.color, 'black');
+          myComponent.color = 'red';
+          assertEqual(div.style.color, 'black');
+          await waitForFrame();
+          assertEqual(div.style.color, 'red');
+        }
+
+        {
+          // event handlers
+          assertEqual(myComponent.name, 'foo');
+          button.dispatchEvent(new UIEvent('click'));
+          assertEqual(myComponent.name, 'foo!!');
+        }
+
+        {
+          // option bindings
+          assertEqual(widget.get('gain'), 42.0);
+          assertEqual(widget.get('bar'), 42.0);
+          getBackendValue('test:channel1/Gain').set(23.4);
+          assertEqual(widget.get('bar'), 23.4);
+          assertEqual(widget.get('gain'), 23.4);
+        }
+
+        {
+          // property bindings
+          const bv = getBackendValue('test:channel1/Color');
+          myComponent.color = 'black';
+          bv.set('green');
+          assertEqual(myComponent.color, 'green');
+          await waitForFrame();
+          assertEqual(div.style.color, 'green');
+          myComponent.color = 'black';
+          assertEqual(bv.value, 'black');
+        }
+
+        {
+          // readonly property bindings
+          const bv = getBackendValue('test:channel1/Label');
+          myComponent.name = '';
+          bv.set('foo');
+          assertEqual(myComponent.name, 'foo');
+          myComponent.name = 'hello';
+          assertEqual(bv.value, 'foo');
+        }
+      });
+    </script>
+    <awml-backend name="test" type="local" data="initialValues"></awml-backend>
+  </head>
+  <body>
+    <div>
+      <my-component>
+        <awml-option
+          type="bind"
+          name="child1.gain"
+          src="test:channel1/Gain"
+        ></awml-option>
+        <awml-option
+          type="bind"
+          name="gain"
+          src="test:channel1/Gain"
+        ></awml-option>
+        <awml-option
+          sync
+          type="bind"
+          name="color"
+          src="test:channel1/Color"
+        ></awml-option>
+        <awml-option
+          sync
+          readonly
+          type="bind"
+          name="name"
+          src="test:channel1/Label"
+        ></awml-option>
+      </my-component>
+    </div>
+  </body>
+</html>
