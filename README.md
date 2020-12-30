@@ -7,7 +7,7 @@ This implementation uses HTML5 Custom Tags and supports integration with the
 ## Contents
 
 * [Using Widgets](#widgets)
-* [Options](#options)
+* [Options](#aux-widget-options)
   - [Option formats](#option-formats)
   - [Static options](#awml-option-type-static)
   - [Media options](#awml-option-type-media)
@@ -24,7 +24,7 @@ This implementation uses HTML5 Custom Tags and supports integration with the
 * [Installation](#installation)
 * [License](#license)
 
-## Options
+## AUX Widget Options
 
 The behavior of AUX widgets is completely controlled by their options.
 
