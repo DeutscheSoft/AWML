@@ -62,6 +62,9 @@ function bindingFromProperty(component, name, options) {
  * TemplateComponent is a base class for components using DOM templates.
  */
 export class TemplateComponent extends HTMLElement {
+  /**
+   * @params {DOMTemplate} [template]
+   */
   constructor(template) {
     super();
     this._template = template.clone();
@@ -91,6 +94,8 @@ export class TemplateComponent extends HTMLElement {
 
   /**
    * Returns a promise which resolves when the DOM template has been attached.
+   *
+   * @returns {Promise}
    */
   whenAttached() {
     return new Promise((resolve) => {

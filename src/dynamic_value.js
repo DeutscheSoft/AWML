@@ -36,14 +36,13 @@ export class DynamicValue {
     return result;
   }
 
-  /** @ignore */
   static from(v) {
     if (v instanceof this) return v;
 
     return this.fromConstant(v);
   }
 
-  /** @ignore */
+  /** @private */
   _updateValue(value) {
     this._hasValue = true;
     this._value = value;
@@ -52,6 +51,10 @@ export class DynamicValue {
   }
 
   /**
+   * Internal method implemented by all sub classes. This method will be called
+   * when the first subscriber subscribes to this dynamic value.
+   *
+   * @virtual
    * @protected
    */
   _subscribe() {

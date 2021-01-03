@@ -127,7 +127,7 @@ export class VisibilityComponent extends StylesComponentBase {
 }
 
 /**
- * The `AWML-SHOW` component hides its parent widget if the
+ * The `AWML-HIDE` component hides its parent widget if the
  * corresponding backend value is true.
  */
 export class HideComponent extends VisibilityComponent {

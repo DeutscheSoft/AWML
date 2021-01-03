@@ -49,6 +49,10 @@ export function subscribeBackendType(type, callback) {
   };
 }
 
+/**
+ * This component can be used to instantiate backends and register them under a
+ * name.
+ */
 export class BackendComponent extends BaseComponent {
   static get observedAttributes() {
     return BaseComponent.observedAttributes.concat([
@@ -65,7 +69,6 @@ export class BackendComponent extends BaseComponent {
     return this._name;
   }
 
-  /** @ignore */
   set name(v) {
     if (typeof v !== 'string' && v !== null)
       throw new TypeError('Expected string.');
@@ -81,7 +84,6 @@ export class BackendComponent extends BaseComponent {
     return this._type;
   }
 
-  /** @ignore */
   set type(v) {
     if (typeof v !== 'string' && v !== null)
       throw new TypeError('Expected string.');
@@ -97,7 +99,6 @@ export class BackendComponent extends BaseComponent {
     return this._retryInterval || 500;
   }
 
-  /** @ignore */
   set retryInterval(v) {
     if (typeof v === 'number') {
       if (!(v > 0)) v = null;

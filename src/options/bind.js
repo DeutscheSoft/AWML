@@ -13,6 +13,10 @@ function combineSubscriptions(a, b) {
   };
 }
 
+/**
+ * This option type is used to create two-way bindings between backend values
+ * and components.
+ */
 export class BindOption extends Option {
   static get needsBackendValue() {
     return true;

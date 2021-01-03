@@ -50,19 +50,19 @@ export function subscribeOptionType(type, callback) {
 }
 
 /**
- * The AWML-OPTION can be used to bind to options in AUX widgets. The type and
- * behavior of the binding depends on the specific option being used. Standard
- * option types available as part of AWML are
+ * The ``AWML-OPTION`` component can be used to bind to options in AUX widgets.
+ * The type and behavior of the binding depends on the specific option being used.
+ * Standard option types available as part of AWML are
  *
- * - `static` for setting options to static values,
- * - `media` for setting options based on CSS media queries and
- * - `bind` for binding options to backend values.
+ * - ``static`` for setting options to static values (see :ref:`StaticOption`),
+ * - ``media`` for setting options based on CSS media queries and
+ * - ``bind`` for binding options to backend values.
  *
  * Note that each option has additional attributes which can be used to control
  * its behavior. They are documented for each option type. These additional
  * options are only interpreted when the option is first connected. This means
  * that when these options are changed dynamically, it is necessary to also
- * modify either `name` or `type` to trigger the option to be reinitialized.
+ * modify either ``name`` or ``type`` to trigger the option to be reinitialized.
  *
  */
 export class OptionComponent extends PrefixComponentBase {
@@ -80,7 +80,6 @@ export class OptionComponent extends PrefixComponentBase {
     return this._type;
   }
 
-  /** @ignore */
   set type(v) {
     if (typeof v !== 'string' && v !== null)
       throw new TypeError('Expected string.');
@@ -97,7 +96,6 @@ export class OptionComponent extends PrefixComponentBase {
     return this._name;
   }
 
-  /** @ignore */
   set name(v) {
     if (typeof v !== 'string' && v !== null)
       throw new TypeError('Expected string.');

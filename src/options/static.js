@@ -2,6 +2,9 @@ import { Option } from './option.js';
 import { parseAttribute } from '../utils/parse_attribute.js';
 import { getAuxWidget } from '../utils/aux-support.js';
 
+/**
+ * This option type is used to set aux widet options to static values.
+ */
 export class StaticOption extends Option {
   constructor(options, component) {
     super(options);

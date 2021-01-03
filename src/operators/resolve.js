@@ -89,7 +89,7 @@ class ResolveValue extends DynamicValue {
  *
  * @param {DynamicValue} dv
  *      The input DynamicValue.
- * @param {function(value: *):Promise} projection
+ * @param {function(*):Promise} projection
  *      Transformation function for values.
  * @param {boolean} [parallel=false]
  *      If true, each value will spawn a task and

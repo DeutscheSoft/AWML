@@ -62,8 +62,9 @@ export function triggerUpdatePrefix(node, handle) {
  *      The DOM node.
  * @param {string} prefix
  *      The prefix value.
- * @param {string} [handle]
- *      The handle name.
+ * @param {string|null} [handle]
+ *      The handle name. If omitted defaults ot ``null`` for the
+ *      default prefix handle.
  */
 export function setPrefix(node, prefix, handle) {
   if (handle === void 0) {

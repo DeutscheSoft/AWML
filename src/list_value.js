@@ -83,8 +83,10 @@ export class ListValue extends DynamicValue {
 
   /**
    * @param values {DynamicValue[]}
-   * @param [partial=false] {boolean} - Initial value for the partial property.
-   * @param [debounce=0] {number} - Initial value for the debounce property.
+   * @param [partial=false] {boolean}
+   *    Initial value for the partial property.
+   * @param [debounce=0] {number} 
+   *    Initial value for the debounce property.
    */
   constructor(values, partial, debounce) {
     super();
@@ -107,8 +109,8 @@ export class ListValue extends DynamicValue {
 
   /**
    * The debounce property can be used to throttle the number of
-   * value updates. When debounce is a positive number N, value change
-   * notifications will be delayed for N milliseconds.
+   * value updates. When debounce is a positive number ``N``, value change
+   * notifications will be delayed for ``N`` milliseconds.
    * @param v {number} - Number of milliseconds to debounce.
    */
   set debounce(v) {
@@ -130,7 +132,6 @@ export class ListValue extends DynamicValue {
     this._notify();
   }
 
-  /** @ignore */
   get debounce() {
     return this._debounce;
   }
@@ -156,7 +157,6 @@ export class ListValue extends DynamicValue {
     }
   }
 
-  /** @ignore */
   get partial() {
     return this._partial;
   }

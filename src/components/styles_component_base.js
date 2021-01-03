@@ -27,7 +27,8 @@ export class StylesComponentBase extends RedrawComponentBase {
   }
 
   /**
-   * If true, a resize is triggered after updating the display state.
+   * If true, a resize is triggered after updating the display state. This
+   * property can be set using the ``trigger-resize`` attribute.
    * @type {?boolean}
    */
   get triggerResize() {
