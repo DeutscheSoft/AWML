@@ -22,6 +22,8 @@ export { DynamicValue } from './dynamic_value.js';
 export { ListValue } from './list_value.js';
 export {
   combineLatest,
+  connect,
+  connectTo,
   filter,
   fromSubscription,
   fromDOMEvent,
