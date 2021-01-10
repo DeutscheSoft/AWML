@@ -13,8 +13,11 @@ export {
   waitForAWMLContentLoaded,
 } from './utils/awml_content_loaded.js';
 export {
+  registerPrefixTagName,
   collectPrefix,
+  triggerUpdatePrefix,
   setPrefix,
+  removePrefix,
   setPrefixBlock,
   printPrefixes,
 } from './utils/prefix.js';
