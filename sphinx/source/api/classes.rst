@@ -58,3 +58,38 @@ MediaOption
 ^^^^^^^^^^^
 
 .. js:autoclass:: MediaOption
+
+.. _Backends:
+
+Backends
+--------
+
+.. _LocalBackend:
+
+LocalBackend
+^^^^^^^^^^^^
+
+.. js:autoclass:: LocalBackend
+  :members: delay
+
+.. _LocalStorageBackend:
+
+LocalStorageBackend
+^^^^^^^^^^^^^^^^^^^
+
+.. js:autoclass:: LocalStorageBackend
+  :members: storage
+
+.. _AES70Backend:
+
+AES70Backend
+^^^^^^^^^^^^
+
+.. js:autoclass:: AES70Backend
+
+.. _EmberPlusBackend:
+
+EmberPlusBackend
+^^^^^^^^^^^^^^^^
+
+.. js:autoclass:: EmberPlusBackend

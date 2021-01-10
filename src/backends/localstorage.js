@@ -3,7 +3,18 @@ import { LocalBackend } from './local.js';
 import { subscribeDOMEvent } from '../utils/subscribe_dom_event.js';
 import { warn } from '../utils/log.js';
 
+/**
+ * This class implements a backend which stores parameters in either
+ * localStorage or sessionStorage.
+ *
+ * It is available with the ``AWML-BACKEND`` component using the type
+ * ``localstorage``.
+ */
 export class LocalStorageBackend extends LocalBackend {
+  /**
+   * The storage object. Should be either ``localStorage`` or
+   * ``sessionStorage``.
+   */
   get storage() {
     return this._storage;
   }

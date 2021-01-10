@@ -9,6 +9,7 @@
 
    introduction
    template_components
+   installation_and_license
 
 .. toctree::
    :maxdepth: 2

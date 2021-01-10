@@ -66,6 +66,38 @@ const ParameterProperties = [
   'streamDescriptor',
 ];
 
+/**
+ * This class implements a backend for the Ember+ protocol. It uses the
+ * ember-plus https://github.com/DeutscheSoft/ember-plus which is required to be
+ * loaded as the global symbol ``EmberPlus``.
+ *
+ * The paths used to represent objects follow the standard Ember+ naming
+ * convention. The ``/`` character is used as delimiter. The following addresses
+ * are supported:
+ *
+ * - Addresses of nodes or parameters will emit the corresponding object from
+ *   the ember-plus library.
+ * - Addresses of nodes appended with a ``/`` will emit the node object with
+ *   children populated. It will emit another value whenever the children are
+ *   changed.
+ * - Adresses of nodes appended with ``/identifier`` will emit the node identifier,
+ *   ``/number`` will emit the node number, ``/numericPath`` will emit the node
+ *   numeric path, ``isOnline`` will emit the isOnline flag of the node.
+ * - Adresses of parameters appended with ``/`` and ``identifier``, ``number``,
+ *   ``numericPath``, ``key``, ``description``, ``value``, ``minimum``, ``maximum``,
+ *   ``access``, ``format``, ``enumeration``, ``factor``, ``isOnline``, ``formula``,
+ *   ``step``, ``default``, ``type``, ``streamIdentifier``, ``enumMap`` or
+ *   ``streamDescriptor`` will emit the corresponding Ember+ field.
+ * - Addresses of parameters appended with ``/effectiveValue``,
+ *   ``/effectiveMinimum`` or ``/effectiveMaximum`` will emit the ``value``,
+ *   ``minimum`` or ``maximum`` fields transformed according to the parameter
+ *   fields such as ``factor``, ``step``, etc.
+ *
+ * All parameters except for ``/value`` and ``/effectiveValue`` are read-only.
+ *
+ * This backend is available with the ``AWML-BACKEND`` component using the type
+ * ``emberplus``.
+ */
 export class EmberPlusBackend extends Backend {
   get url() {
     return this.options.url;

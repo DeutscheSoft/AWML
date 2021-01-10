@@ -66,4 +66,5 @@ js_source_path = [
     '../../src/components/',
     '../../src/options/',
     '../../src/utils/',
+    '../../src/backends/',
 ]

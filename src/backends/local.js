@@ -3,11 +3,25 @@ import { parseAttribute } from '../utils/parse_attribute.js';
 import { fetchJSON } from '../utils/fetch.js';
 import { error } from '../utils/log.js';
 
+/**
+ * This class implements a backend which stores parameters in memory. It can be
+ * useful when handling temporary parameters (e.g. some form of shared UI
+ * state).
+ *
+ * It is available with the ``AWML-BACKEND`` component using the type ``local``.
+ */
 export class LocalBackend extends Backend {
   get delay() {
     return this._delay;
   }
 
+  /**
+   * Set an optional delay. Values set on this backend will be emitted after
+   * the delay has passed.
+   *
+   * @param {number} v
+   *    Delay in milliseconds.
+   */
   set delay(v) {
     if (typeof v !== 'number' || v < 0 || !isFinite(v))
       throw new TypeError('Expected finite non-negative number.');
