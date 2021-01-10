@@ -15,7 +15,7 @@ AWML provides
   backend parameters,
 * :ref:`introduction-templating` for combining pre-defined views into complex
   interfaces and
-* :ref:`introduction-protocol-backends` for controling device backends.
+* :ref:`introduction-protocol-backends` for controlling device backends.
 
 .. _introduction-parameter-binding:
 
@@ -37,6 +37,9 @@ concatenation of the prefixes of the node itself and all its parents. Parameter
 trees are denoted by their unique string handle and the prefix of a node for a
 given handle is set using the attribute ``prefix-<HANDLE>``. The default
 parameter tree with handle ``null`` uses the attribute ``prefix``.
+
+The documentation of :ref:`collectPrefix` contains more details about how
+prefixes are combined into a resulting address.
 
 Backend parameter can be bound to
 

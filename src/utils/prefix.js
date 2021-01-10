@@ -1,15 +1,17 @@
 /**
  * Calculate the prefix of the given node for the given handle. The prefix
- * is the concatenation of the `"prefix"` attribute of this node and all its
+ * is the concatenation of the ``"prefix"`` attribute of this node and all its
  * parent nodes. This collection terminates early either
- * - if a prefix attribute has the value `":noprefix:"` which results in an empty
- *   prefix, or
- * - if a prefix contains a `":"` at which point the prefix is complete.
  *
- * @param {Node} node The DOM node.
+ * - if a prefix attribute has the value ``":noprefix:"`` which results in an empty
+ *   prefix, or
+ * - if a prefix contains a ``":"`` at which point the prefix is complete.
+ *
+ * @param {Node} node
+ *   The DOM node.
  * @param {string} [handle]
- *      The handle name. If given, instead of the
- *      `"prefix"` attribute, the attribute `"prefix-" + handle` is used.
+ *   The handle name. If given, instead of the ``"prefix"`` attribute,
+ *   the attribute ``"prefix-" + handle`` is used.
  */
 export function collectPrefix(node, handle) {
   const attributeName = handle && handle.length ? 'prefix-' + handle : 'prefix';
@@ -29,7 +31,10 @@ export function collectPrefix(node, handle) {
 const prefixTags = new Set();
 let prefixTagSelector = '';
 
-/** @ignore */
+/**
+ * Register the given tagName to be included in the list of components
+ * to be notified when a prefix changes on a parent node.
+ */
 export function registerPrefixTagName(tagName) {
   if (prefixTags.has(tagName)) return;
   prefixTags.add(tagName);

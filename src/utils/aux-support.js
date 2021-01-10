@@ -208,6 +208,11 @@ function blockWhileInteracting(widget, subscribeReceive, setFun, delay) {
  * @param {number} [options.receiveDelay=500]
  *      Delay values passed to set() for the given number of ms after
  *      the user interaction has ended.
+ *
+ * @returns {DynamicValue}
+ *      Returns the dynamic value which represents this binding. Calling
+ *      :class:`set() <DynamicValue>` on this value will set the option on the widget.
+ *      Values emitted from this dynamic value represent changes of the option.
  */
 export function bindingFromWidget(widget, name, options) {
   let setFun = null;
@@ -311,6 +316,9 @@ export function bindingFromWidget(widget, name, options) {
  * @param {number} [options.receiveDelay=500]
  *      Delay values passed to set() for the given number of ms after
  *      the user interaction has ended.
+ *
+ * @returns {DynamicValue}
+ *      Returns the dynamic value which represents this binding.
  */
 export function bindingFromComponent(node, name, options) {
   if (isCustomElementDefined(node)) {
