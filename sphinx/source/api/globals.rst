@@ -1,5 +1,5 @@
-Globals
-=======
+Global Functions
+================
 
 Backends
 --------
