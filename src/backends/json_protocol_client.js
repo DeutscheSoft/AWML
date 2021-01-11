@@ -88,19 +88,9 @@ export class JsonProtocolClientBackend extends Backend {
       this._pendingSubscriptionMessage = message = {};
     }
 
-    message[address] = 1;
-    this.triggerFlush();
-  }
-
-  lowSubscribeBatch(addresses) {
-    let message = this._pendingSubscriptionMessage;
-
-    if (message === null) {
-      this._pendingSubscriptionMessage = message = {};
-    }
-
-    for (let i = 0; i < addresses.length; i++) {
-      const address = addresses[i];
+    if (message[address] === 0) {
+      delete message[address];
+    } else {
       message[address] = 1;
     }
 
@@ -114,7 +104,12 @@ export class JsonProtocolClientBackend extends Backend {
       this._pendingSubscriptionMessage = message = {};
     }
 
-    message[address] = 0;
+    if (message[address] === 1) {
+      delete message[address];
+    } else {
+      message[address] = 0;
+    }
+
     this.triggerFlush();
   }
 

@@ -36,14 +36,13 @@ export class DynamicValue {
     return result;
   }
 
-  /** @ignore */
   static from(v) {
     if (v instanceof this) return v;
 
     return this.fromConstant(v);
   }
 
-  /** @ignore */
+  /** @private */
   _updateValue(value) {
     this._hasValue = true;
     this._value = value;
@@ -52,6 +51,10 @@ export class DynamicValue {
   }
 
   /**
+   * Internal method implemented by all sub classes. This method will be called
+   * when the first subscriber subscribes to this dynamic value.
+   *
+   * @virtual
    * @protected
    */
   _subscribe() {
@@ -119,11 +122,15 @@ export class DynamicValue {
    * Returns a unsubscribe callback. Calling it will remove the subscription.
    *
    * @param {Function} subscriber - Callback function to subscribe.
+   * @param {boolean} [replay=true] - Call the subscriber once with
+   *    the current value (if any).
    * @return {Function} - The unsubscribe callback.
    */
-  subscribe(subscriber) {
+  subscribe(subscriber, replay) {
     if (typeof subscriber !== 'function')
       throw new TypeError('Expected function or Subscriber object.');
+
+    if (replay === void 0) replay = true;
 
     const a = this._subscribers;
 
@@ -136,7 +143,7 @@ export class DynamicValue {
       this._subscribers.push(subscriber);
     }
 
-    if (this._hasValue) {
+    if (replay && this._hasValue) {
       callSubscriber(subscriber, this._value);
     }
 

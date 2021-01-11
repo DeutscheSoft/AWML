@@ -7,7 +7,7 @@ This implementation uses HTML5 Custom Tags and supports integration with the
 ## Contents
 
 * [Using Widgets](#widgets)
-* [Options](#options)
+* [Options](#aux-widget-options)
   - [Option formats](#option-formats)
   - [Static options](#awml-option-type-static)
   - [Media options](#awml-option-type-media)
@@ -18,12 +18,13 @@ This implementation uses HTML5 Custom Tags and supports integration with the
   - [local](#-awml-backend-type-local-)
   - [websocket](#-awml-backend-type-websocket-)
   - [aes70](#-awml-backend-type-aes70-)
-* [Templates](#templates)
+* [Cloning Templates](#cloning-templates)
 * [Tree Mutation Tags](#mutation-tags)
+* [Template Components](#template-components)
 * [Installation](#installation)
 * [License](#license)
 
-## Options
+## AUX Widget Options
 
 The behavior of AUX widgets is completely controlled by their options.
 
@@ -285,7 +286,7 @@ Example:
 
 * `delay`: Artificially delays the setting of properties by a number of
   milliseconds. This can be used to simulate the behavior of a user
-  interface with a specific network lag. 
+  interface with a specific network lag.
 
 ### `<awml-backend type=websocket>`
 
@@ -359,7 +360,7 @@ All AES70 Manager objects are available through their name, e.g. the
 
 * `src`: WebSocket url to connect to.
 
-## Templates
+## Cloning Templates
 
 [HTML5 Templates](https://developer.mozilla.org/en/docs/Web/HTML/Element/template) are a mechanism for defining reusable parts of document.
 AWML encourages the use of templates and features the special tag `awml-clone` to make them easier to use.
@@ -419,6 +420,111 @@ This could then easily be implemented in the above template examples:
     <awml-clone template='block' prefix='remote:block1/'></awml-clone>
 
 The `awml-clone` tag will automatically propagate the correct prefix values to all `awml-option` tags.
+
+## Template Components
+
+Template components are web components based on HTML templates. They use a
+template syntax similar to that of Angular. Expressions used inside of the
+template string are mapped onto properties of the corresponding component.
+
+    const template = `<div title={{ this.title }}>Hello {{ this.name }}</div>`;
+    
+    class MyComponent extends TemplateComponent.fromString(template) {
+      constructor() {
+        super();
+        this.title = '';
+        this.name = '';
+      }
+    }
+
+    customElements.define('my-component', MyComponent);
+
+Using the above example template will result in a web component which defines
+two properties `title` and `name`. Setting them will automatically update the
+DOM in the next rendering frame.
+Inside of strings template expressions can be used inside of Node textContent,
+attributes and using special syntax as properties, style properties and DOM
+event handlers.
+
+Properties referenced in template expressions can be bound to using
+`awml-option` tag with option `type=bind`. As an example for the above component
+this can be done using
+
+    <my-component>
+      <awml-option type=bind sync name=title src='.../Title'></awml-option>
+      <awml-option type=bind sync name=name src='.../Name'></awml-option>
+    </my-component>
+
+### Template Expressions in Attributes
+
+Template expressions can be used to control attribute values.
+
+    const template1 = `<div title={{ this.title }}></div>`;
+    const template2 = `<div title="Title: {{ this.title }}"></div>`;
+
+### Template Expressions in Properties
+
+Template expressions can be used to control node properties using a special
+syntax using square brackets.
+
+    const template1 = `<input type=text [value]={{ this.value }} />`;
+
+### Template Expressions in Style properties
+
+Template expressions can be used to control style properties using a special
+syntax using square brackets.
+
+    const template1 = `<div [style.color]={{ this.color }}></div>`;
+
+### Template Expressions in event handlers
+
+Template expressions can be used to attach event handlers to DOM nodes.
+
+    const template = `<button (click)={{ this.onClick }}>click me</button>`;
+    class MyComponent extends TemplateComponent.fromString(template) {
+      constructor() {
+        super();
+        this.onClick = (ev) => {
+          // handle click event.
+        };
+      }
+    }
+
+    customElements.define('my-component', MyComponent);
+
+### Node References
+
+DOM nodes inside of templates can be assigned names which make them available as
+properties on the resulting web components.
+
+    const template = `<div #hello>Hello</div>`;
+
+This can be useful to access specific DOM nodes inside of the resulting
+component. It can also be useful when trying to create bindings to child
+components.
+
+    const template = `<aux-fader #gain></aux-fader>`;
+    customElements.define('my-channel', TemplateComponent.fromString(template));
+    
+Then inside the DOM options of the fader can be bound to using `awml-option`.
+
+    <my-channel>
+      <awml-option type=bind name='gain.value' src='...'></awml-option>
+    </my-channel>
+
+### Binding aliases
+
+Options of components inside of templates can be assigned aliases which make them available as
+options on the resulting web components.
+
+    const template = `<aux-fader $gain=value></aux-fader>`;
+    customElements.define('my-channel', TemplateComponent.fromString(template));
+
+Then inside the DOM options of the fader can be bound to using `awml-option`.
+
+    <my-channel>
+      <awml-option type=bind name='gain' src='...'></awml-option>
+    </my-channel>
 
 ## Mutation Tags
 

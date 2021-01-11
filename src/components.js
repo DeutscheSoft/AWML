@@ -15,3 +15,4 @@ export {
 export { PrefixComponent } from './components/prefix.js';
 export { StylesComponent } from './components/styles.js';
 export { HideComponent, ShowComponent } from './components/visibility.js';
+export { TemplateComponent } from './components/template.js';

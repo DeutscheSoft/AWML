@@ -1,15 +1,17 @@
 /**
  * Calculate the prefix of the given node for the given handle. The prefix
- * is the concatenation of the `"prefix"` attribute of this node and all its
+ * is the concatenation of the ``"prefix"`` attribute of this node and all its
  * parent nodes. This collection terminates early either
- * - if a prefix attribute has the value `":noprefix:"` which results in an empty
- *   prefix, or
- * - if a prefix contains a `":"` at which point the prefix is complete.
  *
- * @param {Node} node The DOM node.
+ * - if a prefix attribute has the value ``":noprefix:"`` which results in an empty
+ *   prefix, or
+ * - if a prefix contains a ``":"`` at which point the prefix is complete.
+ *
+ * @param {Node} node
+ *   The DOM node.
  * @param {string} [handle]
- *      The handle name. If given, instead of the
- *      `"prefix"` attribute, the attribute `"prefix-" + handle` is used.
+ *   The handle name. If given, instead of the ``"prefix"`` attribute,
+ *   the attribute ``"prefix-" + handle`` is used.
  */
 export function collectPrefix(node, handle) {
   const attributeName = handle && handle.length ? 'prefix-' + handle : 'prefix';
@@ -29,7 +31,10 @@ export function collectPrefix(node, handle) {
 const prefixTags = new Set();
 let prefixTagSelector = '';
 
-/** @ignore */
+/**
+ * Register the given tagName to be included in the list of components
+ * to be notified when a prefix changes on a parent node.
+ */
 export function registerPrefixTagName(tagName) {
   if (prefixTags.has(tagName)) return;
   prefixTags.add(tagName);
@@ -62,8 +67,9 @@ export function triggerUpdatePrefix(node, handle) {
  *      The DOM node.
  * @param {string} prefix
  *      The prefix value.
- * @param {string} [handle]
- *      The handle name.
+ * @param {string|null} [handle]
+ *      The handle name. If omitted defaults ot ``null`` for the
+ *      default prefix handle.
  */
 export function setPrefix(node, prefix, handle) {
   if (handle === void 0) {
@@ -133,7 +139,11 @@ export function printPrefixes(node, match) {
     const attrs = node.attributes;
     for (let i = 0; i < attrs.length; ++i) {
       const pmatch = attrs[i].name.match(/prefix[\-]?([a-zA-Z0-9_]*)$/);
-      if (pmatch && prefixes.indexOf(pmatch[1]) < 0 && (!match || (match && pmatch[1].match(match)))) {
+      if (
+        pmatch &&
+        prefixes.indexOf(pmatch[1]) < 0 &&
+        (!match || (match && pmatch[1].match(match)))
+      ) {
         prefixes.push(pmatch[1]);
         chars = Math.max(chars, pmatch[1].length);
       }
@@ -141,7 +151,13 @@ export function printPrefixes(node, match) {
   }
   prefixes.sort((a, b) => a.localeCompare(b));
   for (let i = 0, m = prefixes.length; i < m; ++i) {
-    const spaces = new Array(chars - prefixes[i].length + 1).join(" ");
-    console.log("%s%s : %c%s", prefixes[i], spaces, "color:#FFDE7A", collectPrefix(N, prefixes[i]));
+    const spaces = new Array(chars - prefixes[i].length + 1).join(' ');
+    console.log(
+      '%s%s : %c%s',
+      prefixes[i],
+      spaces,
+      'color:#FFDE7A',
+      collectPrefix(N, prefixes[i])
+    );
   }
 }

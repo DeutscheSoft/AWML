@@ -57,31 +57,33 @@ function isBlock(o) {
 
 /**
  * This class implements a backend for AES70 devices. It uses AES70.js
- * [https://github.com/DeutscheSoft/AES70.js] which is required to be loaded
- * as one global `OCA` symbol. It is usually enough to include `AES70.es5.js`
- * alongside this backend.
+ * https://github.com/DeutscheSoft/AES70.js which is required to be loaded
+ * as one global ``OCA`` symbol. It is usually enough to include
+ * ``AES70.es5.js`` alongside this backend.
  *
  * The paths uses to represent objects and properties of the AES70 device in
  * this backend follow these rules.
  *
  * - The path of an object is given by the concatenation of all role names up
- *   to the root block delimited by `/`.
+ *   to the root block delimited by ``/``.
  * - The path of a property is given by the paths of the corresponding object
- *   concatenated by `/` and the property name.
+ *   concatenated by ``/`` and the property name.
  * - The path for minimum and maximum values for a property (if defined) are
- *   given by the properties path followed by `/Min` and `/Max~, respectively.
+ *   given by the properties path followed by ``/Min`` and ``/Max``, respectively.
  *
  * Furthermore, it is possible to subscribe to directory contents inside of
- * blocks. These are given by the path of the object followed by a single `/`.
+ * blocks. These are given by the path of the object followed by a single ``/``.
  * This paths will emit an array with two elements, the first the block itself
  * and the second a `Map` which contains all children by their role name in
  * order. For example, the content of the root block can be subscribed as the
- * path `/`.
+ * path ``/``.
  *
  * Note that AES70 does not guarantee, only recommend, that all siblings of a
  * block have unique role names. In order to generate unique path names, this
- * backend will make object paths unique by appending `1`, `2`, etc..
+ * backend will make object paths unique by appending ``1``, ``2``, etc..
  *
+ * This backend is available with the ``AWML-BACKEND`` component using the type
+ * ``aes70``.
  */
 export class AES70Backend extends Backend {
   /** @internal */

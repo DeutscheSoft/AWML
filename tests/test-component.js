@@ -5,12 +5,14 @@ class TestWidget extends EventTarget {
     super();
     this.options = {
       visbility: true,
+      interacting: false,
     };
   }
 
   set(name, value) {
     this.options[name] = value;
     this.emit('set_' + name, value, name);
+    this.emit('set', name, value);
   }
 
   startInteracting() {

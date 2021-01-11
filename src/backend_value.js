@@ -1,6 +1,10 @@
 import { warn } from './utils/log.js';
 import { DynamicValue } from './dynamic_value.js';
 
+/**
+ * Instances of this class represent dynamic values connected to a protocol
+ * backend. Internally it interfaces with the API of a backend implementation.
+ */
 export class BackendValue extends DynamicValue {
   _activate() {
     const backend = this._backend;
@@ -57,6 +61,7 @@ export class BackendValue extends DynamicValue {
     if (backendId === null) return;
 
     try {
+      this._backendId = null;
       backend.unsubscribe(backendId, this._callback);
     } catch (err) {
       warn(err);

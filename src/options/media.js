@@ -1,10 +1,16 @@
 import { Option } from './option.js';
 import { parseAttribute } from '../utils/parse_attribute.js';
 import { warn } from '../utils/log.js';
+import { getAuxWidget } from '../utils/aux-support.js';
 
+/**
+ * This option type can be used to bind aux widet options
+ * to the result of CSS media queries.
+ */
 export class MediaOption extends Option {
-  constructor(options) {
+  constructor(options, component) {
     super(options);
+    this.widget = getAuxWidget(component);
     this.values = options.values;
     this.query = options.query;
     this._handler = () => {

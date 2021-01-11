@@ -59,7 +59,10 @@ export class PrefixComponentBase extends BaseComponent {
 
   /**
    * Number of milliseconds to debounce incoming values. This currently only
-   * works with ListValue sources.
+   * works with ListValue sources. This property can also be set using the
+   * ``debounce`` attribute.
+   *
+   * @type number
    */
   get debounce() {
     return this._debounce;
@@ -76,7 +79,10 @@ export class PrefixComponentBase extends BaseComponent {
   }
 
   /**
-   * If true, partial values are received from a ListValue source.
+   * If true, partial values are received from a ListValue source. This property
+   * can also be set using the ``partial`` attribute.
+   *
+   * @type boolean
    */
   get partial() {
     return this._partial;
@@ -94,9 +100,10 @@ export class PrefixComponentBase extends BaseComponent {
   /**
    * A function which is called before subscribing to a DynamicValue. It can be
    * used to transform the DynamicValue, e.g. by using an operator. If null, no
-   * transformation happens.
+   * transformation happens. This propert can also be set using the ``pipe``
+   * attribute.
    *
-   * @return {function(dv: DynamicValue):DynamicValue}
+   * @return {function(DynamicValue):DynamicValue}
    */
   get pipe() {
     return this._pipe;
@@ -110,9 +117,9 @@ export class PrefixComponentBase extends BaseComponent {
 
   /**
    * The source address of the backend value to
-   * bind to this property. The source address is combined with `prefix`
+   * bind to this property. The source address is combined with ``prefix``
    * attributes on this component and all it's DOM parents into the final
-   * address. This property can be set using the `src` attribute.
+   * address. This property can be set using the ``src`` attribute.
    * @type {?string}
    */
   get src() {
@@ -128,12 +135,12 @@ export class PrefixComponentBase extends BaseComponent {
 
   /**
    * The source address prefix to use for
-   * the `src` property in this component. If `null`, the default prefix will
-   * be used, which corresponds to the `prefix` attribute. If not null, the
+   * the ``src`` property in this component. If ``null``, the default prefix will
+   * be used, which corresponds to the ``prefix`` attribute. If not null, the
    * source address will instead be constructed using the
-   * `prefix-<srcPrefix>` attribute. This feature can be used to connect
+   * ``prefix-<srcPrefix>`` attribute. This feature can be used to connect
    * bind components to different backend parameter trees. This property can
-   * be set using the `src-prefix` atttribute.
+   * be set using the ``src-prefix`` atttribute.
    *
    * @type {?string}
    */
@@ -152,8 +159,8 @@ export class PrefixComponentBase extends BaseComponent {
   /**
    * Transformation function for backend values.
    * This function is called in the context of this component for every value
-   * received from the backend. This property can be set using the
-   * `transform-receive` attribute.
+   * received from the backend. This property can also be set using the
+   * ``transform-receive`` attribute.
    * @type {?function}
    */
   get transformReceive() {
@@ -170,7 +177,7 @@ export class PrefixComponentBase extends BaseComponent {
    * Transformation function for the source
    * address. This function is called in the context of this component
    * once before a source address is subscribed to.
-   * This property can be set using the `transform-src` attribute.
+   * This property can also be set using the ``transform-src`` attribute.
    * @type {?function}
    */
   get transformSrc() {

@@ -2,7 +2,7 @@
   <head>
     <script type="module">
       import { define, delay, assertEqual } from './testing.js';
-      import { DynamicValue, ListValue, fromDOMEvent } from '../src/index.js';
+      import { DynamicValue, ListValue, fromDOMEvent, connect, connectTo } from '../src/index.js';
 
       define(async () => {
         {
@@ -201,6 +201,60 @@
 
             assertEqual(div.dispatchEvent(ev), false);
             assertEqual(await p, ev);
+          }
+        }
+
+        {
+          // connectTo
+          const to = new DynamicValue();
+          const from = DynamicValue.from(42);
+
+          {
+            assertEqual(to.hasValue, false);
+            assertEqual(from.hasValue, true);
+
+            const sub = connectTo(to, from);
+
+            assertEqual(to.value, 42);
+
+            sub();
+            to.clear();
+          }
+
+          {
+            const sub = connectTo(to, from, false, (v) => v*2);
+
+            assertEqual(to.hasValue, false);
+
+            from.set(42);
+
+            assertEqual(to.value, 42 * 2);
+
+            sub();
+            to.clear();
+          }
+        }
+
+        {
+          // connect
+          const a = new DynamicValue();
+          const b = new DynamicValue();
+
+          {
+            const sub = connect(a, true, null,
+                                b, true, null);
+
+            a.set(42);
+
+            assertEqual(a.value, b.value);
+            assertEqual(a.value, 42);
+
+            b.set(23);
+
+            assertEqual(a.value, b.value);
+            assertEqual(a.value, 23);
+
+            sub();
           }
         }
       });

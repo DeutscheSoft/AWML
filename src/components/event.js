@@ -38,7 +38,6 @@ export class EventComponent extends BaseComponent {
     return this._type;
   }
 
-  /** @ignore */
   set type(v) {
     if (typeof v !== 'string' && v !== null && !Array.isArray(v))
       throw new TypeError('Expected string.');
@@ -55,7 +54,6 @@ export class EventComponent extends BaseComponent {
     return this._callback;
   }
 
-  /** @ignore */
   set callback(v) {
     if (typeof v !== 'function' && v !== null)
       throw new TypeError('Expected function.');

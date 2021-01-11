@@ -1,7 +1,7 @@
 export class Option {
   constructor(options) {
     this.name = options.name;
-    this.widget = options.widget;
+    this.node = options.node;
   }
 
   static optionsFromNode(node) {

@@ -1,8 +1,8 @@
 import { PrefixComponentBase } from './prefix_component_base.js';
 import { error } from '../utils/log.js';
 import {
-  maybeAuxElement,
-  getAuxWidget,
+  isCustomElement,
+  isCustomElementDefined,
   subscribeCustomElement,
 } from '../utils/aux-support.js';
 
@@ -50,19 +50,19 @@ export function subscribeOptionType(type, callback) {
 }
 
 /**
- * The AWML-OPTION can be used to bind to options in AUX widgets. The type and
- * behavior of the binding depends on the specific option being used. Standard
- * option types available as part of AWML are
+ * The ``AWML-OPTION`` component can be used to bind to options in AUX widgets.
+ * The type and behavior of the binding depends on the specific option being used.
+ * Standard option types available as part of AWML are
  *
- * - `static` for setting options to static values,
- * - `media` for setting options based on CSS media queries and
- * - `bind` for binding options to backend values.
+ * - ``static`` for setting options to static values (see :ref:`StaticOption`),
+ * - ``media`` for setting options based on CSS media queries and
+ * - ``bind`` for binding options to backend values.
  *
  * Note that each option has additional attributes which can be used to control
  * its behavior. They are documented for each option type. These additional
  * options are only interpreted when the option is first connected. This means
  * that when these options are changed dynamically, it is necessary to also
- * modify either `name` or `type` to trigger the option to be reinitialized.
+ * modify either ``name`` or ``type`` to trigger the option to be reinitialized.
  *
  */
 export class OptionComponent extends PrefixComponentBase {
@@ -80,7 +80,6 @@ export class OptionComponent extends PrefixComponentBase {
     return this._type;
   }
 
-  /** @ignore */
   set type(v) {
     if (typeof v !== 'string' && v !== null)
       throw new TypeError('Expected string.');
@@ -97,7 +96,6 @@ export class OptionComponent extends PrefixComponentBase {
     return this._name;
   }
 
-  /** @ignore */
   set name(v) {
     if (typeof v !== 'string' && v !== null)
       throw new TypeError('Expected string.');
@@ -126,53 +124,45 @@ export class OptionComponent extends PrefixComponentBase {
 
     const parentNode = this.parentNode;
 
-    if (!maybeAuxElement(parentNode))
+    if (!isCustomElement(parentNode))
       throw new Error(
-        'AWML-OPTION needs to be the direct child of an AUX Widget.'
+        'AWML-OPTION needs to be the direct child of a WebComponent.'
       );
 
-    const widget = getAuxWidget(parentNode);
-
     // come back when the custom element has been defined
-    if (widget === null)
+    if (!isCustomElementDefined(parentNode))
       return subscribeCustomElement(parentNode, () => this._resubscribe());
 
     let sub = null;
 
     if (constructor.needsBackendValue === true) {
-      sub = super._subscribe();
+      const backendValue = this._getBackendValue();
 
-      // backend value not found, yet.
-      if (sub === null) return null;
+      if (backendValue === null) return null;
+
+      this._backendValue = backendValue;
     }
 
     const options = constructor.optionsFromNode(this);
 
     options.name = name;
-    options.widget = widget;
 
-    const option = new constructor(options);
+    const option = new constructor(options, parentNode);
+
+    // come back when the option is ready.
+    if (typeof option.then === 'function') {
+      option.then(() => this._resubscribe());
+      return null;
+    }
 
     this._option = option;
 
     this.log('Constructed option implementation %o', option);
 
-    const backendValue = this._backendValue;
-
-    if (backendValue !== null && backendValue.hasValue) {
-      let value = backendValue.value;
-      const transformReceive = this._transformReceive;
-
-      if (transformReceive !== null) {
-        value = transformReceive.call(this._backendValue, value, this);
-      }
-
-      option.valueReceived(value);
-    }
-
     return () => {
       option.destroy();
       this._option = null;
+      this._backendValue = null;
 
       if (sub !== null) {
         sub();
@@ -180,15 +170,6 @@ export class OptionComponent extends PrefixComponentBase {
       }
       this.log('Destructed option implementation.');
     };
-  }
-
-  _valueReceived(value) {
-    const option = this._option;
-    // this happens if the backendValue already has a value and calls
-    // the subscriber in super._subscribe(). We handle this by calling
-    // option.valueReceived() above.
-    if (option === null) return;
-    option.valueReceived(value);
   }
 
   /** @ignore */

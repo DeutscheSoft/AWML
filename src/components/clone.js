@@ -175,7 +175,6 @@ export class CloneComponent extends PrefixComponentBase {
     return this._template;
   }
 
-  /** @ignore */
   set template(v) {
     if (v !== null && typeof v !== 'string')
       throw new TypeError('Expected string.');
@@ -195,7 +194,6 @@ export class CloneComponent extends PrefixComponentBase {
     return this._fetch;
   }
 
-  /** @ignore */
   set fetch(v) {
     if (typeof v !== 'boolean') throw new TypeError('Expected boolean.');
     this._fetch = v;
@@ -214,7 +212,6 @@ export class CloneComponent extends PrefixComponentBase {
     return this._notemplate;
   }
 
-  /** @ignore */
   set notemplate(v) {
     if (typeof v !== 'boolean') throw new TypeError('Expected boolean.');
     this._notemplate = v;
@@ -230,17 +227,21 @@ export class CloneComponent extends PrefixComponentBase {
     return this._nocache;
   }
 
-  /** @ignore */
   set nocache(v) {
     if (typeof v !== 'boolean') throw new TypeError('Expected boolean.');
     this._nocache = v;
   }
 
+  /**
+   * An optional callback which is called before a template is cloned. It
+   * can be used to transform the template DOM.
+   *
+   * @type function(Node, *): Node
+   */
   get transformTemplate() {
     return this._transformTemplate;
   }
 
-  /** @ignore */
   set transformTemplate(v) {
     if (v !== null && typeof v !== 'function')
       throw new TypeError('Expected function.');
@@ -263,7 +264,6 @@ export class CloneComponent extends PrefixComponentBase {
     return this._triggerResize;
   }
 
-  /** @ignore */
   set triggerResize(v) {
     if (typeof v !== 'boolean' && !(v >= 0))
       throw new TypeError('Expected boolean or non-negativee interger.');
@@ -280,7 +280,6 @@ export class CloneComponent extends PrefixComponentBase {
     return this._importScripts;
   }
 
-  /** @ignore */
   set importScripts(v) {
     if (typeof v !== 'boolean') throw new TypeError('Expected boolean.');
     this._importScripts = v;

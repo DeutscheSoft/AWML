@@ -1,0 +1,86 @@
+<html>
+  <head>
+    <script type="module">
+      import { define, assertEq, assertEqual } from './testing.js';
+      import { DOMTemplate } from '../src/utils/dom_template.js';
+
+      define(async () => {
+        [
+          DOMTemplate.fromString(
+            `<div foo={{ this.foobar }}>
+             <span>{{ this.bar }}</span>
+             <input type=text [hidden]={{ this.hidden }} />
+             <a [style.z-index]={{ this.zIndex }}>hello</a>
+            </div>  bar `
+          ),
+          DOMTemplate.fromTemplate`
+            <div foo=${'this.foobar'}>
+             <span>${'this.bar'}</span>
+             <input type=text [hidden]=${'this.hidden'} />
+             <a [style.z-index]=${'this.zIndex'}>hello</a>
+            </div>  bar `,
+        ].forEach((template) => {
+          assertEq(template.dependencies, [
+            'foobar',
+            'bar',
+            'hidden',
+            'zIndex',
+          ]);
+
+          template.update({
+            bar: 42,
+            foobar: 23,
+            hidden: false,
+            zIndex: 1,
+          });
+
+          const container = document.createElement('div');
+
+          container.appendChild(template._fragment);
+
+          const div = container.querySelector('div');
+          const span = container.querySelector('span');
+          const input = container.querySelector('input');
+          const a = container.querySelector('a');
+
+          assertEq(div.getAttribute('foo'), '23');
+          assertEq(span.textContent, '42');
+          assertEq(input.hidden, false);
+          assertEq(a.style['z-index'], '1');
+
+          template.update({
+            bar: 'hello',
+            foobar: 23,
+            hidden: true,
+            zIndex: 2,
+          });
+
+          assertEq(div.getAttribute('foo'), '23');
+          assertEq(span.textContent, 'hello');
+          assertEq(input.hidden, true);
+          assertEq(a.style['z-index'], '2');
+
+          template.update({
+            bar: 'hello',
+            foobar: 'bar',
+            hidden: false,
+            zIndex: 3,
+          });
+
+          assertEq(div.getAttribute('foo'), 'bar');
+          assertEq(span.textContent, 'hello');
+          assertEq(input.hidden, false);
+          assertEq(a.style['z-index'], '3');
+        });
+
+        {
+          const template = DOMTemplate.fromString('<div #foo></div>');
+
+          assertEq(template.referencePrototype.foo.tagName, 'DIV');
+        }
+      });
+    </script>
+    <script type="module" src="../src/index.js"></script>
+  </head>
+  <body></body>
+</html>

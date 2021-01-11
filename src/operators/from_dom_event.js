@@ -10,6 +10,8 @@ import { fromSubscription } from './from_subscription.js';
  *      each event.
  * @param {bool} [stopPropagation=false] If true, stopPropagation() is called on
  *      each event.
+ * @returns {DynamicValue<Event>}
+ *      Returns the dynamic value representing the DOM event.
  */
 export function fromDOMEvent(
   eventTarget,

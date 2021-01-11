@@ -1,5 +1,13 @@
 import { DynamicValue } from '../dynamic_value.js';
 
+function defaultSubscribe() {
+  return () => {};
+}
+
+function defaultSet() {
+  throw new Error('This dynamic value is read-only.');
+}
+
 class SubscriptionDynamicValue extends DynamicValue {
   _subscribe() {
     return this._subscribeFun((value) => {
@@ -7,19 +15,20 @@ class SubscriptionDynamicValue extends DynamicValue {
     });
   }
 
-  constructor(subscribeFun, transformArgs) {
+  constructor(subscribeFun, setFun) {
     super();
-    this._subscribeFun = subscribeFun;
+    this._subscribeFun = subscribeFun || defaultSubscribe;
+    this._setFun = setFun || defaultSet;
   }
 
-  set() {
-    throw new Error('Read only.');
+  set(value) {
+    this._setFun(value);
   }
 }
 
 /**
  * Creates a read-only DynamicValue from a subscription function.
  */
-export function fromSubscription(subscribeFun) {
-  return new SubscriptionDynamicValue(subscribeFun);
+export function fromSubscription(subscribeFun, setFun) {
+  return new SubscriptionDynamicValue(subscribeFun, setFun);
 }

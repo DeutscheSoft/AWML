@@ -18,6 +18,10 @@ export function getBackend(name) {
 
 /**
  * Waits for a backend with the given name to become available (i.e. `open`).
+ *
+ * @param {string} name
+ *      The backend name.
+ * @returns {Promise<Backend>}
  */
 export function waitForBackend(name) {
   if (backends.has(name)) {
@@ -29,7 +33,14 @@ export function waitForBackend(name) {
   }
 }
 
-/** @ignore */
+/**
+ * Register a backend under a name.
+ *
+ * @param {string} name
+ *      The backend name.
+ * @param {Backend} backend
+ *      The backend object. The backend should be in ``open`` state.
+ */
 export function registerBackend(name, backend) {
   if (backends.has(name)) {
     throw new Error('Backend already exists.');
@@ -55,7 +66,14 @@ export function registerBackend(name, backend) {
   document.dispatchEvent(ev);
 }
 
-/** @ignore */
+/**
+ * Unregister a backend with the given name.
+ *
+ * @param {string} name
+ *      The backend name.
+ * @param {Backend} backend
+ *      The backend object. The backend should be in ``open`` state.
+ */
 export function unregisterBackend(name, backend) {
   if (backend !== backends.get(name)) {
     throw new Error('Unregistering wrong backend.');

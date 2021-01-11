@@ -68,7 +68,7 @@ class SwitchMapValue extends DynamicValue {
  * emitted from another DynamicValue.
  *
  * @param {DynamicValue} dv
- * @param {function(value: *): DynamicValue} projection
+ * @param {function(*): DynamicValue} projection
  *      This function is called for each value emitted by the input
  *      DynamicValue. The DynamicValue returned will then be subscribed to. If
  *      the projection function returned `null`, the value is ignored.

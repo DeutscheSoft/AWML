@@ -5,12 +5,17 @@ export function isCustomElement(node) {
   return node.tagName.includes('-');
 }
 
+export function isCustomElementDefined(node) {
+  const tagName = node.tagName;
+
+  return tagName.includes('-') && customElements.get(tagName.toLowerCase());
+}
+
 /** @ignore */
 export function maybeAuxElement(node) {
-  if (!isCustomElement(node)) return false;
-
   return (
-    node.auxWidget !== void 0 || !customElements.get(node.tagName.toLowerCase())
+    node.auxWidget !== void 0 ||
+    (isCustomElement(node) && !customElements.get(node.tagName.toLowerCase()))
   );
 }
 
@@ -90,5 +95,241 @@ export function triggerResize(node, levels) {
     widget.triggerResize();
   } else {
     window.dispatchEvent(new UIEvent('resize'));
+  }
+}
+
+export function subscribeInteractionChange(widget, timeout, callback) {
+  let state = widget.get('interacting');
+  let tid;
+
+  const call_out = (cb) => {
+    if (!(timeout > 0)) {
+      cb();
+    } else {
+      tid = setTimeout(cb, timeout);
+    }
+  };
+
+  callback(state);
+
+  const sub = widget.subscribe('set_interacting', (value) => {
+    if (value || !(timeout > 0)) {
+      if (state == value) return;
+      callback((state = value));
+    } else {
+      if (tid !== void 0) clearTimeout(tid);
+
+      state = value;
+
+      tid = call_out(() => {
+        tid = void 0;
+        if (state) return;
+        callback(state);
+      });
+    }
+  });
+
+  return () => {
+    sub();
+    if (tid !== void 0) {
+      clearTimeout(tid);
+      tid = void 0;
+    }
+  };
+}
+
+import { fromSubscription } from '../operators/from_subscription.js';
+
+export function userInteractionFromWidget(widget, timeout) {
+  if (timeout === void 0) timeout = 500;
+
+  if (!(timeout >= 0))
+    throw new TypeError('Expected timeout (non-negative number).');
+
+  return fromSubscription((cb) => {
+    return subscribeInteractionChange(widget, timeout, cb);
+  });
+}
+
+function blockWhileInteracting(widget, subscribeReceive, setFun, delay) {
+  let interacting = false;
+  let hasValue = false;
+  let lastValue = null;
+
+  return [
+    (cb) => {
+      let sub1 = subscribeInteractionChange(widget, delay, (_interacting) => {
+        interacting = _interacting;
+
+        if (!interacting && hasValue) {
+          hasValue = false;
+          setFun(lastValue);
+        }
+      });
+      let sub2 = subscribeReceive(cb);
+
+      return () => {
+        sub1();
+        sub2();
+      };
+    },
+    (value) => {
+      if (interacting) {
+        hasValue = true;
+        lastValue = value;
+      } else {
+        hasValue = false;
+        setFun(value);
+      }
+    },
+  ];
+}
+
+/**
+ * @param {Widget} widget
+ *      The aux widget to bind to.
+ * @param {String} name
+ *      Name of the option to bind to.
+ * @param {Object} [options={}]
+ * @param {boolean} [options.ignoreInteraction=false]
+ *      If false, values are being delayed while the widget is being
+ *      interacted with.
+ * @param {boolean} [options.preventDefault=false]
+ *      If true, the default action of the change is being prevented.
+ *      The meaning of this depends on the widget and the option bound to.
+ * @param {boolean} [options.sync=false]
+ *      Emit modifications also if they are not triggered by user interaction.
+ * @param {boolean} [options.readonly=false]
+ *      Only emit option changes, do not allow setting the option using
+ *      set(). The resulting dynamic value will be readonly.
+ * @param {boolean} [options.writeonly=false]
+ *      Do not emit any values, only allow setting the widget option using
+ *      set().
+ * @param {number} [options.receiveDelay=500]
+ *      Delay values passed to set() for the given number of ms after
+ *      the user interaction has ended.
+ *
+ * @returns {DynamicValue}
+ *      Returns the dynamic value which represents this binding. Calling
+ *      :class:`set() <DynamicValue>` on this value will set the option on the widget.
+ *      Values emitted from this dynamic value represent changes of the option.
+ */
+export function bindingFromWidget(widget, name, options) {
+  let setFun = null;
+  let subscribeFun = null;
+
+  if (!options) options = {};
+
+  if (options.writeonly && options.readonly)
+    throw new Error('Binding cannot be both write- and read-only.');
+
+  if (!options.writeonly) {
+    if (options.sync) {
+      let rec = false;
+
+      if (options.preventDefault) {
+        subscribeFun = function (cb) {
+          return widget.subscribe('set_' + name, function (value) {
+            if (rec) return;
+            cb(value);
+            return false;
+          });
+        };
+      } else {
+        subscribeFun = function (cb) {
+          return widget.subscribe('set_' + name, function (value) {
+            if (rec) return;
+            cb(value);
+          });
+        };
+      }
+
+      setFun = function (value) {
+        if (rec) return;
+        rec = true;
+        try {
+          widget.set(name, value);
+        } catch (err) {
+          throw err;
+        } finally {
+          rec = false;
+        }
+      };
+    } else {
+      if (options.preventDefault) {
+        subscribeFun = function (cb) {
+          return widget.subscribe('userset', function (_name, value) {
+            if (_name !== name) return;
+            cb(value);
+            return false;
+          });
+        };
+      } else {
+        subscribeFun = function (cb) {
+          return widget.subscribe('useraction', function (_name, value) {
+            if (_name !== name) return;
+            cb(value);
+          });
+        };
+      }
+    }
+  }
+
+  if (!options.readonly && setFun === null) {
+    setFun = function (value) {
+      widget.set(name, value);
+    };
+  }
+
+  if (!options.ignoreInteraction && setFun !== null) {
+    [subscribeFun, setFun] = blockWhileInteracting(
+      widget,
+      subscribeFun,
+      setFun,
+      options.receiveDelay
+    );
+  }
+
+  return fromSubscription(subscribeFun, setFun);
+}
+
+/**
+ * @param {HTMLElement} node
+ *      The component to bind to.
+ * @param {String} name
+ *      Name of the option or property to bind to.
+ * @param {Object} [options={}]
+ * @param {boolean} [options.ignoreInteraction=false]
+ *      If false, values are being delayed while the widget is being
+ *      interacted with.
+ * @param {boolean} [options.preventDefault=false]
+ *      If true, the default action of the change is being prevented.
+ *      The meaning of this depends on the widget and the option bound to.
+ * @param {boolean} [options.sync=false]
+ *      Emit modifications also if they are not triggered by user interaction.
+ * @param {boolean} [options.readonly=false]
+ *      Only emit option changes, do not allow setting the option using
+ *      set(). The resulting dynamic value will be readonly.
+ * @param {boolean} [options.writeonly=false]
+ *      Do not emit any values, only allow setting the widget option using
+ *      set().
+ * @param {number} [options.receiveDelay=500]
+ *      Delay values passed to set() for the given number of ms after
+ *      the user interaction has ended.
+ *
+ * @returns {DynamicValue}
+ *      Returns the dynamic value which represents this binding.
+ */
+export function bindingFromComponent(node, name, options) {
+  if (isCustomElementDefined(node)) {
+    const widget = node.auxWidget;
+
+    if (widget) return bindingFromWidget(widget, name, options);
+
+    if (node.awmlCreateBinding) {
+      return node.awmlCreateBinding(name, options);
+    }
+  } else {
+    throw new Error('Cannot create binding with unsupported component.');
   }
 }

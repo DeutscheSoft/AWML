@@ -34,9 +34,9 @@ class MappedValue extends DynamicValue {
  * transform and call `dv.set(inverse(X))`.
  *
  * @param {DynamicValue} dv
- * @param {function(value: *): *} transform
+ * @param {function(*): *} transform
  *      Transformation function for values.
- * @param {function(value: *): *} [inverse]
+ * @param {function(*): *} [inverse]
  *      Optional inverse transformation function. It not specified, the
  *      resulting DynamicValue does not support `set()`.
  * @return {DynamicValue}
@@ -61,7 +61,7 @@ export function map(dv, transform, inverse) {
  * This is similar to Array.reduce().
  *
  * @param {DynamicValue} dv
- * @param {function(*, *:*)} transform
+ * @param {function(*, *): *} transform
  *      Transformation function. Is called with each value and the
  *      accumulator.
  * @param initialValue
