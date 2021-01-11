@@ -124,14 +124,16 @@ export class OptionComponent extends PrefixComponentBase {
 
     const parentNode = this.parentNode;
 
-    if (!isCustomElement(parentNode))
-      throw new Error(
-        'AWML-OPTION needs to be the direct child of a WebComponent.'
-      );
+    if (!parentNode.isAuxWidget) {
+      if (!isCustomElement(parentNode))
+        throw new Error(
+          'AWML-OPTION needs to be the direct child of a WebComponent.'
+        );
 
-    // come back when the custom element has been defined
-    if (!isCustomElementDefined(parentNode))
-      return subscribeCustomElement(parentNode, () => this._resubscribe());
+      // come back when the custom element has been defined
+      if (!isCustomElementDefined(parentNode))
+        return subscribeCustomElement(parentNode, () => this._resubscribe());
+    }
 
     let sub = null;
 
