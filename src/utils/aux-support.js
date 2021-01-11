@@ -166,6 +166,10 @@ function blockWhileInteracting(widget, subscribeReceive, setFun, delay) {
           setFun(lastValue);
         }
       });
+
+      if (!subscribeReceive)
+        return sub1;
+
       let sub2 = subscribeReceive(cb);
 
       return () => {
