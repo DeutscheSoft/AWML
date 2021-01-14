@@ -72,6 +72,7 @@ class Template {
     const templates = fragment.querySelectorAll('template');
 
     templates.forEach((template) => {
+      if (!template.hasAttribute('id')) return;
       document.head.appendChild(template);
       this._inlines.push(template);
     });
