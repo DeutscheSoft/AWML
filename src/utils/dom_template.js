@@ -221,6 +221,57 @@ class EventBindingExpression extends DOMTemplateExpression {
   }
 }
 
+class OptionalNodeReference extends DOMTemplateExpression {
+  constructor(path, template) {
+    super(path);
+    this._template = template;
+    this._commentNode = null;
+  }
+
+  get commentNode() {
+    let commentNode = this._commentNode;
+
+    if (commentNode === null) {
+      this._commentNode = commentNode = document.createComment(" %if placeholder ");
+    }
+
+    return commentNode;
+  }
+
+  update(ctx) {
+    const template = this._template;
+
+    if (template.update(ctx)) {
+      const state = !!template.get();
+      const node = this._node;
+      const attached = node.parentNode !== null;
+
+      if (state === attached) return false;
+
+      const commentNode = this.commentNode;
+
+      if (state) {
+        commentNode.replaceWith(node);
+      } else {
+        node.replaceWith(commentNode);
+      }
+
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  get dependencies() {
+    return this._template.dependencies;
+  }
+
+  clone() {
+    return new this.constructor(this._path, this._template.clone());
+  }
+}
+
+
 function containsPlaceholders(input) {
   return -1 !== input.search(PLACEHOLDER_START);
 }
@@ -321,6 +372,10 @@ function compileExpressions(childNodes, expressions, nodePath) {
                 );
                 continue;
               }
+            } else if (name === '%if') {
+              const tpl = compileStringWithPlaceholders(value, expressions);
+
+              expr = new OptionalNodeReference(path, tpl.toSingleExpression());
             } else if (containsPlaceholders(value)) {
               if (containsPlaceholders(name))
                 throw new Error('Templates in attribute names not supported.');

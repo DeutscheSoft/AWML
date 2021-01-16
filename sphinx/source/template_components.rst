@@ -99,6 +99,18 @@ Then inside the DOM options of the fader can be bound to using ``awml-option``. 
       <awml-option type=bind name='gain.value' src='...'></awml-option>
     </my-channel>
 
+Optional Nodes
+^^^^^^^^^^^^^^
+
+DOM nodes inside of templates can be added or removed based on the value of a
+template expression. This can be used to implement optional parts of an
+interface. ::
+
+    const template `
+      <aux-fader></aux-fader>
+      <aux-toggle %if={{ this.hasMute }} label=mute></aux-toggle>
+    `;
+
 Binding aliases
 ^^^^^^^^^^^^^^^
 

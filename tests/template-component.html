@@ -17,6 +17,7 @@
         <div [style.color]={{ this.color }} className={{ this.myClass }}>Hello World {{ this.name }}!</div>
         <button (click)={{ this.onClick }}>click me</button>
         <test-component #child1 $gain=bar></test-component>
+        <div class=not_there %if={{ this.showDiv }}> Not visible {{ this.name }}! </div>
       `;
 
       class MyComponent extends TemplateComponent.fromString(myTemplate) {
@@ -27,6 +28,7 @@
           this.onClick = (ev) => {
             this.name += '!!';
           };
+          this.showDiv = false;
         }
       }
 
@@ -86,6 +88,17 @@
           assertEqual(myComponent.name, 'foo');
           myComponent.name = 'hello';
           assertEqual(bv.value, 'foo');
+        }
+
+        {
+          // OptionalNodeDirective
+          assertEqual(myComponent.querySelector('.not_there'), null);
+          myComponent.showDiv = true;
+          await waitForFrame();
+          assertEqual(!myComponent.querySelector('.not_there'), false);
+          myComponent.showDiv = false;
+          await waitForFrame();
+          assertEqual(myComponent.querySelector('.not_there'), null);
         }
       });
     </script>
