@@ -121,10 +121,12 @@ export class DynamicValue {
    *
    * Returns a unsubscribe callback. Calling it will remove the subscription.
    *
-   * @param {Function} subscriber - Callback function to subscribe.
-   * @param {boolean} [replay=true] - Call the subscriber once with
-   *    the current value (if any).
-   * @return {Function} - The unsubscribe callback.
+   * @param {Function} subscriber
+   *    Callback function to subscribe.
+   * @param {boolean} [replay=true]
+   *    Call the subscriber once with the current value (if any).
+   * @return {Function}
+   *    The unsubscribe callback.
    */
   subscribe(subscriber, replay) {
     if (typeof subscriber !== 'function')

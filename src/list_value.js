@@ -4,11 +4,11 @@ import { Subscriptions } from './utils/subscriptions.js';
 /**
  * A special DynamicValue implementation which combines a list of other DynamicValue
  * instances. The ListValue will emit an array of values emitted by that list of
- * values.
+ * dynamic values.
  */
 export class ListValue extends DynamicValue {
   /**
-   * A shorthand function to create a ListValue from a list of values.
+   * A shorthand function to create a ListValue from a list of dynamic values.
    *
    * @param values {DynamicValue}
    */
@@ -138,7 +138,9 @@ export class ListValue extends DynamicValue {
 
   /**
    * The partial property can be used to emit values even if not for each input
-   * values at least one value has been received.
+   * dynamic value at least one value has been received. The resulting array
+   * will contain ``undefined`` at those positions.
+   *
    * @param v {boolean}
    */
   set partial(v) {
