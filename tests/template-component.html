@@ -18,7 +18,7 @@
         <button (click)={{ this.onClick }}>click me</button>
         <test-component #child1 $gain=bar></test-component>
         <div class=not_there %if={{ this.showDiv }}> Not visible {{ this.name }}! </div>
-      `;
+        {{ this.content }}`;
 
       class MyComponent extends TemplateComponent.fromString(myTemplate) {
         constructor() {
@@ -99,6 +99,31 @@
           myComponent.showDiv = false;
           await waitForFrame();
           assertEqual(myComponent.querySelector('.not_there'), null);
+        }
+
+        {
+          // Nodes in NodeContentDirectives
+          const lastNode = () => {
+            const childNodes = myComponent.childNodes;
+
+            return childNodes[childNodes.length - 1];
+          };
+          myComponent.content = null;
+          await waitForFrame();
+          assertEqual(lastNode().nodeType, 8);
+          const span = document.createElement('span');
+          myComponent.content = span;
+          await waitForFrame();
+          assertEqual(lastNode(), span);
+          myComponent.content = 'foo';
+          await waitForFrame();
+          assertEqual(lastNode().nodeType, 3);
+          myComponent.content = span;
+          await waitForFrame();
+          assertEqual(lastNode(), span);
+          myComponent.content = null;
+          await waitForFrame();
+          assertEqual(lastNode().nodeType, 8);
         }
       });
     </script>

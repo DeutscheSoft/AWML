@@ -84,7 +84,7 @@ class OptionReference extends DOMTemplateDirective {
 
 class DOMTemplateExpression extends DOMTemplateDirective {}
 
-class TextDataExpression extends DOMTemplateExpression {
+class NodeContentExpression extends DOMTemplateExpression {
   constructor(path, template) {
     super(path);
     this._template = template;
@@ -94,7 +94,44 @@ class TextDataExpression extends DOMTemplateExpression {
     const template = this._template;
 
     if (template.update(ctx)) {
-      this._node.data = template.get();
+      const data = template.get();
+
+      if (data === null || data === void 0) {
+        const node = document.createComment(' null placeholder ');
+        this._node.replaceWith(node);
+        this._node = node;
+      } else {
+        switch (typeof data) {
+        case 'string':
+        case 'number':
+        case 'boolean':
+          {
+            const node = this._node;
+
+            if (node.nodeType !== 3) {
+              const tmp = document.createTextNode(data);
+              node.replaceWith(tmp);
+              this._node = tmp;
+            } else {
+              node.data = data;
+            }
+          }
+          break;
+        case 'object':
+
+          // is a node.
+          if ('replaceWith' in data) {
+            this._node.replaceWith(data);
+            this._node = data;
+          } else {
+            throw new TypeError('Unsupported data type.');
+          }
+          break;
+        default:
+          throw new TypeError('Unsupported type.');
+        }
+      }
+
       return true;
     } else {
       return false;
@@ -271,9 +308,8 @@ class OptionalNodeReference extends DOMTemplateExpression {
   }
 }
 
-
 function containsPlaceholders(input) {
-  return -1 !== input.search(PLACEHOLDER_START);
+  return -1 !== input.search(rePlaceholder);
 }
 
 function mergeTokens(strings, expressions) {
@@ -315,6 +351,28 @@ function attributesToArray(attributes) {
   }
 
   return result;
+}
+
+function splitTextNodes(childNodes) {
+  childNodes.forEach((node) => {
+    if (node.nodeType === 3) {
+      let pos;
+      while ((pos = node.data.search(rePlaceholder)) !== -1) {
+        if (pos > 0) {
+          node = node.splitText(pos);
+        } else {
+          pos = node.data.search(PLACEHOLDER_END);
+          if (pos === node.data.length - 1)
+            break;
+          node = node.splitText(pos + 1);
+        }
+      }
+    } else {
+      const childNodes = node.childNodes;
+      if (!childNodes.length) return;
+      splitTextNodes(childNodes);
+    }
+  });
 }
 
 function compileExpressions(childNodes, expressions, nodePath) {
@@ -420,12 +478,13 @@ function compileExpressions(childNodes, expressions, nodePath) {
         {
           const data = node.data;
 
-          if (!containsPlaceholders(data)) break;
+          if (!containsPlaceholders(data))
+            break;
 
           node.data = '';
 
           const tpl = compileStringWithPlaceholders(data, expressions);
-          const tmp = new TextDataExpression(path, tpl);
+          const tmp = new NodeContentExpression(path, tpl.toSingleExpression());
 
           results.push(tmp);
         }
@@ -557,6 +616,8 @@ export class DOMTemplate {
     templateNode.innerHTML = html;
 
     const fragment = templateNode.content;
+
+    splitTextNodes(fragment.childNodes);
 
     const expressions = compileExpressions(
       fragment.childNodes,

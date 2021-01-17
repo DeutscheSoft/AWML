@@ -45,6 +45,25 @@ Template expressions can be used to control attribute values. ::
     const template1 = `<div title={{ this.title }}></div>`;
     const template2 = `<div title="Title: {{ this.title }}"></div>`;
 
+Container Contents
+^^^^^^^^^^^^^^^^^^
+
+Templates expressions can be used to control node content which allows either
+strings or arbitrary DOM nodes to be placed into the DOM. ::
+
+    const template = `<div>{{ this.content }}</div>`;
+
+How the content is placed into the DOM depdends on the data type of the data.
+
+- Values of type ``'string'``, ``'number'`` or ``'boolean'`` are rendered into the DOM
+  as strings inside of a TextNode.
+- The values ``null`` and ``undefined`` result in no content, instead a
+  CommentNode is placed into the DOM as a placeholder.
+- Values of type ``Node`` are placed directly into the DOM. Naturally, using the
+  same Node as content for two different template expressions does not work.
+  Template Components do not guard against this usage and it will result in
+  subtle issues.
+
 Properties
 ^^^^^^^^^^
 
