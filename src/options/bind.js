@@ -3,19 +3,45 @@ import { parseAttribute } from '../utils/parse_attribute.js';
 import { bindingFromComponent } from '../utils/aux-support.js';
 import { connect } from '../operators/connect.js';
 
-function combineSubscriptions(a, b) {
-  if (!a && !b) return null;
-  if (!b) return a;
-  if (!a) return b;
-  return () => {
-    a();
-    b();
-  };
-}
-
 /**
  * This option type is used to create two-way bindings between backend values
  * and components.
+ *
+ * When this option is created from a :ref:`OptionComponent` the following
+ * attributes are parsed on creation and passed as options to the constructor
+ * along with those options already parsed by :ref:`OptionComponent`.
+ *
+ * - ``readonly`` as the ``readonly = true`` if present,
+ * - ``writeonly`` as the ``writeonly = true`` if present,
+ * - ``sync`` as the ``sync`` option if present,
+ * - ``prevent-default`` as the ``preventDefault = true`` option if present,
+ * - ``transform-send`` is parsed as JavaScript and passed as ``transformSend``
+ *   option,
+ * - ``transform-receive`` is parsed as JavaScript and passed as
+ *   ``transformReceive`` option,
+ * - ``receive-delay`` is parsed as an integer and passed as ``receiveDelay``
+ *   option and
+ * - ``ignore-interaction`` is passed as ``ignoreInteraction = true`` if
+ *   present.
+ *
+ * Passes the options ``readonly``, ``writeonly``,
+ * ``sync``, ``preventDefault``, ``ignoreInteraction`` and ``receiveDelay`` to
+ * a call to :ref:`bindingFromComponent`.
+ *
+ * The option ``transformSend`` is a function (or null) which is called to
+ * transform a value before it is passed to the backend.
+ *
+ * The option ``transformReceive`` is a function (or null) which is called to
+ * transform a value before it is passed from the backend to the component.
+ *
+ * @param {object} options
+ *    The options for this binding.
+ * @param {DynamicValue} options.backendValue
+ *    The backend value to bind to.
+ * @param {string} options.name
+ *    The option name in the component to bind to.
+ * @param {Node} component
+ *    The component to bind to.
  */
 export class BindOption extends Option {
   static get needsBackendValue() {

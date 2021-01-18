@@ -56,7 +56,7 @@ export function subscribeOptionType(type, callback) {
  *
  * - ``static`` for setting options to static values (see :ref:`StaticOption`),
  * - ``media`` for setting options based on CSS media queries and
- * - ``bind`` for binding options to backend values.
+ * - ``bind`` for binding options to backend values (see :ref:`BindOption`).
  *
  * Note that each option has additional attributes which can be used to control
  * its behavior. They are documented for each option type. These additional

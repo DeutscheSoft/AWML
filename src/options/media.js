@@ -4,8 +4,31 @@ import { warn } from '../utils/log.js';
 import { getAuxWidget } from '../utils/aux-support.js';
 
 /**
- * This option type can be used to bind aux widet options
- * to the result of CSS media queries.
+ * This option type can be used to bind CSS media queries to aux widet
+ * options.
+ *
+ * When this option is created from a :ref:`OptionComponent` the following
+ * attributes are parsed on creation and passed as options to the constructor
+ * along with those options already parsed by :ref:`OptionComponent`.
+ *
+ * - ``format`` is passed as a string as the ``format`` option (default is
+ *   ``json``),
+ * - ``values`` is passed as parsed according to the ``format`` option and passed
+ *   as the ``values`` option and
+ * - ``media`` is used to create a MediaQuery using the ``matchMedia`` function
+ *   which is passed as the ``query`` option.
+ *
+ * @param {object} options
+ * @param {string} options.name
+ *    The option name in the component to set.
+ * @param {Array} options.values
+ *    An array of length two. The first item in this array is set
+ *    as the option value when the media queries is false, the second when
+ *    the media query is true.
+ * @param {MediaQuery} options.query
+ *    The media query to subscribe to.
+ * @param {Node} component
+ *    The component to set an option on.
  */
 export class MediaOption extends Option {
   constructor(options, component) {
