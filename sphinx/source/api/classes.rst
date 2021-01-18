@@ -44,6 +44,7 @@ BindOption
 ^^^^^^^^^^
 
 .. js:autoclass:: BindOption
+  :members: BindOption
 
 .. _StaticOption:
 

@@ -112,3 +112,15 @@ AWML components follow several simple conventions.
   attribute ``some-property`` onto that same property. The conversion between the
   attribute value (which is a string) and the property value depends on the
   datatype.
+
+.. _aux_integration:
+
+AUX widgets integration
+-----------------------
+
+AWML has built-in support for interfacing with widgets from the `aux-widgets
+<https://github.com/DeutscheSoft/aux-widgets>`_ library. This allows one to
+
+* connect backend parameters to aux widget options (see
+  :ref:`introduction-parameter-binding`) and
+* subscribe to events emitted by aux widgets (see :ref:`EventComponent`).
