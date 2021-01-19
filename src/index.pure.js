@@ -51,6 +51,7 @@ export {
   StylesComponent,
   HideComponent,
   ShowComponent,
+  TemplateComponent,
 } from './components.js';
 export { LocalBackend } from './backends/local.js';
 export { LocalStorageBackend } from './backends/localstorage.js';
