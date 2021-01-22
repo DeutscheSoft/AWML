@@ -30,6 +30,7 @@ export class PrefixComponentBase extends BaseComponent {
       'src-prefix',
       'src',
       'transform-receive',
+      'transform-send',
       'transform-src',
     ]);
   }
@@ -157,7 +158,7 @@ export class PrefixComponentBase extends BaseComponent {
   }
 
   /**
-   * Transformation function for backend values.
+   * Transformation function for receiving backend values.
    * This function is called in the context of this component for every value
    * received from the backend. This property can also be set using the
    * ``transform-receive`` attribute.
@@ -170,6 +171,23 @@ export class PrefixComponentBase extends BaseComponent {
     if (typeof v !== 'function' && v !== null)
       throw new TypeError('Expected function.');
     this._transformReceive = v;
+    this._resubscribe();
+  }
+
+  /**
+   * Transformation function for backend values.
+   * This function is called in the context of this component for every value
+   * sent to the backend. This property can also be set using the
+   * ``transform-send`` attribute.
+   * @type {?function}
+   */
+  get transformSend() {
+    return this._transformSend;
+  }
+  set transformSend(v) {
+    if (typeof v !== 'function' && v !== null)
+      throw new TypeError('Expected function.');
+    this._transformSend = v;
     this._resubscribe();
   }
 
@@ -195,6 +213,7 @@ export class PrefixComponentBase extends BaseComponent {
     this._srcPrefix = null;
     this._src = null;
     this._transformReceive = null;
+    this._transformSend = null;
     this._currentPrefix = null;
     this._transformSrc = null;
     this._backendValue = null;
@@ -386,6 +405,9 @@ export class PrefixComponentBase extends BaseComponent {
         break;
       case 'transform-receive':
         this.transformReceive = parseAttribute('javascript', newValue, null);
+        break;
+      case 'transform-send':
+        this.transformSend = parseAttribute('javascript', newValue, null);
         break;
       case 'transform-src':
         this.transformSrc = parseAttribute('javascript', newValue, null);

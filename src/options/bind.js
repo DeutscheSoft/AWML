@@ -54,7 +54,7 @@ export class BindOption extends Option {
     this.backendValue = options.backendValue;
     this.transformSend = options.transformSend;
     this.node = options.node;
-    this.transformReceive = this.node.transformReceive;
+    this.transformReceive = options.transformReceive;
 
     const dv = bindingFromComponent(component, this.name, {
       readonly: options.writeonly,
@@ -110,11 +110,8 @@ export class BindOption extends Option {
     options.writeonly = node.getAttribute('writeonly') !== null;
     options.sync = node.getAttribute('sync') !== null;
     options.preventDefault = node.getAttribute('prevent-default') !== null;
-    options.transformSend = parseAttribute(
-      'javascript',
-      node.getAttribute('transform-send'),
-      null
-    );
+    options.transformSend = node.transformSend;
+    options.transformReceive = node.transformReceive;
 
     const afterReceive = parseAttribute(
       'javascript',
