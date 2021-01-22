@@ -158,6 +158,33 @@
           widget.userset('foo', 42);
           assertEqual(value.value, 21);
         }
+
+        {
+          // test behavior of replay property
+          const widget = widgets[9];
+          const value = getBackendValue('test:foo');
+
+          const awmlOption = components[9].querySelector('awml-option');
+
+          assertEqual(awmlOption.option, null);
+          widget.set('foo', 23);
+          value.set(42);
+          awmlOption.type = 'bind';
+          assertEqual(!awmlOption.option, false);
+          assertEqual(widget.get('foo'), 23);
+          value.set(42);
+          assertEqual(widget.get('foo'), 42);
+
+          // disable binding and reset replay to true
+          awmlOption.type = null;
+          widget.set('foo', 23);
+          value.set(42);
+          awmlOption.type = 'bind';
+          assertEqual(!awmlOption.option, false);
+          assertEqual(widget.get('foo'), 23);
+          awmlOption.replay = true;
+          assertEqual(widget.get('foo'), 42);
+        }
       });
     </script>
     <script>
@@ -234,6 +261,13 @@
     <test-component>
       <awml-option
         type="bind"
+        name="foo"
+        src="test:foo"
+      ></awml-option>
+    </test-component>
+    <test-component>
+      <awml-option
+        no-replay
         name="foo"
         src="test:foo"
       ></awml-option>

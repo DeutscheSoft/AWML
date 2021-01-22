@@ -7,7 +7,7 @@ PrefixComponentBase
 -------------------
 
 .. js:autoclass:: PrefixComponentBase
-  :members: src, srcPrefix, transformReceive, transformSrc, debounce, partial, pipe
+  :members: src, srcPrefix, transformReceive, transformSend, transformSrc, debounce, partial, pipe, replay
 
 .. _AttributesComponent:
 

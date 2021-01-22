@@ -27,6 +27,7 @@ export class PrefixComponentBase extends BaseComponent {
       'debounce',
       'partial',
       'pipe',
+      'no-replay',
       'src-prefix',
       'src',
       'transform-receive',
@@ -208,6 +209,23 @@ export class PrefixComponentBase extends BaseComponent {
     this._resubscribe();
   }
 
+  /**
+   * Determines the value of the second argument to ``subscribe()`` on the
+   * backend value. If false, the current cached value will not be emitted.
+   * This property can also be set using the ``no-replay`` attribute. Defaults to
+   * ``true``.
+   *
+   * @type {boolean}
+   */
+  get replay() {
+    return this._replay;
+  }
+  set replay(v) {
+    this._replay = v === void 0 || !!v;
+    if (this._replay)
+      this._resubscribe();
+  }
+
   constructor() {
     super();
     this._srcPrefix = null;
@@ -220,6 +238,7 @@ export class PrefixComponentBase extends BaseComponent {
     this._debounce = 0;
     this._partial = false;
     this._pipe = null;
+    this._replay = true;
     this._effectiveSrc = null;
 
     // it would be enough to do this once
@@ -391,6 +410,9 @@ export class PrefixComponentBase extends BaseComponent {
         break;
       case 'pipe':
         this.pipe = parseAttribute('javascript', newValue, null);
+        break;
+      case 'no-replay':
+        this.replay = newValue === null;
         break;
       case 'src':
         this.src = newValue;
