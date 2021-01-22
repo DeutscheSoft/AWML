@@ -20,7 +20,7 @@ import sphinx_rtd_theme
 # -- Project information -----------------------------------------------------
 
 project = 'AWML'
-copyright = '2020, DeusO GmbH'
+copyright = '2021, DeusO GmbH'
 author = 'Arne Goedeke'
 
 # The full version, including alpha/beta/rc tags
