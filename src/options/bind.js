@@ -71,7 +71,7 @@ export class BindOption extends Option {
 
     this._sub = connect(
       options.backendValue,
-      true,
+      options.replay,
       this.receiveValue.bind(this),
       dv,
       false,
@@ -112,6 +112,7 @@ export class BindOption extends Option {
     options.preventDefault = node.getAttribute('prevent-default') !== null;
     options.transformSend = node.transformSend;
     options.transformReceive = node.transformReceive;
+    options.replay = node.replay;
 
     const afterReceive = parseAttribute(
       'javascript',
