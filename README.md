@@ -4,15 +4,16 @@
 
 ## Documentation
 
-The documentation for this project is built using `sphinx-js`. It can be found
-in the `doc` directory. Building the documentation requires `sphinx-js` to be
-installed. `sphinx-js` requires `jsdoc` which can be installed by running
+The documentation for this project is built using `sphinx-js`. The documentation
+source files can be found in the `doc` directory.
+Building the documentation requires `sphinx-js` to be installed.
+`sphinx-js` requires `jsdoc` which can be installed by running
 
     npm ci
 
 inside of the `doc` directory.
 
-After that building the documentation can be done using
+After that the documentation can be built using
 
     make html
 
