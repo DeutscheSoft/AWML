@@ -103,7 +103,8 @@ export class PrefixComponentBase extends BaseComponent {
    * A function which is called before subscribing to a DynamicValue. It can be
    * used to transform the DynamicValue, e.g. by using an operator. If null, no
    * transformation happens. This propert can also be set using the ``pipe``
-   * attribute.
+   * attribute. See :ref:`dynamic-value-operators` for a list of supported
+   * operators.
    *
    * @return {function(DynamicValue):DynamicValue}
    */
