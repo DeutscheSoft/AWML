@@ -103,6 +103,13 @@ export class OptionComponent extends PrefixComponentBase {
     this._resubscribe();
   }
 
+  /**
+   * Returns the current option implementation.
+   */
+  get option() {
+    return this._option;
+  }
+
   constructor() {
     super();
     this._type = null;
