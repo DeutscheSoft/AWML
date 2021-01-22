@@ -1,6 +1,7 @@
 # AWML
 
-**A**udio **W**idget **M**arkup **L**anguage is a markup language for building user interfaces for audio applications.
+**A**udio **W**idget **M**arkup **L**anguage is a markup language for building
+user interfaces for audio applications.
 
 ## Documentation
 
