@@ -1,9 +1,6 @@
 Classes
 =======
 
-Dynamic Values
---------------
-
 .. _DynamicValue:
 
 DynamicValue
@@ -32,9 +29,6 @@ by :ref:`getBackendValue`.
 
 .. _Option-Types:
 
-Option Types
-------------
-
 Option types are classes which are instantiated by the ``AWML-OPTION`` component
 (see :ref:`OptionComponent`). They control how values are connected to the component.
 
@@ -61,9 +55,6 @@ MediaOption
 .. js:autoclass:: MediaOption
 
 .. _Backends:
-
-Backends
---------
 
 .. _LocalBackend:
 

@@ -1,9 +1,6 @@
 Global Functions
 ================
 
-Backends
---------
-
 APIs in this section are used to interact with registered backends and their
 parameters.
 
@@ -44,9 +41,6 @@ waitForBackend
 
 .. _setPrefix:
 
-Prefixes
---------
-
 The APIs in this section are used to interact with parameter prefixes.
 
 setPrefix
@@ -82,9 +76,6 @@ registerPrefixTagName
 ^^^^^^^^^^^^^^^^^^^^^
 
 .. js:autofunction:: registerPrefixTagName
-
-Bindings
---------
 
 .. _bindingFromWidget:
 
