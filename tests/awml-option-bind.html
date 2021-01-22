@@ -129,6 +129,35 @@
           await delay(60);
           assertEqual(widget.get('foo'), 2);
         }
+        {
+          // test behavior of transformSend and transformReceive
+          const widget = widgets[8];
+          const value = getBackendValue('test:foo');
+
+          const awmlOption = components[8].querySelector('awml-option');
+
+          widget.set('foo', 23);
+          value.set(21);
+
+          awmlOption.transformReceive = function (v, node) {
+            assertEqual(this, value);
+            assertEqual(node, awmlOption);
+            return v * 2;
+          };
+
+          assertEqual(widget.get('foo'), 21 * 2);
+
+          widget.userset('foo', 42);
+          assertEqual(value.value, 42);
+
+          awmlOption.transformSend = function(v) {
+            assertEqual(this, awmlOption.option);
+            return v / 2;
+          };
+
+          widget.userset('foo', 42);
+          assertEqual(value.value, 21);
+        }
       });
     </script>
     <script>
@@ -200,6 +229,13 @@
         name="foo"
         src="remote:foo"
         receive-delay="100"
+      ></awml-option>
+    </test-component>
+    <test-component>
+      <awml-option
+        type="bind"
+        name="foo"
+        src="test:foo"
       ></awml-option>
     </test-component>
   </body>
