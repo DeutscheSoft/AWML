@@ -3,6 +3,15 @@ import { parseAttribute } from '../utils/parse_attribute.js';
 import { warn } from '../utils/log.js';
 import { getAuxWidget } from '../utils/aux-support.js';
 
+function compareQueries(query1, query2) {
+  if (query1 === query2)
+    return true;
+  if (typeof query1 !== typeof query2)
+    return false;
+
+  return query1.replace(/\s/g, '') === query2.replace(/\s/g, '');
+}
+
 /**
  * This option type can be used to bind CSS media queries to aux widet
  * options.
@@ -58,7 +67,7 @@ export class MediaOption extends Option {
 
     const query = matchMedia(media);
 
-    if (query.media !== media) {
+    if (!compareQueries(query.media, media)) {
       warn(
         'Possibly malformed media query %o (is parsed as %o)',
         media,
