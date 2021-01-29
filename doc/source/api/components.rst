@@ -81,7 +81,7 @@ OptionComponent
 ---------------
 
 The OptionComponent can be used to create two-way bindings with a parent
-component. Custom binding types can be implemented to extend it's functionality.
+component. Custom binding types can be implemented to extend its functionality.
 
 .. js:autoclass:: OptionComponent
   :members: type, name
