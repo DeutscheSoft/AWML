@@ -67,7 +67,7 @@ How the content is placed into the DOM depdends on the data type of the data.
 Properties
 ^^^^^^^^^^
 
-Template expressions can be used to control node properties using a special
+Template expressions can be used to control node properties with a special
 syntax using square brackets. ::
 
     const template1 = `<input type=text [value]={{ this.value }} />`;
