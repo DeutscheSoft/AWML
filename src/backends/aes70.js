@@ -61,7 +61,7 @@ function isBlock(o) {
  * as one global ``OCA`` symbol. It is usually enough to include
  * ``AES70.es5.js`` alongside this backend.
  *
- * The paths uses to represent objects and properties of the AES70 device in
+ * The paths used to represent objects and properties of the AES70 device in
  * this backend follow these rules.
  *
  * - The path of an object is given by the concatenation of all role names up
