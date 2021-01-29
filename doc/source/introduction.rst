@@ -25,13 +25,13 @@ Parameter Binding
 For binding components to backend parameters, for instance using a standard
 audio control protocol such as `AES70 <https://www.ocaalliance.org>`_, AWML
 allows backend parameters to be assigned to the DOM tree. This relies on backend
-parameters being represented by some kind of hirarchical addressing scheme (e.g.
+parameters being represented by some kind of hierarchical addressing scheme (e.g.
 ``Channel1/Mute``). These parameter addresses will then be used by AWML
 components in order to decide which backend parameter to bind to.
 
 In general, there can be any number of different parameter trees defined on top
 of the DOM, however in basic views it will be only one. The assignment of
-parameter addresses to DOM elements is done hirarchically by assigning address
+parameter addresses to DOM elements is done hierarchically by assigning address
 prefixes to nodes. The resulting address of a given node is then the
 concatenation of the prefixes of the node itself and all its parents. Parameter
 trees are denoted by their unique string handle and the prefix of a node for a
@@ -58,7 +58,7 @@ Backend parameter can be bound to
 Templating
 ----------
 
-There are two main ways of templating build into AWML. The first are standard
+There are two main ways of templating built into AWML. The first are standard
 HTML templates which can be cloned into the DOM using the :ref:`CloneComponent`.
 The second are :ref:`template-components` which allow building complex custom
 components based on HTML templates.
@@ -72,7 +72,7 @@ attribute to attach it to the corresponding backend parameters. ::
       <aux-fader>
         ...
       </aux-fader>
-      <aux-toglle label=Mute>
+      <aux-toggle label=Mute>
         ...
       </aux-toggle>
     </template>
@@ -81,7 +81,7 @@ attribute to attach it to the corresponding backend parameters. ::
     <awml-clone template=channel prefix='remote:Channel2/'></awml-clone>
     <awml-clone template=channel prefix='remote:Channel3/'></awml-clone>
 
-Template compoents instead are Web Components which are defined using a HTML
+Template components instead are Web Components which are defined using a HTML
 template. This HTML template contains template expressions which are mapped onto
 properties of the resulting component. See :ref:`template-components` for an
 introduction.
@@ -92,9 +92,9 @@ Protocol Backends
 -----------------
 
 In AWML protocol backends can be thought of conceptually as remote devices or
-or as some kind of backend parameters. Backends are essentially parameters which
+as some kind of backend parameters. Backends are essentially parameters which
 can be accessed using some unique address. If a backend is registered and given
-a name its parameters can be referenced by components in parameter bindings.
+a name, its parameters can be referenced by components in parameter bindings.
 
 Backends can either be created and registered using the :ref:`BackendComponent`
 or using the global functions :ref:`registerBackend`. Then a parameter with 
