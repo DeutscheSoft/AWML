@@ -1,0 +1,100 @@
+<html>
+  <head>
+    <script>
+      window.localData = { foo: 'bar', bar: 'bar', flupp: 'bar' };
+    </script>
+    <script type="module">
+      import { define, assertEqual, delay, assertEq } from './testing.js';
+      import { getBackendValue, DynamicValue, map } from '../src/index.js';
+      import * as AWML from '../src/index.js';
+      window.AWML = AWML;
+
+      define(async () => {
+        const components = Array.from(
+          document.querySelectorAll('test-component')
+        );
+        const widgets = components.map((c) => c.auxWidget);
+
+        {
+          const component = components[0];
+          const widget = widgets[0];
+
+          const awmlBind = document.createElement('awml-bind');
+
+          const test_foo = getBackendValue('test:foo');
+          const bv = DynamicValue.fromConstant('bar');
+
+          component.appendChild(awmlBind);
+
+          awmlBind.bindings = [
+            {
+              src: 'test:foo',
+              name: 'foo1',
+            },
+            {
+              backendValue: bv,
+              name: 'foo2',
+              replayReceive: false,
+            },
+            {
+              src: 'foo',
+              name: 'foo3',
+            },
+            {
+              src: ['foo', 'foo'],
+              name: 'foo4',
+            },
+            {
+              src: ['oo', 'oo'],
+              srcPrefix: 'bar',
+              name: 'foo5',
+            },
+            {
+              src: ['oo', 'foo'],
+              srcPrefix: ['bar', null],
+              name: 'foo6',
+            },
+            {
+              backendValue: bv,
+              name: 'foo7',
+              pipe: (bv) => map(bv, (str) => str + str),
+            },
+          ];
+
+          assertEqual(await test_foo.wait(), widget.get('foo1'));
+          assertEqual(undefined, widget.get('foo2'));
+          bv.set('bar');
+          assertEqual(await bv.wait(), widget.get('foo2'));
+          assertEqual(await test_foo.wait(), widget.get('foo3'));
+          assertEq(
+            new Array(2).fill(await test_foo.wait()),
+            widget.get('foo4')
+          );
+          assertEq(
+            new Array(2).fill(await test_foo.wait()),
+            widget.get('foo5')
+          );
+          assertEq(
+            new Array(2).fill(await test_foo.wait()),
+            widget.get('foo6')
+          );
+          assertEq(bv.value + bv.value, widget.get('foo7'));
+
+          awmlBind.remove();
+
+          bv.set('bar');
+
+          // check that the binding is gone
+          assertEq(bv.value + bv.value, widget.get('foo7'));
+        }
+      });
+    </script>
+    <script></script>
+    <script type="module" src="../src/index.js"></script>
+    <script type="module" src="./test-component.js"></script>
+    <awml-backend type="local" name="test" data="localData"></awml-backend>
+  </head>
+  <body>
+    <test-component prefix="test:" prefix-bar="test:f"> </test-component>
+  </body>
+</html>

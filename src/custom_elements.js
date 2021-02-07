@@ -1,5 +1,6 @@
 import './components/attributes.element.js';
 import './components/backend.element.js';
+import './components/bind.element.js';
 import './components/class.element.js';
 import './components/clone.element.js';
 import './components/event.element.js';

@@ -1,5 +1,5 @@
 import { BaseComponent } from './base_component.js';
-import { collectPrefix, registerPrefixTagName } from '../utils/prefix.js';
+import { collectPrefix, registerPrefixTagName, compileSrc } from '../utils/prefix.js';
 import { getBackendValue } from '../backends.js';
 import { parseAttribute } from '../utils/parse_attribute.js';
 import { ListValue } from '../list_value.js';
@@ -247,51 +247,14 @@ export class PrefixComponentBase extends BaseComponent {
   }
 
   _compileSrc(src) {
-    if (src === null) return null;
-
-    if (!src.includes(',')) {
-      if (src.includes(':')) return src;
-
-      const prefix = this.currentPrefix;
-
-      if (Array.isArray(prefix)) {
-        this.log('src-prefix is a list and src not. Giving up.');
-        return null;
-      }
-
-      if (!prefix.includes(':')) return null;
-
-      return prefix + src;
+    try {
+      if (typeof src === 'string' && src.includes(','))
+        src = src.split(',');
+      return compileSrc(src, () => this.currentPrefix);
+    } catch (err) {
+      this.log(err.toString());
+      return null;
     }
-
-    let prefix = null;
-    const a = src.split(',');
-
-    for (let i = 0; i < a.length; i++) {
-      const tmp = a[i];
-
-      if (tmp.includes(':')) continue;
-
-      if (prefix === null) {
-        prefix = this.currentPrefix;
-        if (!Array.isArray(prefix)) {
-          prefix = new Array(a.length).fill(prefix);
-        } else if (prefix.length !== a.length) {
-          this.log(
-            'src-prefix and src arrays have different number of entries. Giving up.'
-          );
-          return null;
-        }
-      }
-
-      const p = prefix[i];
-
-      if (!p.includes(':')) return null;
-
-      a[i] = p + tmp;
-    }
-
-    return a;
   }
 
   get effectiveSrc() {

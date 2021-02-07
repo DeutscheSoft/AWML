@@ -123,6 +123,50 @@ export function setPrefixBlock(node, handle) {
   setPrefix(node, ':noprefix:', handle);
 }
 
+export function compileSrc(src, getPrefix) {
+  if (src === null) return null;
+
+  if (typeof src === 'string') {
+
+    if (src.includes(':'))
+      return src;
+
+    const prefix = getPrefix();
+
+    if (Array.isArray(prefix))
+      throw new TypeError('Expected prefix string for src string.');
+
+    if (!prefix.includes(':')) return null;
+
+    return prefix + src;
+  }
+
+  let prefix;
+
+  const result = src.map((src, i) => {
+    if (typeof src !== 'string')
+      throw new TypeError('Expected src as string[].');
+
+    if (src.includes(':')) return src;
+
+    if (prefix === void 0)
+      prefix = getPrefix();
+
+    const tmp = Array.isArray(prefix) ? prefix[i] : prefix;
+
+    if (typeof tmp !== 'string' || !tmp.includes(':'))
+      return null;
+
+    return tmp + src;
+  });
+
+  for (let i = 0; i < result.length; i++)
+    if (result[i] === null)
+      return null;
+
+  return result;
+}
+
 /**
  * Print all prefixes available for this node to the console.
  *

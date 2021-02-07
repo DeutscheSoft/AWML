@@ -35,6 +35,11 @@ export class BaseComponent extends HTMLElement {
     log('%o ' + fmt, this.tagName, ...args);
   }
 
+  getLog() {
+    if (!this.debug) return null;
+    return (fmt, ...args) => this.log(fmt, ...args);
+  }
+
   /** @ignore */
   connectedCallback() {
     this.style.display = 'none';
