@@ -2,7 +2,13 @@
   <head>
     <script type="module">
       import { define, delay, assertEqual } from './testing.js';
-      import { DynamicValue, ListValue, fromDOMEvent, connect, connectTo } from '../src/index.js';
+      import {
+        DynamicValue,
+        ListValue,
+        fromDOMEvent,
+        connect,
+        connectTo,
+      } from '../src/index.js';
 
       define(async () => {
         {
@@ -222,7 +228,7 @@
           }
 
           {
-            const sub = connectTo(to, from, false, (v) => v*2);
+            const sub = connectTo(to, from, false, (v) => v * 2);
 
             assertEqual(to.hasValue, false);
 
@@ -241,8 +247,7 @@
           const b = new DynamicValue();
 
           {
-            const sub = connect(a, true, null,
-                                b, true, null);
+            const sub = connect(a, true, null, b, true, null);
 
             a.set(42);
 

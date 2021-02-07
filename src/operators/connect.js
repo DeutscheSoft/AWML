@@ -63,7 +63,6 @@ export function connect(
   };
 }
 
-
 /**
  * Connects the output of one dynamic value to the input of
  * another.
@@ -85,8 +84,7 @@ export function connect(
  */
 export function connectTo(to, from, replay, transform) {
   return from.subscribe((value) => {
-    if (transform)
-      value = transform(value);
+    if (transform) value = transform(value);
     to.set(value);
   }, replay);
 }

@@ -127,9 +127,7 @@ export function compileSrc(src, getPrefix) {
   if (src === null) return null;
 
   if (typeof src === 'string') {
-
-    if (src.includes(':'))
-      return src;
+    if (src.includes(':')) return src;
 
     const prefix = getPrefix();
 
@@ -149,20 +147,16 @@ export function compileSrc(src, getPrefix) {
 
     if (src.includes(':')) return src;
 
-    if (prefix === void 0)
-      prefix = getPrefix();
+    if (prefix === void 0) prefix = getPrefix();
 
     const tmp = Array.isArray(prefix) ? prefix[i] : prefix;
 
-    if (typeof tmp !== 'string' || !tmp.includes(':'))
-      return null;
+    if (typeof tmp !== 'string' || !tmp.includes(':')) return null;
 
     return tmp + src;
   });
 
-  for (let i = 0; i < result.length; i++)
-    if (result[i] === null)
-      return null;
+  for (let i = 0; i < result.length; i++) if (result[i] === null) return null;
 
   return result;
 }

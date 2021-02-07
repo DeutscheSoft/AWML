@@ -1,5 +1,9 @@
 import { BaseComponent } from './base_component.js';
-import { collectPrefix, registerPrefixTagName, compileSrc } from '../utils/prefix.js';
+import {
+  collectPrefix,
+  registerPrefixTagName,
+  compileSrc,
+} from '../utils/prefix.js';
 import { getBackendValue } from '../backends.js';
 import { parseAttribute } from '../utils/parse_attribute.js';
 import { ListValue } from '../list_value.js';
@@ -223,8 +227,7 @@ export class PrefixComponentBase extends BaseComponent {
   }
   set replay(v) {
     this._replay = v === void 0 || !!v;
-    if (this._replay)
-      this._resubscribe();
+    if (this._replay) this._resubscribe();
   }
 
   constructor() {
@@ -248,8 +251,7 @@ export class PrefixComponentBase extends BaseComponent {
 
   _compileSrc(src) {
     try {
-      if (typeof src === 'string' && src.includes(','))
-        src = src.split(',');
+      if (typeof src === 'string' && src.includes(',')) src = src.split(',');
       return compileSrc(src, () => this.currentPrefix);
     } catch (err) {
       this.log(err.toString());

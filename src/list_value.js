@@ -85,7 +85,7 @@ export class ListValue extends DynamicValue {
    * @param values {DynamicValue[]}
    * @param [partial=false] {boolean}
    *    Initial value for the partial property.
-   * @param [debounce=0] {number} 
+   * @param [debounce=0] {number}
    *    Initial value for the debounce property.
    */
   constructor(values, partial, debounce) {

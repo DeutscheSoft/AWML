@@ -150,7 +150,7 @@
           widget.userset('foo', 42);
           assertEqual(value.value, 42);
 
-          awmlOption.transformSend = function(v) {
+          awmlOption.transformSend = function (v) {
             assertEqual(this, awmlOption.option);
             return v / 2;
           };
@@ -259,18 +259,10 @@
       ></awml-option>
     </test-component>
     <test-component>
-      <awml-option
-        type="bind"
-        name="foo"
-        src="test:foo"
-      ></awml-option>
+      <awml-option type="bind" name="foo" src="test:foo"></awml-option>
     </test-component>
     <test-component>
-      <awml-option
-        no-replay
-        name="foo"
-        src="test:foo"
-      ></awml-option>
+      <awml-option no-replay name="foo" src="test:foo"></awml-option>
     </test-component>
   </body>
 </html>

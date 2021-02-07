@@ -102,33 +102,32 @@ class NodeContentExpression extends DOMTemplateExpression {
         this._node = node;
       } else {
         switch (typeof data) {
-        case 'string':
-        case 'number':
-        case 'boolean':
-          {
-            const node = this._node;
+          case 'string':
+          case 'number':
+          case 'boolean':
+            {
+              const node = this._node;
 
-            if (node.nodeType !== 3) {
-              const tmp = document.createTextNode(data);
-              node.replaceWith(tmp);
-              this._node = tmp;
-            } else {
-              node.data = data;
+              if (node.nodeType !== 3) {
+                const tmp = document.createTextNode(data);
+                node.replaceWith(tmp);
+                this._node = tmp;
+              } else {
+                node.data = data;
+              }
             }
-          }
-          break;
-        case 'object':
-
-          // is a node.
-          if ('replaceWith' in data) {
-            this._node.replaceWith(data);
-            this._node = data;
-          } else {
-            throw new TypeError('Unsupported data type.');
-          }
-          break;
-        default:
-          throw new TypeError('Unsupported type.');
+            break;
+          case 'object':
+            // is a node.
+            if ('replaceWith' in data) {
+              this._node.replaceWith(data);
+              this._node = data;
+            } else {
+              throw new TypeError('Unsupported data type.');
+            }
+            break;
+          default:
+            throw new TypeError('Unsupported type.');
         }
       }
 
@@ -269,7 +268,9 @@ class OptionalNodeReference extends DOMTemplateExpression {
     let commentNode = this._commentNode;
 
     if (commentNode === null) {
-      this._commentNode = commentNode = document.createComment(" %if placeholder ");
+      this._commentNode = commentNode = document.createComment(
+        ' %if placeholder '
+      );
     }
 
     return commentNode;
@@ -362,8 +363,7 @@ function splitTextNodes(childNodes) {
           node = node.splitText(pos);
         } else {
           pos = node.data.search(PLACEHOLDER_END);
-          if (pos === node.data.length - 1)
-            break;
+          if (pos === node.data.length - 1) break;
           node = node.splitText(pos + 1);
         }
       }
@@ -478,8 +478,7 @@ function compileExpressions(childNodes, expressions, nodePath) {
         {
           const data = node.data;
 
-          if (!containsPlaceholders(data))
-            break;
+          if (!containsPlaceholders(data)) break;
 
           node.data = '';
 

@@ -4,10 +4,8 @@ import { warn } from '../utils/log.js';
 import { getAuxWidget } from '../utils/aux-support.js';
 
 function compareQueries(query1, query2) {
-  if (query1 === query2)
-    return true;
-  if (typeof query1 !== typeof query2)
-    return false;
+  if (query1 === query2) return true;
+  if (typeof query1 !== typeof query2) return false;
 
   return query1.replace(/\s/g, '') === query2.replace(/\s/g, '');
 }
