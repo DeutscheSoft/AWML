@@ -200,6 +200,9 @@ function blockWhileInteracting(widget, subscribeReceive, setFun, delay) {
  * @param {boolean} [options.preventDefault=false]
  *      If true, the default action of the change is being prevented.
  *      The meaning of this depends on the widget and the option bound to.
+ * @param {boolean} [options.preventChange=false]
+ *      If true, the ``userset`` event handler will be used. This implies
+ *      ``options.preventDefault=true``.
  * @param {boolean} [options.sync=false]
  *      Emit modifications also if they are not triggered by user interaction.
  * @param {boolean} [options.readonly=false]
@@ -229,23 +232,23 @@ export function bindingFromWidget(widget, name, options) {
   if (!options.writeonly) {
     if (options.sync) {
       let rec = false;
+      const eventName = 'set_' + name;
+      const preventDefault = options.preventDefault;
 
-      if (options.preventDefault) {
-        subscribeFun = function (cb) {
-          return widget.subscribe('set_' + name, function (value) {
-            if (rec) return;
-            cb(value);
-            return false;
-          });
-        };
-      } else {
-        subscribeFun = function (cb) {
-          return widget.subscribe('set_' + name, function (value) {
-            if (rec) return;
-            cb(value);
-          });
-        };
-      }
+      subscribeFun = function (cb) {
+        const eventHandler = preventDefault
+          ?  function (value) {
+              if (rec) return;
+              cb(value);
+              return false;
+            }
+          : function (value) {
+              if (rec) return;
+              cb(value);
+            };
+
+        return widget.subscribe(eventName, eventHandler);
+      };
 
       setFun = function (value) {
         if (rec) return;
@@ -259,22 +262,22 @@ export function bindingFromWidget(widget, name, options) {
         }
       };
     } else {
-      if (options.preventDefault) {
-        subscribeFun = function (cb) {
-          return widget.subscribe('userset', function (_name, value) {
-            if (_name !== name) return;
-            cb(value);
-            return false;
-          });
-        };
-      } else {
-        subscribeFun = function (cb) {
-          return widget.subscribe('useraction', function (_name, value) {
-            if (_name !== name) return;
-            cb(value);
-          });
-        };
-      }
+      const eventName = options.preventChange ? 'userset' : 'useraction';
+      const preventDefault = options.preventChange || options.preventDefault;
+
+      subscribeFun = function (cb) {
+        const eventHandler = preventDefault
+          ? function (_name, value) {
+              if (_name !== name) return;
+              cb(value);
+              return false;
+            }
+          : function (_name, value) {
+              if (_name !== name) return;
+              cb(value);
+            };
+        return widget.subscribe(eventName, eventHandler);
+      };
     }
   }
 
@@ -308,6 +311,9 @@ export function bindingFromWidget(widget, name, options) {
  * @param {boolean} [options.preventDefault=false]
  *      If true, the default action of the change is being prevented.
  *      The meaning of this depends on the widget and the option bound to.
+ * @param {boolean} [options.preventChange=false]
+ *      If true, the event handler will attempt to prevent the change from
+ *      taking place.
  * @param {boolean} [options.sync=false]
  *      Emit modifications also if they are not triggered by user interaction.
  * @param {boolean} [options.readonly=false]
