@@ -15,6 +15,7 @@ import { connect } from '../operators/connect.js';
  * - ``writeonly`` as the ``writeonly = true`` if present,
  * - ``sync`` as the ``sync`` option if present,
  * - ``prevent-default`` as the ``preventDefault = true`` option if present,
+ * - ``prevent-change`` as the ``preventChange = true`` option if present,
  * - ``transform-send`` is parsed as JavaScript and passed as ``transformSend``
  *   option,
  * - ``transform-receive`` is parsed as JavaScript and passed as
@@ -61,6 +62,7 @@ export class BindOption extends Option {
       writeonly: options.readonly,
       sync: options.sync,
       preventDefault: options.preventDefault,
+      preventChange: options.preventChange,
       ignoreInteraction: options.ignoreInteraction,
       receiveDelay: options.receiveDelay,
     });
@@ -110,6 +112,7 @@ export class BindOption extends Option {
     options.writeonly = node.getAttribute('writeonly') !== null;
     options.sync = node.getAttribute('sync') !== null;
     options.preventDefault = node.getAttribute('prevent-default') !== null;
+    options.preventChange = node.getAttribute('prevent-change') !== null;
     options.transformSend = node.transformSend;
     options.transformReceive = node.transformReceive;
     options.replay = node.replay;
