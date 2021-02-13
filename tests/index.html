@@ -30,12 +30,37 @@
         'values.html',
       ];
 
+      function makeNodes(msg) {
+        if (typeof msg === 'string') {
+          return document.createTextNode(msg);
+        } else if (Array.isArray(msg)) {
+          return msg.map(makeNodes);
+        } else if (typeof msg === 'object') {
+          return msg;
+        } else {
+          throw new TypeError('Unsupported argument.');
+        }
+      }
+
+      function makeLink(url) {
+        const a = document.createElement('a');
+        a.href = url;
+        a.textContent = url;
+        a.target = '_blank';
+        return a;
+      }
+
       function _log(msg) {
         const span = document.createElement('span');
-        const text = document.createTextNode(msg);
+        const text = makeNodes(msg);
         const log = document.querySelector('#log');
 
-        span.appendChild(text);
+        if (Array.isArray(text)) {
+          text.forEach((node) => span.appendChild(node));
+        } else {
+          span.appendChild(text);
+        }
+
         log.appendChild(span);
 
         return span;
@@ -88,7 +113,7 @@
           const url = tests[i];
           const t1 = performance.now();
           try {
-            _log('Running test ' + url + ' ... ');
+            _log([ 'Running test ', makeLink(url), ' ... ']);
             const n = await runTest(url);
             const time = performance.now() - t1;
             log(['OK ( ', n, ' tests, ', time.toFixed(0), 'ms )'].join(''));
