@@ -70,7 +70,15 @@ export class TemplateComponent extends HTMLElement {
     this._template = template.clone();
     this._attached = false;
     this._redrawRequested = false;
-    this._redraw = this.redraw.bind(this);
+    this._needsRedraw = true;
+    this._redraw = () => {
+      this._redrawRequested = false;
+      if (!this.isConnected)
+        return;
+      this.redraw();
+      this._needsRedraw = false;
+      this.emit('redraw');
+    };
     this._whenAttached = null;
     this._eventHandlers = null;
   }
@@ -79,17 +87,16 @@ export class TemplateComponent extends HTMLElement {
    * @internal
    */
   connectedCallback() {
-    if (this._attached) return;
     if (!this.isConnected) return;
-    this._attached = true;
-    this.appendChild(this._template.fragment);
+    if (!this._attached) {
+      this._attached = true;
+      this.appendChild(this._template.fragment);
 
-    const whenAttached = this._whenAttached;
-
-    if (whenAttached !== null) {
-      this._whenAttached = null;
-      whenAttached();
+      this.emit('attached');
     }
+
+    if (this._needsRedraw)
+      this.triggerRedraw();
   }
 
   /**
@@ -102,8 +109,22 @@ export class TemplateComponent extends HTMLElement {
       if (this._attached) {
         resolve();
       } else {
-        this._whenAttached = resolve;
+        let unsubscribe;
+        unsubscribe = this.subscribeEvent('attached', () => {
+          resolve();
+          unsubscribe();
+        });
       }
+    });
+  }
+
+  whenRedrawn() {
+    return new Promise((resolve) => {
+      let unsubscribe;
+      unsubscribe = this.subscribeEvent('redraw', () => {
+        resolve();
+        unsubscribe();
+      });
     });
   }
 
@@ -172,6 +193,15 @@ export class TemplateComponent extends HTMLElement {
     }
   }
 
+  triggerRedraw() {
+    if (this._needsRedraw && this._redrawRequested) return;
+    this._needsRedraw = true;
+    if (!this.isConnected)
+      return;
+    this._redrawRequested = true;
+    requestRedraw(this._redraw);
+  }
+
   /**
    * Mark a certain property as changed and (if necessary) trigger
    * redraw() to be called in the next rendering frame.
@@ -180,18 +210,14 @@ export class TemplateComponent extends HTMLElement {
    *    The name of the property which changed.
    */
   triggerUpdate(propertyName) {
-    if (this._redrawRequested) return;
-    this._redrawRequested = true;
-    requestRedraw(this._redraw);
+    this.triggerRedraw();
   }
 
   /**
    * Called in a rendering frame and updates the DOM.
    */
   redraw() {
-    this._redrawRequested = false;
     this._template.update(this);
-    this.emit('redraw');
   }
 
   /**

@@ -35,95 +35,128 @@
       customElements.define('my-component', MyComponent);
 
       define(async () => {
-        await waitForFrame();
+        {
+          await waitForFrame();
 
-        const myComponent = document.querySelector('my-component');
-        const div = myComponent.querySelector('div');
-        const button = myComponent.querySelector('button');
-        const testComponent = myComponent.child1;
-        const widget = testComponent.auxWidget;
+          const myComponent = document.querySelector('my-component');
+          const div = myComponent.querySelector('div');
+          const button = myComponent.querySelector('button');
+          const testComponent = myComponent.child1;
+          const widget = testComponent.auxWidget;
+
+          {
+            // inputs
+            assertEqual(div.style.color, 'black');
+            myComponent.color = 'red';
+            assertEqual(div.style.color, 'black');
+            await waitForFrame();
+            assertEqual(div.style.color, 'red');
+          }
+
+          {
+            // event handlers
+            assertEqual(myComponent.name, 'foo');
+            button.dispatchEvent(new UIEvent('click'));
+            assertEqual(myComponent.name, 'foo!!');
+          }
+
+          {
+            // option bindings
+            assertEqual(widget.get('gain'), 42.0);
+            assertEqual(widget.get('bar'), 42.0);
+            getBackendValue('test:channel1/Gain').set(23.4);
+            assertEqual(widget.get('bar'), 23.4);
+            assertEqual(widget.get('gain'), 23.4);
+          }
+
+          {
+            // property bindings
+            const bv = getBackendValue('test:channel1/Color');
+            myComponent.color = 'black';
+            bv.set('green');
+            assertEqual(myComponent.color, 'green');
+            await waitForFrame();
+            assertEqual(div.style.color, 'green');
+            myComponent.color = 'black';
+            assertEqual(bv.value, 'black');
+          }
+
+          {
+            // readonly property bindings
+            const bv = getBackendValue('test:channel1/Label');
+            myComponent.name = '';
+            bv.set('foo');
+            assertEqual(myComponent.name, 'foo');
+            myComponent.name = 'hello';
+            assertEqual(bv.value, 'foo');
+          }
+
+          {
+            // OptionalNodeDirective
+            assertEqual(myComponent.querySelector('.not_there'), null);
+            myComponent.showDiv = true;
+            await waitForFrame();
+            assertEqual(!myComponent.querySelector('.not_there'), false);
+            myComponent.showDiv = false;
+            await waitForFrame();
+            assertEqual(myComponent.querySelector('.not_there'), null);
+          }
+
+          {
+            // Nodes in NodeContentDirectives
+            const lastNode = () => {
+              const childNodes = myComponent.childNodes;
+
+              return childNodes[childNodes.length - 1];
+            };
+            myComponent.content = null;
+            await waitForFrame();
+            assertEqual(lastNode().nodeType, 8);
+            const span = document.createElement('span');
+            myComponent.content = span;
+            await waitForFrame();
+            assertEqual(lastNode(), span);
+            myComponent.content = 'foo';
+            await waitForFrame();
+            assertEqual(lastNode().nodeType, 3);
+            myComponent.content = span;
+            await waitForFrame();
+            assertEqual(lastNode(), span);
+            myComponent.content = null;
+            await waitForFrame();
+            assertEqual(lastNode().nodeType, 8);
+          }
+        }
 
         {
-          // inputs
+          const myComponent = document.createElement('my-component');
+
+          document.body.appendChild(myComponent);
+
+          await myComponent.whenAttached();
+
+          const div = myComponent.querySelector('div');
+
+          await waitForFrame();
+
+          // check that the initial change is rendered
           assertEqual(div.style.color, 'black');
+
+          // detach the element.
+          myComponent.remove();
+
+          // We rely on the fact that detached elements
+          // are not rendered.
           myComponent.color = 'red';
           assertEqual(div.style.color, 'black');
           await waitForFrame();
+          assertEqual(div.style.color, 'black');
+
+          // Make sure that rendering happens when the element is attached
+          // again.
+          document.body.appendChild(myComponent);
+          await waitForFrame();
           assertEqual(div.style.color, 'red');
-        }
-
-        {
-          // event handlers
-          assertEqual(myComponent.name, 'foo');
-          button.dispatchEvent(new UIEvent('click'));
-          assertEqual(myComponent.name, 'foo!!');
-        }
-
-        {
-          // option bindings
-          assertEqual(widget.get('gain'), 42.0);
-          assertEqual(widget.get('bar'), 42.0);
-          getBackendValue('test:channel1/Gain').set(23.4);
-          assertEqual(widget.get('bar'), 23.4);
-          assertEqual(widget.get('gain'), 23.4);
-        }
-
-        {
-          // property bindings
-          const bv = getBackendValue('test:channel1/Color');
-          myComponent.color = 'black';
-          bv.set('green');
-          assertEqual(myComponent.color, 'green');
-          await waitForFrame();
-          assertEqual(div.style.color, 'green');
-          myComponent.color = 'black';
-          assertEqual(bv.value, 'black');
-        }
-
-        {
-          // readonly property bindings
-          const bv = getBackendValue('test:channel1/Label');
-          myComponent.name = '';
-          bv.set('foo');
-          assertEqual(myComponent.name, 'foo');
-          myComponent.name = 'hello';
-          assertEqual(bv.value, 'foo');
-        }
-
-        {
-          // OptionalNodeDirective
-          assertEqual(myComponent.querySelector('.not_there'), null);
-          myComponent.showDiv = true;
-          await waitForFrame();
-          assertEqual(!myComponent.querySelector('.not_there'), false);
-          myComponent.showDiv = false;
-          await waitForFrame();
-          assertEqual(myComponent.querySelector('.not_there'), null);
-        }
-
-        {
-          // Nodes in NodeContentDirectives
-          const lastNode = () => {
-            const childNodes = myComponent.childNodes;
-
-            return childNodes[childNodes.length - 1];
-          };
-          myComponent.content = null;
-          await waitForFrame();
-          assertEqual(lastNode().nodeType, 8);
-          const span = document.createElement('span');
-          myComponent.content = span;
-          await waitForFrame();
-          assertEqual(lastNode(), span);
-          myComponent.content = 'foo';
-          await waitForFrame();
-          assertEqual(lastNode().nodeType, 3);
-          myComponent.content = span;
-          await waitForFrame();
-          assertEqual(lastNode(), span);
-          myComponent.content = null;
-          await waitForFrame();
-          assertEqual(lastNode().nodeType, 8);
         }
       });
     </script>
