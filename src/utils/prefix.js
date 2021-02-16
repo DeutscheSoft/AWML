@@ -50,9 +50,14 @@ export function registerPrefixTagName(tagName) {
  *      The handle name.
  */
 export function triggerUpdatePrefix(node, handle) {
+  const selector = prefixTagSelector;
+
   if (node._updatePrefix) node._updatePrefix(handle);
 
-  const list = node.querySelectorAll(prefixTagSelector);
+  if (node._updatePrefix && node.matches(selector))
+    node._updatePrefix(handle);
+
+  const list = node.querySelectorAll(selector);
 
   for (let i = 0; i < list.length; i++) {
     const node = list.item(i);
