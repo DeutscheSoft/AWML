@@ -39,7 +39,7 @@ function dependsOnPrefix(binding, handle) {
 
     // Note: index 0 would not be sufficient, the empty
     // string is not a legal name for a backend
-    return src.indexOf(':') > 0;
+    return src.indexOf(':') <= 0;
   }
 }
 
