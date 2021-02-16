@@ -25,12 +25,15 @@ export class BackendValue extends DynamicValue {
 
         this._backendId = id;
 
-        if (this._hasRequestedValue) {
-          this._backend.set(id, this._requestedValue);
-        }
+        const hasRequestedValue = this._hasRequestedValue;
+        const requestedValue = this._requestedValue;
 
         if (result.length === 3) {
           if (!this._hasValue) this._callback(id, result[2]);
+        }
+
+        if (hasRequestedValue) {
+          this._backend.set(id, requestedValue);
         }
       },
       (err) => {
