@@ -39,12 +39,6 @@ export class BindComponent extends BaseComponent {
     registerPrefixTagName(this.tagName);
   }
 
-  _subscribeBinding(options) {
-    const parentNode = this.parentNode;
-
-    return createBinding(this.parentNode, this, this, options, this.getLog());
-  }
-
   _subscribe() {
     const parentNode = this.parentNode;
 
