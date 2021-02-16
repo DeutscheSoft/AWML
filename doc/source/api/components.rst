@@ -41,6 +41,13 @@ BackendComponent
 
 .. js:autoclass:: BackendComponent
 
+.. _BindComponent:
+
+BindComponent
+-------------
+
+.. js:autoclass:: BindComponent
+
 .. _ClassComponent:
 
 ClassComponent

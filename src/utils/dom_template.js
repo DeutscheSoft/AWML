@@ -3,6 +3,7 @@ import { StringTemplate } from './string_template.js';
 import { warn } from './log.js';
 import { Subscriptions } from './subscriptions.js';
 import { subscribeDOMEvent } from './subscribe_dom_event.js';
+import { Bindings } from '../bindings.js';
 
 const PLACEHOLDER_START = '\x01';
 const PLACEHOLDER_END = '\x02';
@@ -32,6 +33,15 @@ class DOMTemplateDirective {
   constructor(path) {
     this._path = path;
     this._node = null;
+    this.isConnected = false;
+  }
+
+  connectedCallback() {
+    this.isConnected = true;
+  }
+
+  disconnectedCallback() {
+    this.isConnected = false;
   }
 
   attach(node) {
@@ -82,7 +92,7 @@ class OptionReference extends DOMTemplateDirective {
   }
 }
 
-class DOMTemplateExpression extends DOMTemplateDirective {}
+class DOMTemplateExpression extends DOMTemplateDirective { }
 
 class NodeContentExpression extends DOMTemplateExpression {
   constructor(path, template) {
@@ -309,6 +319,63 @@ class OptionalNodeReference extends DOMTemplateExpression {
   }
 }
 
+class BindNodeReference extends DOMTemplateExpression {
+  static get requiresPrefix() {
+    return true;
+  }
+
+  constructor(path, template) {
+    super(path);
+    this._template = template;
+    this._bindingsImpl = null;
+  }
+
+  attach(node) {
+    super.attach(node);
+    this._bindingsImpl = new Bindings(
+      this._node,
+      this._node,
+      this._node
+    );
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    this._bindingsImpl.update(this._template.get());
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this._bindingsImpl.dispose();
+  }
+
+  updatePrefix(handle) {
+    if (this.isConnected) {
+      this._bindingsImpl.updatePrefix(handle);
+    }
+  }
+
+  update(ctx) {
+    const template = this._template;
+
+    if (template.update(ctx)) {
+      if (this.isConnected)
+        this._bindingsImpl.update(template.get())
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  get dependencies() {
+    return this._template.dependencies;
+  }
+
+  clone() {
+    return new this.constructor(this._path, this._template.clone());
+  }
+}
+
 function containsPlaceholders(input) {
   return -1 !== input.search(rePlaceholder);
 }
@@ -434,6 +501,10 @@ function compileExpressions(childNodes, expressions, nodePath) {
               const tpl = compileStringWithPlaceholders(value, expressions);
 
               expr = new OptionalNodeReference(path, tpl.toSingleExpression());
+            } else if (name === '%bind') {
+              const tpl = compileStringWithPlaceholders(value, expressions);
+
+              expr = new BindNodeReference(path, tpl.toSingleExpression());
             } else if (containsPlaceholders(value)) {
               if (containsPlaceholders(name))
                 throw new Error('Templates in attribute names not supported.');
@@ -503,6 +574,10 @@ function compileExpressions(childNodes, expressions, nodePath) {
 }
 
 export class DOMTemplate {
+  get requiresPrefix() {
+    return this._requiresPrefix;
+  }
+
   constructor(fragment, directives, dependencies) {
     this._original = fragment;
     this._directives = directives;
@@ -512,9 +587,15 @@ export class DOMTemplate {
     });
     this._dependencies = dependencies || null;
 
+    let requiresPrefix = false;
+
     directives.forEach((directive) => {
       directive.attach(this._fragment);
+      if (directive.constructor.requiresPrefix)
+        requiresPrefix = true;
     });
+
+    this._requiresPrefix = requiresPrefix;
 
     let references = null;
     let optionReferences = null;
@@ -580,6 +661,21 @@ export class DOMTemplate {
         .filter((name, index, a) => index === a.indexOf(name));
     }
     return this._dependencies;
+  }
+
+  connectedCallback() {
+    this._directives.forEach((directive) => directive.connectedCallback());
+  }
+
+  disconnectedCallback() {
+    this._directives.forEach((directive) => directive.disconnectedCallback());
+  }
+
+  _updatePrefix(handle) {
+    this._directives.forEach((directive) => {
+      if (directive.constructor.requiresPrefix)
+        directive.updatePrefix(handle);
+    });
   }
 
   update(ctx) {

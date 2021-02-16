@@ -145,3 +145,28 @@ Then inside the DOM options of the fader can be bound to using ``awml-option``. 
       <awml-option type=bind name='gain' src='...'></awml-option>
     </my-channel>
 
+Bind directives
+^^^^^^^^^^^^^^^
+
+Bind directives can be used to install bindings on components inside of a
+template. They are internally based on a :ref:`Bindings` object and work
+similar to :ref:`BindComponent`. The main advantage to using a
+:ref:`BindComponent` is that they require no additional component. ::
+
+    const template = `<aux-fader %bind={{ this.faderBindings }}></aux-fader>`;
+    class MyComponent extends TemplateComponent.fromString(template) {
+      constructor() {
+        super();
+        this.faderBindings = [
+          {
+            src: '...',
+          },
+        ];
+      }
+    }
+
+    customElements.define('my-component', MyComponent);
+
+See the documentation of :ref:`IBindingDescription` for a specification of the
+possible parameters. All bindings will calculate their prefix starting from the
+node which they are installed on.

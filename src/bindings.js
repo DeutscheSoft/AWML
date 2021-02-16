@@ -44,18 +44,38 @@ function dependsOnPrefix(binding, handle) {
 }
 
 /**
- * Binding description.
+ * An interface describing a binding.
+ *
  * @typedef {Object} IBindingDescription
  * @property {string|string[]} src
- * @property {string} srcPrefix
- * @property {DynamicValue} backendValue
+ *      The src address.
+ * @property {string|string[]} [srcPrefix=null]
+ *      The source prefix to use.
+ * @property {DynamicValue} [backendValue]
+ *      An explicit backend value to bind to. If a backendValue
+ *      is specified, ``src`` and ``srcPrefix`` will be ignored.
  * @property {function} [pipe]
+ *      An optional pipe operator.
  * @property {function} [transformReceive]
+ *      An optional function for transforming values received
+ *      from the ``backendValue``.
  * @property {function} [transformSend]
+ *      An optional function for transforming values sent to the
+ *      backendValue.
  * @property {boolean} [replayReceive=true]
+ *      If true, one value will be replayed when subscribing to
+ *      the backendValue.
  * @property {boolean} [replaySend=false]
+ *      If true, one value will be replayed when subscribing to
+ *      the component value. For example, this would send the
+ *      current option value of the widget to the backend when
+ *      the binding is created.
  * @property {boolean} [partial=false]
+ *      Optional partial parameter used if ``src`` specifies a
+ *      list of sources. This parameter is passed to the resulting
+ *      ListValue.
  * @property {number} [debounce=0]
+ *      Optional parameter used if a ListValue is created.
  */
 
 /**

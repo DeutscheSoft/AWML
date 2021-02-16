@@ -3,6 +3,7 @@ import { DOMTemplate } from '../utils/dom_template.js';
 import { warn } from '../utils/log.js';
 import { bindingFromComponent } from '../utils/aux-support.js';
 import { fromSubscription } from '../operators/from_subscription.js';
+import { registerPrefixTagName } from '../utils/prefix.js';
 
 let redrawQueue = [];
 let oldQueue = [];
@@ -81,6 +82,9 @@ export class TemplateComponent extends HTMLElement {
     };
     this._whenAttached = null;
     this._eventHandlers = null;
+
+    if (template.requiresPrefix)
+      registerPrefixTagName(this.tagName);
   }
 
   /**
@@ -97,6 +101,24 @@ export class TemplateComponent extends HTMLElement {
 
     if (this._needsRedraw)
       this.triggerRedraw();
+
+    this._template.connectedCallback();
+  }
+
+  /**
+   * @internal
+   */
+  disconnectedCallback() {
+    this._template.disconnectedCallback();
+  }
+
+  /**
+   * @internal
+   */
+  _updatePrefix(handle) {
+    if (!this.isConnected)
+      return;
+    this._template._updatePrefix(handle);
   }
 
   /**

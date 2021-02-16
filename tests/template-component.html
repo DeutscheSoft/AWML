@@ -3,6 +3,7 @@
     <script>
       var initialValues = {
         'channel1/Gain': 42.0,
+        'channel1/Mute': false,
       };
     </script>
 
@@ -12,33 +13,58 @@
       import { assertEqual, define, waitForFrame } from './testing.js';
       import { TemplateComponent } from '../src/components/template.js';
       import { getBackendValue } from '../src/index.pure.js';
+      import { setPrefix } from '../src/utils/prefix.js';
 
-      const myTemplate = `
-        <div [style.color]={{ this.color }} className={{ this.myClass }}>Hello World {{ this.name }}!</div>
-        <button (click)={{ this.onClick }}>click me</button>
-        <test-component #child1 $gain=bar></test-component>
-        <div class=not_there %if={{ this.showDiv }}> Not visible {{ this.name }}! </div>
-        {{ this.content }}`;
+      {
+        const myTemplate = `
+          <div [style.color]={{ this.color }} className={{ this.myClass }}>Hello World {{ this.name }}!</div>
+          <button (click)={{ this.onClick }}>click me</button>
+          <test-component #child1 $gain=bar></test-component>
+          <div class=not_there %if={{ this.showDiv }}> Not visible {{ this.name }}! </div>
+          {{ this.content }}`;
 
-      class MyComponent extends TemplateComponent.fromString(myTemplate) {
-        constructor() {
-          super();
-          this.name = 'foo';
-          this.color = 'black';
-          this.onClick = (ev) => {
-            this.name += '!!';
-          };
-          this.showDiv = false;
+        class MyComponent extends TemplateComponent.fromString(myTemplate) {
+          constructor() {
+            super();
+            this.name = 'foo';
+            this.color = 'black';
+            this.onClick = (ev) => {
+              this.name += '!!';
+            };
+            this.showDiv = false;
+          }
         }
+
+        customElements.define('my-component1', MyComponent);
       }
 
-      customElements.define('my-component', MyComponent);
+      {
+        const myTemplate = `<test-component #child %bind={{ this.bindings }}></test-component>`;
+
+        class MyComponent extends TemplateComponent.fromString(myTemplate) {
+          constructor() {
+            super();
+            this.bindings = [
+              {
+                src: 'Gain',
+                name: 'gain',
+              },
+              {
+                src: 'Mute',
+                name: 'mute',
+              },
+            ];
+          }
+        }
+
+        customElements.define('my-component2', MyComponent);
+      }
 
       define(async () => {
         {
           await waitForFrame();
 
-          const myComponent = document.querySelector('my-component');
+          const myComponent = document.querySelector('my-component1');
           const div = myComponent.querySelector('div');
           const button = myComponent.querySelector('button');
           const testComponent = myComponent.child1;
@@ -129,7 +155,7 @@
         }
 
         {
-          const myComponent = document.createElement('my-component');
+          const myComponent = document.createElement('my-component1');
 
           document.body.appendChild(myComponent);
 
@@ -157,6 +183,69 @@
           document.body.appendChild(myComponent);
           await waitForFrame();
           assertEqual(div.style.color, 'red');
+          myComponent.remove();
+        }
+
+        {
+          const myComponent = document.querySelector('my-component2');
+          const child = myComponent.child;
+
+          const gain = getBackendValue('test:channel1/Gain');
+          const mute = getBackendValue('test:channel1/Mute');
+
+          assertEqual(child.auxWidget.get('gain'), await gain.wait());
+          assertEqual(child.auxWidget.get('mute'), await mute.wait());
+
+          gain.set((await gain.wait()) - 2.0);
+          mute.set(!(await mute.wait()));
+
+          assertEqual(child.auxWidget.get('gain'), await gain.wait());
+          assertEqual(child.auxWidget.get('mute'), await mute.wait());
+
+          // remove the node and check that the bindings are removed
+          const parentNode = myComponent.parentNode;
+
+          myComponent.remove();
+
+          gain.set((await gain.wait()) - 2.0);
+          mute.set(!(await mute.wait()));
+
+          assertEqual(child.auxWidget.get('gain') - 2.0, await gain.wait());
+          assertEqual(!child.auxWidget.get('mute'), await mute.wait());
+
+          // check that adding the node again will reattach
+          // all bindings
+          parentNode.appendChild(myComponent);
+
+          await waitForFrame();
+
+          assertEqual(child.auxWidget.get('gain'), await gain.wait());
+          assertEqual(child.auxWidget.get('mute'), await mute.wait());
+        }
+
+        {
+          const myComponent = document.querySelector('my-component2');
+          const child = myComponent.child;
+
+          // check that prefix updates work
+          const gain = getBackendValue('test:channel2/Gain');
+          const mute = getBackendValue('test:channel2/Mute');
+
+          setPrefix(myComponent, 'test:channel2/');
+
+          gain.set(23.0);
+          mute.set(false);
+
+          await waitForFrame();
+
+          assertEqual(child.auxWidget.get('gain'), await gain.wait());
+          assertEqual(child.auxWidget.get('mute'), await mute.wait());
+
+          mute.set(true);
+          gain.set(0.0);
+
+          assertEqual(child.auxWidget.get('gain'), await gain.wait());
+          assertEqual(child.auxWidget.get('mute'), await mute.wait());
         }
       });
     </script>
@@ -164,7 +253,7 @@
   </head>
   <body>
     <div>
-      <my-component>
+      <my-component1>
         <awml-option
           type="bind"
           name="child1.gain"
@@ -188,7 +277,9 @@
           name="name"
           src="test:channel1/Label"
         ></awml-option>
-      </my-component>
+      </my-component1>
+      <my-component2 prefix='test:channel1/'>
+      </my-component2>
     </div>
   </body>
 </html>

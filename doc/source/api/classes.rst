@@ -26,6 +26,19 @@ by :ref:`getBackendValue`.
 .. js:autoclass:: BackendValue
   :members: inSync, uri
 
+.. _IBindingDescription:
+
+IBindingDescription
+^^^^^^^^^^^^^^^^^^^
+
+.. js:autoclass:: IBindingDescription
+
+.. _Bindings:
+
+Bindings
+^^^^^^^^
+.. js:autoclass:: Bindings
+  :members: update, updatePrefix, dispose
 
 .. _Option-Types:
 
