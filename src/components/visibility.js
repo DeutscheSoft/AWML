@@ -51,10 +51,12 @@ export class VisibilityComponent extends StylesComponentBase {
 
           const parent = widget.parent;
 
-          if (hidden) {
-            parent.hideChild(widget);
-          } else {
-            parent.showChild(widget);
+          if (parent) {
+            if (hidden) {
+              parent.hideChild(widget);
+            } else {
+              parent.showChild(widget);
+            }
           }
         }
         break;
