@@ -48,6 +48,7 @@ class SwitchMapValue extends DynamicValue {
         inner_sub();
         inner_sub = null;
       }
+      this._inner = null;
     };
   }
 
