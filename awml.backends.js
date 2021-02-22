@@ -842,7 +842,7 @@ var f = (function(w, AWML) {
           } else {
             /* unsubscribe happens per id */
             try {
-              var id = parseInt(uri);
+              var id = backend.uri2id.get(uri);
               backend.unsubscribe(id, this._change_cb);
               this.subscriptions.delete(id);
             } catch (err) {
