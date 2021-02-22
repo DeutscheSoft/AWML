@@ -7,6 +7,10 @@ export class JsonProtocolClientBackend extends Backend {
     this._pendingSubscriptionMessage = null;
     this._pendingChanges = new Map();
     this._willFlush = false;
+    // This map temporarily contains
+    // ids for each path which is currently
+    // pending in the current unsubscribe message.
+    this._pendingPaths = new Map();
   }
 
   send() {
@@ -38,6 +42,7 @@ export class JsonProtocolClientBackend extends Backend {
     if (pendingSubscriptionMessage !== null) {
       this._pendingSubscriptionMessage = null;
       this.send(pendingSubscriptionMessage);
+      this._pendingPaths.clear();
     }
   }
 
@@ -90,6 +95,7 @@ export class JsonProtocolClientBackend extends Backend {
 
     if (message[address] === 0) {
       delete message[address];
+      this._subscribeSuccess(address, this._pendingPaths.get(address));
     } else {
       message[address] = 1;
     }
@@ -97,8 +103,10 @@ export class JsonProtocolClientBackend extends Backend {
     this.triggerFlush();
   }
 
-  lowUnsubscribe(address) {
+  lowUnsubscribe(id) {
     let message = this._pendingSubscriptionMessage;
+
+    const address = this._idToPath.get(id);
 
     if (message === null) {
       this._pendingSubscriptionMessage = message = {};
@@ -107,6 +115,7 @@ export class JsonProtocolClientBackend extends Backend {
     if (message[address] === 1) {
       delete message[address];
     } else {
+      this._pendingPaths.set(address, id);
       message[address] = 0;
     }
 
