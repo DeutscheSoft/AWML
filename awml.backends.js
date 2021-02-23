@@ -58,7 +58,7 @@ var f = (function(w, AWML) {
     var pending = this.pending_subscriptions.get(uri);
 
     this.pending_subscriptions.delete(uri);
-    
+
     pending.forEach(function(a) {
       a[2]([ uri, error ]);
     });
@@ -201,7 +201,7 @@ var f = (function(w, AWML) {
     this.values = new Map();
     this.subscriptions = new Map();
     this.pending_subscriptions = new Map();
-    
+
     subscriptions.forEach(function(cbs, id) {
         var uri = typeof(id) === "string" ? id : id2uri.get(id);
 
@@ -304,7 +304,7 @@ var f = (function(w, AWML) {
       var id2uri = this.id2uri;
       var subscriptions = this.subscriptions;
       var values = this.values;
-      
+
       if (!id2uri.has(id)) throw new Error("No such subscription.");
 
       var uri = id2uri.get(id);
@@ -466,7 +466,7 @@ var f = (function(w, AWML) {
     setInterval(function() {
       this.uri2id.forEach(function(id, uri) {
         if (uri.search("random") !== -1) {
-          this.receive(id, Math.random()); 
+          this.receive(id, Math.random());
         }
       }, this);
     }.bind(this), 500);
@@ -567,14 +567,16 @@ var f = (function(w, AWML) {
       }
       this.send(d);
     },
-    low_unsubscribe: function(uri) {
+    low_unsubscribe: function(id) {
+      var uri = this.id2uri.get(id);
       if (this.changeset.length === 0 && this.pending === null) this.dispatch();
       var d = this.pending;
       if (d === null) this.pending = d = {};
       d[uri] = 0;
     },
-    low_unsubscribe_batch: function(uris) {
+    low_unsubscribe_batch: function(ids) {
       var d = {}, i;
+      var uris = ids.map((id) => this.id2uri.get(id));
       for (i = 0; i < uris.length; i++) {
         d[uris[i]] = 0;
       }
@@ -815,7 +817,7 @@ var f = (function(w, AWML) {
         if (d.length & 1) throw new Error("Bad message from client.\n");
         for (var i = 0; i < d.length; i+=2) backend.set(d[i], d[i+1]);
       } else if (d === false) {
-        backend.clear(); 
+        backend.clear();
       } else {
         for (var uri in d) {
           if (!d.hasOwnProperty(uri)) return;
