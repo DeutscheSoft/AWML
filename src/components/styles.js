@@ -10,12 +10,12 @@ export class StylesComponent extends StylesComponentBase {
   }
 
   applyState(v) {
-    const style = this.target.style;
-
     if (typeof v === 'object') {
+      let S = '';
       for (const name in v) {
-        style.setProperty(name, v[name]);
+        S += name + ': ' + v[name] + ';';
       }
+      this.target.setAttribute('style', S);
     } else {
       throw new TypeError('Expected object.');
     }
