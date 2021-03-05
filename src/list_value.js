@@ -67,6 +67,10 @@ export class ListValue extends DynamicValue {
       );
     });
 
+    if (this.values.length === 0) {
+      this._notify();
+    }
+
     return sub.unsubscribe.bind(sub);
   }
 
