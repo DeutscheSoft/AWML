@@ -14,7 +14,13 @@ export class StylesComponent extends StylesComponentBase {
 
     if (typeof v === 'object') {
       for (const name in v) {
-        style.setProperty(name, v[name]);
+        const value = v[name];
+
+        if (Array.isArray(value)) {
+          style.setProperty(name, ...value);
+        } else {
+          style.setProperty(name, value);
+        }
       }
     } else {
       throw new TypeError('Expected object.');
