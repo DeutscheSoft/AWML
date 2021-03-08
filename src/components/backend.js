@@ -186,7 +186,7 @@ export class BackendComponent extends BaseComponent {
 
     this._backend = backend;
 
-    const subscriptions = new Subscriptions();
+    let subscriptions = new Subscriptions();
 
     let registered = false;
 
@@ -211,7 +211,8 @@ export class BackendComponent extends BaseComponent {
     };
 
     const retry = () => {
-      unregister();
+      subscriptions.unsubscribe();
+      subscriptions = new Subscriptions();
       const time = this.calculateRetryInterval();
       this.log('retrying in %d ms', time);
       subscriptions.add(
@@ -258,7 +259,9 @@ export class BackendComponent extends BaseComponent {
       setTimeout(retry, 0);
     }
 
-    return subscriptions.unsubscribe.bind(subscriptions);
+    return () => {
+      subscriptions.unsubscribe();
+    };
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
