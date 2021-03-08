@@ -7,17 +7,22 @@
         const widget = document.querySelector('test-component').auxWidget;
         const awmlOption = document.querySelector('awml-option');
 
-        assertEqual(widget.get('foo'), 'bar');
+        assertEqual(widget.get('foo'), 1);
         awmlOption.remove();
         assertEqual(widget.get('foo'), void 0);
       });
     </script>
-    <script type="module" src="../src/index.js"></script>
+    <script type="module" src="../../src/index.js"></script>
     <script type="module" src="./test-component.js"></script>
   </head>
   <body>
     <test-component>
-      <awml-option type="static" name="foo" value='"bar"'></awml-option>
+      <awml-option
+        type="media"
+        media="(max-width: 1px)"
+        name="foo"
+        values="[ 1, 2 ]"
+      ></awml-option>
     </test-component>
   </body>
 </html>

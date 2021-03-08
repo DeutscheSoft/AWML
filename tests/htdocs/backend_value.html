@@ -7,7 +7,7 @@
         LocalBackend,
         registerBackend,
         unregisterBackend,
-      } from '../src/index.js';
+      } from '../../src/index.js';
 
       define(async () => {
         {
@@ -23,7 +23,7 @@
           // this set needs to subscribe which is in itself an asynchronous
           // operation.
 
-          assertEqual(await backend.fetch('foo'), 'bar');
+          assertEqual(await backend.fetchByPath('foo'), 'bar');
 
           unregisterBackend(backend.name, backend);
 
@@ -33,7 +33,7 @@
         }
       });
     </script>
-    <script type="module" src="../src/index.js"></script>
+    <script type="module" src="../../src/index.js"></script>
   </head>
   <body></body>
 </html>

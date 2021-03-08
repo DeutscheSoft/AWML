@@ -1,0 +1,34 @@
+<html>
+  <head>
+    <script type="module" src="../../src/index.js"></script>
+    <script type="module">
+      import { define, assertEqual, assertFailure } from './testing.js';
+      import { getBackendValue } from '../../src/index.js';
+
+      define(async () => {
+        const backend = document.querySelector('awml-backend');
+
+        const b = getBackendValue('test:foo');
+
+        b.set('flu');
+
+        backend.name = null;
+        await Promise.resolve();
+
+        assertFailure(() => {
+          b.set('flu');
+        });
+        assertEqual(b.hasValue, false);
+
+        backend.name = 'test';
+        await Promise.resolve();
+
+        assertEqual(await b.wait(), 'flu');
+
+        window.localStorage.clear();
+      });
+    </script>
+    <awml-backend name='test' type="localstorage"></awml-backend>
+  </head>
+  <body></body>
+</html>

@@ -2,8 +2,8 @@
   <head>
     <script type="module">
       import { define, assertEq, assertEqual } from './testing.js';
-      import { tokenizeTemplate } from '../src/utils/tokenize_template.js';
-      import { StringTemplate } from '../src/utils/string_template.js';
+      import { tokenizeTemplate } from '../../src/utils/tokenize_template.js';
+      import { StringTemplate } from '../../src/utils/string_template.js';
 
       define(async () => {
         assertEq([], tokenizeTemplate(''));
@@ -54,7 +54,7 @@
         }
       });
     </script>
-    <script type="module" src="../src/index.js"></script>
+    <script type="module" src="../../src/index.js"></script>
   </head>
   <body></body>
 </html>

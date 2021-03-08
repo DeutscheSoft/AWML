@@ -5,8 +5,8 @@
     </script>
     <script type="module">
       import { define, assertEqual, delay, assertEq } from './testing.js';
-      import { getBackendValue, DynamicValue, map } from '../src/index.js';
-      import * as AWML from '../src/index.js';
+      import { getBackendValue, DynamicValue, map } from '../../src/index.js';
+      import * as AWML from '../../src/index.js';
       window.AWML = AWML;
 
       define(async () => {
@@ -90,7 +90,7 @@
       });
     </script>
     <script></script>
-    <script type="module" src="../src/index.js"></script>
+    <script type="module" src="../../src/index.js"></script>
     <script type="module" src="./test-component.js"></script>
     <awml-backend type="local" name="test" data="localData"></awml-backend>
   </head>

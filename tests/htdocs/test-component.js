@@ -1,4 +1,4 @@
-import { EventTarget } from '../src/utils/event_target.js';
+import { EventTarget } from '../../src/utils/event_target.js';
 
 class TestWidget extends EventTarget {
   constructor() {

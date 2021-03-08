@@ -1,10 +1,10 @@
 <html>
   <head>
-    <script type="module" src="../src/index.js"></script>
+    <script type="module" src="../../src/index.js"></script>
     <script type="module" src="test-component.js"></script>
     <script type="module">
       import { define, failure, assertEqual } from './testing.js';
-      import { getBackendValue } from '../src/index.js';
+      import { getBackendValue } from '../../src/index.js';
 
       define(async () => {
         const backend = document.querySelector('awml-backend');

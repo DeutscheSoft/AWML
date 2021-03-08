@@ -1,7 +1,7 @@
 <html>
   <head>
     <script type="module">
-      import { ClassComponent } from '../src/index.pure.js';
+      import { ClassComponent } from '../../src/index.pure.js';
       import { assertEqual, define, waitForFrame } from './testing.js';
 
       window.global = {
@@ -17,7 +17,7 @@
         assertEqual(awmlClass.transformReceive, global.foo);
       });
     </script>
-    <script type="module" src="../src/index.js"></script>
+    <script type="module" src="../../src/index.js"></script>
   </head>
   <body>
     <div>

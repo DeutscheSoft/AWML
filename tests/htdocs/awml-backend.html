@@ -1,9 +1,9 @@
 <html>
   <head>
-    <script type="module" src="../src/index.js"></script>
+    <script type="module" src="../../src/index.js"></script>
     <script type="module">
       import { define, assertEqual, waitForDOMEvent } from './testing.js';
-      import { waitForBackend } from '../src/index.js';
+      import { waitForBackend } from '../../src/index.js';
 
       async function testOpenBehavior(b) {
         if (b.isOpen) return;

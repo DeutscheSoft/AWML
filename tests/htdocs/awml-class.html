@@ -1,17 +1,17 @@
 <html>
   <head>
-    <script type="module" src="../src/index.js"></script>
+    <script type="module" src="../../src/index.js"></script>
     <script type="module">
       import { assertEqual, define, waitForFrame } from './testing.js';
       define(async () => {
         const div = document.querySelector('div');
-        const awmlAttributes = div.querySelector('awml-attributes');
+        const awmlClass = div.querySelector('awml-class');
 
         await waitForFrame();
 
-        assertEqual(div.getAttribute('data-foo'), 'bar');
-        awmlAttributes.remove();
-        assertEqual(div.getAttribute('data-foo'), null);
+        assertEqual(div.classList.contains('bar'), true);
+        awmlClass.remove();
+        assertEqual(div.classList.contains('bar'), false);
       });
     </script>
     <awml-backend name="test" type="local">
@@ -20,9 +20,7 @@
   </head>
   <body>
     <div>
-      <awml-attributes src="test:foo">
-        function (v) { return { 'data-foo': v }; }
-      </awml-attributes>
+      <awml-class src="test:foo"></awml-class>
     </div>
   </body>
 </html>

@@ -2,8 +2,8 @@
   <head>
     <script type="module">
       import { define, assertEqual, delay } from './testing.js';
-      import { getBackendValue } from '../src/index.js';
-      import * as AWML from '../src/index.js';
+      import { getBackendValue } from '../../src/index.js';
+      import * as AWML from '../../src/index.js';
       window.AWML = AWML;
 
       define(async () => {
@@ -196,7 +196,7 @@
         return AWML.map(dv, (x) => double(x));
       }
     </script>
-    <script type="module" src="../src/index.js"></script>
+    <script type="module" src="../../src/index.js"></script>
     <script type="module" src="./test-component.js"></script>
     <awml-backend type="local" name="test">
       { "foo" : "bar", "bar" : "bar", "flupp" : "bar" }

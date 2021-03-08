@@ -7,13 +7,13 @@
       };
     </script>
 
-    <script type="module" src="../src/index.js"></script>
+    <script type="module" src="../../src/index.js"></script>
     <script type="module" src="test-component.js"></script>
     <script type="module">
       import { assertEqual, define, waitForFrame } from './testing.js';
-      import { TemplateComponent } from '../src/components/template.js';
-      import { getBackendValue } from '../src/index.pure.js';
-      import { setPrefix } from '../src/utils/prefix.js';
+      import { TemplateComponent } from '../../src/components/template.js';
+      import { getBackendValue } from '../../src/index.pure.js';
+      import { setPrefix } from '../../src/utils/prefix.js';
 
       {
         const myTemplate = `

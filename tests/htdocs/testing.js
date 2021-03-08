@@ -21,6 +21,15 @@ export function assertEq(a, b) {
   tests++;
 }
 
+export async function assertFailure(cb) {
+  try {
+    await cb();
+    failure(new Error('Expected failure.'));
+  } catch (err) {
+    tests++;
+  }
+}
+
 export function done() {
   console.log('%d done', tests);
   window.parent.postMessage({ ok: true, count: tests });
@@ -69,7 +78,7 @@ export function delay(n) {
   });
 }
 
-import { subscribeDOMEventOnce } from '../src/utils/subscribe_dom_event.js';
+import { subscribeDOMEventOnce } from '../../src/utils/subscribe_dom_event.js';
 
 export function waitForDOMEvent(node, name) {
   return new Promise((resolve) => {
