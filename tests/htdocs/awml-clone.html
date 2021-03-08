@@ -30,8 +30,9 @@
         }
 
         {
-          await waitForFrame();
           const clone = clones[1];
+          await clone.waitForLoad();
+          await waitForFrame();
           assertEqual(clone.innerText, 'foo');
           clone.template = 'templates/t2.html';
           await waitForDOMEvent(clone, 'load');
