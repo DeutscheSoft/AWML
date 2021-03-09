@@ -53,6 +53,12 @@ export {
   ShowComponent,
   TemplateComponent,
 } from './components.js';
+export {
+  RPCClientBase,
+  RPCServerBase,
+  WebSocketRPCClient,
+  WebSocketRPCServer,
+} from './rpc.js';
 export { LocalBackend } from './backends/local.js';
 export { LocalStorageBackend } from './backends/localstorage.js';
 export { WebSocketBackend } from './backends/websocket.js';
