@@ -200,11 +200,14 @@ export class DynamicValue {
   /**
    * Wait for a value to be available.
    *
+   * @param {boolean} [replay=true]
+   *    If false, the the current value will be ignored.
    * @returns Promise<any>
    */
-  wait() {
+  wait(replay) {
+    if (replay === void 0) replay = true;
     return new Promise((resolve) => {
-      if (this._hasValue) {
+      if (replay && this._hasValue) {
         resolve(this._value);
         return;
       }
@@ -216,7 +219,7 @@ export class DynamicValue {
         resolve(value);
         resolved = true;
         if (sub !== null) sub();
-      });
+      }, replay);
       if (resolved) sub();
     });
   }
