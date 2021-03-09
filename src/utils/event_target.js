@@ -46,7 +46,7 @@ export class EventTarget {
 
     return () => {
       if (name === null) return;
-      this.off(name, cb);
+      if (this._eventHandlers !== null) this.off(name, cb);
       name = null;
     };
   }
@@ -78,5 +78,13 @@ export class EventTarget {
         error('Subscriber threw an error: %o', err);
       }
     });
+  }
+
+  /**
+   * Remove all event handlers. This object cannot be used after calling
+   * this method.
+   */
+  destroy() {
+    this._eventHandlers = null;
   }
 }
