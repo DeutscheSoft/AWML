@@ -92,7 +92,7 @@ class OptionReference extends DOMTemplateDirective {
   }
 }
 
-class DOMTemplateExpression extends DOMTemplateDirective { }
+class DOMTemplateExpression extends DOMTemplateDirective {}
 
 class NodeContentExpression extends DOMTemplateExpression {
   constructor(path, template) {
@@ -332,11 +332,7 @@ class BindNodeReference extends DOMTemplateExpression {
 
   attach(node) {
     super.attach(node);
-    this._bindingsImpl = new Bindings(
-      this._node,
-      this._node,
-      this._node
-    );
+    this._bindingsImpl = new Bindings(this._node, this._node, this._node);
   }
 
   connectedCallback() {
@@ -359,8 +355,7 @@ class BindNodeReference extends DOMTemplateExpression {
     const template = this._template;
 
     if (template.update(ctx)) {
-      if (this.isConnected)
-        this._bindingsImpl.update(template.get())
+      if (this.isConnected) this._bindingsImpl.update(template.get());
       return true;
     } else {
       return false;
@@ -591,8 +586,7 @@ export class DOMTemplate {
 
     directives.forEach((directive) => {
       directive.attach(this._fragment);
-      if (directive.constructor.requiresPrefix)
-        requiresPrefix = true;
+      if (directive.constructor.requiresPrefix) requiresPrefix = true;
     });
 
     this._requiresPrefix = requiresPrefix;
@@ -673,8 +667,7 @@ export class DOMTemplate {
 
   _updatePrefix(handle) {
     this._directives.forEach((directive) => {
-      if (directive.constructor.requiresPrefix)
-        directive.updatePrefix(handle);
+      if (directive.constructor.requiresPrefix) directive.updatePrefix(handle);
     });
   }
 

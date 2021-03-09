@@ -114,7 +114,7 @@
           const url = tests[i];
           const t1 = performance.now();
           try {
-            _log([ 'Running test ', makeLink(url), ' ... ']);
+            _log(['Running test ', makeLink(url), ' ... ']);
             const n = await runTest(url);
             const time = performance.now() - t1;
             log(['OK ( ', n, ' tests, ', time.toFixed(0), 'ms )'].join(''));

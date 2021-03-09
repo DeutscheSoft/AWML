@@ -237,7 +237,7 @@ export function bindingFromWidget(widget, name, options) {
 
       subscribeFun = function (cb) {
         const eventHandler = preventDefault
-          ?  function (value) {
+          ? function (value) {
               if (rec) return;
               cb(value);
               return false;

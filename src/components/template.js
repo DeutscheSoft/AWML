@@ -74,8 +74,7 @@ export class TemplateComponent extends HTMLElement {
     this._needsRedraw = true;
     this._redraw = () => {
       this._redrawRequested = false;
-      if (!this.isConnected)
-        return;
+      if (!this.isConnected) return;
       this.redraw();
       this._needsRedraw = false;
       this.emit('redraw');
@@ -83,8 +82,7 @@ export class TemplateComponent extends HTMLElement {
     this._whenAttached = null;
     this._eventHandlers = null;
 
-    if (template.requiresPrefix)
-      registerPrefixTagName(this.tagName);
+    if (template.requiresPrefix) registerPrefixTagName(this.tagName);
   }
 
   /**
@@ -99,8 +97,7 @@ export class TemplateComponent extends HTMLElement {
       this.emit('attached');
     }
 
-    if (this._needsRedraw)
-      this.triggerRedraw();
+    if (this._needsRedraw) this.triggerRedraw();
 
     this._template.connectedCallback();
   }
@@ -116,8 +113,7 @@ export class TemplateComponent extends HTMLElement {
    * @internal
    */
   _updatePrefix(handle) {
-    if (!this.isConnected)
-      return;
+    if (!this.isConnected) return;
     this._template._updatePrefix(handle);
   }
 
@@ -223,8 +219,7 @@ export class TemplateComponent extends HTMLElement {
   triggerRedraw() {
     if (this._needsRedraw && this._redrawRequested) return;
     this._needsRedraw = true;
-    if (!this.isConnected)
-      return;
+    if (!this.isConnected) return;
     this._redrawRequested = true;
     requestRedraw(this._redraw);
   }
