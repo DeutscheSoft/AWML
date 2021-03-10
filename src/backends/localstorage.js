@@ -31,17 +31,18 @@ export class LocalStorageBackend extends LocalBackend {
       storage.clear();
     }
 
-    this.addSubscription(
-      subscribeDOMEvent(window, 'storage', (ev) => {
-        if (ev.storageArea !== this._storage) return;
-        const key = ev.key;
-        const val = ev.newValue;
-        if (this._pathToId.has(key)) {
-          this._encodedValues.set(key, val);
-          this.receive(key, JSON.parse(val));
-        }
-      })
-    );
+    if (options.sync)
+      this.addSubscription(
+        subscribeDOMEvent(window, 'storage', (ev) => {
+          if (ev.storageArea !== this._storage) return;
+          const key = ev.key;
+          const val = ev.newValue;
+          if (this._pathToId.has(key)) {
+            this._encodedValues.set(key, val);
+            this.receive(key, JSON.parse(val));
+          }
+        })
+      );
   }
 
   lowSubscribe(address) {
@@ -78,6 +79,7 @@ export class LocalStorageBackend extends LocalBackend {
   static argumentsFromNode(node) {
     const options = LocalBackend.argumentsFromNode(node);
 
+    options.sync = node.getAttribute('sync') !== null;
     options.storage = parseAttribute(
       'js',
       node.getAttribute('storage'),
