@@ -193,6 +193,11 @@ export class TemplateComponent extends HTMLElement {
     };
   }
 
+  observeProperty(name, cb) {
+    cb(this[name]);
+    return this.subscribeEvent(name + 'Changed', cb);
+  }
+
   /**
    * Emits an event. See subscribeEvent().
    */
@@ -299,16 +304,50 @@ export class TemplateComponent extends HTMLElement {
   /**
    * Creates a component class from a template string.
    *
-   * @param {String} input
+   * @param {String|object} input
    *    The template string.
    * @returns {class}
    *    A subclass of TemplateComponent which - when instantiated - will
-   *    clone template.
+   *    clone the template.
    */
   static fromString(input) {
-    const template = DOMTemplate.fromString(input);
+    return this.create({
+      template: input,
+    })
+  }
+
+  /**
+   * Creates a template component from a set of options.
+   * @param {object} options
+   * @param {string|DOMTemplate} options.template
+   *    The template.
+   * @param {string[]} [properties]
+   *    An optional list of property names. They are added
+   *    to the list of properties referenced from the template itself.
+   * @returns {class}
+   *    A subclass of TemplateComponent which - when instantiated - will
+   *    clone the template.
+   */
+  static create(options) {
+    let template;
+
+    if (typeof options.template === 'string') {
+      template = DOMTemplate.fromString(options.template);
+    } else {
+      template = options.template;
+      if (typeof template !== 'object' || !(template instanceof DOMTemplate))
+        throw new TypeError('Expected a DOMTemplate instance or a string.');
+    }
+
     const referenceNames = Array.from(template.references.keys());
-    const dependencies = template.dependencies;
+
+
+    let dependencies = template.dependencies;
+
+    if (Array.isArray(options.properties)) {
+      dependencies = dependencies.concat(options.properties)
+        .filter((entry, i, a) => typeof entry === 'string' && a.indexOf(entry) === i);
+    }
 
     const component = class extends TemplateComponent {
       constructor() {
