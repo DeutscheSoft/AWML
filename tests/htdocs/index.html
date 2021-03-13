@@ -4,8 +4,10 @@
       const tests = [
         'awml-attributes.html',
         'awml-backend.html',
+        'awml-backend-aes70.html',
+        'awml-backend-emberplus.html',
         'awml-backend-localstorage.html',
-        'awml-backend-websocket.html',
+        'awml-backend-websocket-rpc.html',
         'awml-bind.html',
         'awml-class.html',
         'awml-clone.html',
@@ -94,7 +96,17 @@
             window.removeEventListener('message', onmessage);
 
             if (data.ok) {
-              resolve(data.count);
+              if (data.count === 'skipped') {
+                let result = 'skipped';
+
+                if (data.reason) {
+                  result += ' (' + data.reason + ')';
+                }
+
+                resolve(result);
+              } else {
+                resolve(data.count);
+              }
             } else {
               reject(data.error);
             }
@@ -118,7 +130,7 @@
             const n = await runTest(url);
             const time = performance.now() - t1;
             log(['OK ( ', n, ' tests, ', time.toFixed(0), 'ms )'].join(''));
-            count += n;
+            if (typeof n === 'number') count += n;
           } catch (err) {
             error('Failed: ' + err.toString());
           }

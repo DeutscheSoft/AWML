@@ -1,0 +1,139 @@
+<html>
+  <head>
+    <script src="./AES70.es5.js"></script>
+    <script type="module" src="../../src/index.js"></script>
+    <script type="module" src="../../src/backends/aes70.js"></script>
+    <script type="module" src="test-component.js"></script>
+    <script type="module">
+      import {
+        delay,
+        define,
+        assertEqual,
+        assertFailure,
+        skip,
+      } from './testing.js';
+      import {
+        getBackendValue,
+        waitForBackend,
+        getBackend,
+      } from '../../src/index.js';
+      import { connectWebSocket } from '../../src/utils/connect_websocket.js';
+
+      function assertObject(obj) {
+        assertEqual(Number.isInteger(obj.ObjectNumber), true);
+      }
+
+      function assertBlock(obj) {
+        assertObject(obj);
+        assertEqual(typeof obj.GetMembers, 'function');
+      }
+
+      function assertRoleMap(a) {
+        assertEqual(Array.isArray(a), true);
+        assertEqual(a.length, 2);
+        assertBlock(a[0]);
+        assertEqual(a[1] instanceof Map, true);
+      }
+
+      function assertNumber(a) {
+        assertEqual(typeof a, 'number');
+      }
+
+      function assertNoSubscribers(backend) {
+        backend._contexts.forEach((ctx) => {
+          if (ctx.info.type !== 'directory') {
+            assertEqual(ctx.hasSubscribers(), false);
+          }
+        });
+      }
+
+      // This test is written against a specific test device.
+
+      define(async () => {
+        if (!('OCA' in window))
+          return skip('AES70.js not loaded.');
+        try {
+          const ws = await connectWebSocket('ws://' + location.host + '/_control/aes70');
+          ws.close();
+        } catch (err) {
+          return skip('Failed to connect to device.');
+        }
+
+        Array.from(document.querySelectorAll('awml-backend')).forEach((b) => {
+          b.type = 'aes70';
+        });
+
+        await waitForBackend('test1');
+
+        const bRootD = getBackendValue('test1:/');
+        const bChannel1 = getBackendValue('test1:Channel1');
+        const bChannel1D = getBackendValue('test1:Channel1/');
+        const bChannel1Level = getBackendValue('test1:Channel1/Level');
+        const bChannel1LevelReading = getBackendValue(
+          'test1:Channel1/Level/Reading'
+        );
+        const bChannel1LevelReadingMin = getBackendValue(
+          'test1:Channel1/Level/Reading/Min'
+        );
+        const bChannel1LevelReadingMax = getBackendValue(
+          'test1:Channel1/Level/Reading/Max'
+        );
+        const bChannel1LevelRole = getBackendValue('test1:Channel1/Level/Role');
+        const bChannel1Gain1 = getBackendValue('test1:Channel1/Gain1');
+        const bChannel1Gain1Gain = getBackendValue('test1:Channel1/Gain1/Gain');
+
+        assertBlock(await bChannel1.wait());
+        assertRoleMap(await bChannel1D.wait());
+        assertRoleMap(await bRootD.wait());
+        await assertFailure(() => bChannel1.set([]));
+        await assertFailure(() => bChannel1D.set([]));
+        await assertFailure(() => bRootD.set([]));
+        await assertFailure(() => bChannel1LevelReadingMin.set(0));
+        await assertFailure(() => bChannel1LevelReadingMax.set(1));
+
+        assertObject(await bChannel1Level.wait());
+        assertNumber(await bChannel1LevelReading.wait());
+        assertEqual(await bChannel1LevelRole.wait(), 'Level');
+        assertNumber(await bChannel1LevelReadingMin.wait());
+        assertNumber(await bChannel1LevelReadingMax.wait());
+
+        assertObject(await bChannel1Gain1.wait());
+        assertNumber(await bChannel1Gain1Gain.wait());
+
+        assertNoSubscribers(getBackend('test1'));
+        assertNoSubscribers(getBackend('test2'));
+
+        {
+          const gain1 = getBackendValue('test1:Channel1/Gain1/Gain');
+          const gain2 = getBackendValue('test2:Channel1/Gain1/Gain');
+          const min = await getBackendValue(
+            'test2:Channel1/Gain1/Gain/Min'
+          ).wait();
+          const max = await getBackendValue(
+            'test2:Channel1/Gain1/Gain/Max'
+          ).wait();
+
+          let lastObserved = null;
+
+          const sub = gain2.subscribe((val) => (lastObserved = val));
+
+          assertEqual(await gain1.wait(), await gain2.wait());
+          await gain1.set(min);
+          await delay(100);
+          assertEqual(lastObserved, min);
+          await gain1.set(max);
+          await delay(100);
+          assertEqual(lastObserved, max);
+
+          sub();
+        }
+
+        assertNoSubscribers(getBackend('test1'));
+        assertNoSubscribers(getBackend('test2'));
+      });
+    </script>
+    <awml-backend name="test1" src="/_control/aes70"></awml-backend>
+    <awml-backend name="test2" src="/_control/aes70"></awml-backend>
+  </head>
+  <body></body>
+</html>

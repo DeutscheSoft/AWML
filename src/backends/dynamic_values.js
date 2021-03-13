@@ -1,6 +1,19 @@
-import { Backend } from './backend.js';
+import { BackendBase } from './backend_base.js';
 
-export class DynamicValuesBackend extends Backend {
+const parameterInfo = {
+  type: 'parameter',
+  access: 'rw',
+};
+
+export class DynamicValuesBackend extends BackendBase {
+  _getDynamicValue(path) {
+    const dv = this._dynamicValues.get(path);
+
+    if (!dv) throw new Error('No such parameter.');
+
+    return dv;
+  }
+
   constructor(options) {
     super(options);
     let values = options.values;
@@ -13,39 +26,40 @@ export class DynamicValuesBackend extends Backend {
     }
 
     this._dynamicValues = values;
-    this._cleanupHandlers = new Map();
+    this._cleanupHandlers = new Set();
     this.open();
   }
 
-  lowSubscribe(path) {
-    const dv = this._dynamicValues.get(path);
+  observeInfo(path, callback) {
+    if (!this._dynamicValues.has(path)) {
+      callback(0, 1, new Error('No such parameter.'));
+    } else {
+      callback(1, 1, parameterInfo);
+    }
+    return null;
+  }
 
-    if (dv) {
-      this._subscribeSuccess(path, path);
+  observeByPath(path, callback) {
+    try {
+      const dv = this._getDynamicValue(path);
+
       const sub = dv.subscribe((value) => {
-        this.receive(path, value);
+        callback(1, 0, value);
       });
 
-      this._cleanupHandlers.set(path, sub);
-    } else {
-      this._subscribeFailure(new Error('No such parameter.'));
-    }
-  }
+      this._cleanupHandlers.add(sub);
 
-  lowUnsubscribe(id) {
-    const path = id;
-    const sub = this._cleanupHandlers.get(path);
-
-    this._cleanupHandlers.delete(path);
-
-    try {
-      sub();
+      return () => {
+        this._cleanupHandlers.delete(sub);
+        sub();
+      };
     } catch (error) {
-      console.error(error);
+      callback(0, 1, error);
+      return null;
     }
   }
 
-  set(id, value) {
-    this._dynamicValues.get(id).set(value);
+  setByPath(path, value) {
+    return this._getDynamicValue(path).set(value);
   }
 }

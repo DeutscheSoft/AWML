@@ -1,7 +1,6 @@
 import { BackendValue } from './backend_value.js';
 import { ListValue } from './list_value.js';
 import { waitForDOMEvent } from './utils/subscribe_dom_event.js';
-import { combineLatest } from './operators/combineLatest.js';
 
 const backendValues = new Map();
 const backends = new Map();

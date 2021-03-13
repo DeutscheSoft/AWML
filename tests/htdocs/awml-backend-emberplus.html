@@ -1,0 +1,77 @@
+<html>
+  <head>
+    <script src="./ember-plus.browser.js"></script>
+    <script type="module" src="../../src/index.js"></script>
+    <script type="module" src="../../src/backends/ember-plus.js"></script>
+    <script type="module" src="test-component.js"></script>
+    <script type="module">
+      import {
+        delay,
+        define,
+        assertEqual,
+        assertFailure,
+        skip,
+      } from './testing.js';
+      import {
+        getBackendValue,
+        waitForBackend,
+        getBackend,
+      } from '../../src/index.js';
+      import { connectWebSocket } from '../../src/utils/connect_websocket.js';
+
+      function assertNode(node) {
+        assertEqual(Array.isArray(node.children), true);
+      }
+
+      function assertParameter(parameter) {
+        assertEqual('value' in parameter, true);
+      }
+
+      function assertNumber(a) {
+        assertEqual(typeof a, 'number');
+      }
+
+      async function checkRecursive(prefix) {
+        const obj = await getBackendValue(prefix).wait();
+
+        // its a node
+        if (obj.children) {
+          const node = await getBackendValue(prefix + '/').wait();
+          const children = node.children;
+          
+          for (let i = 0; i < children.length; i++) {
+            await checkRecursive(prefix + '/' + children[i].identifier);
+          }
+        } else if ('value' in obj) {
+          assertParameter(obj);
+        }
+      }
+
+      define(async () => {
+        if (!('EmberPlus' in window))
+          return skip('EmberPlus library not loaded.');
+        try {
+          const ws = await connectWebSocket('ws://' + location.host +
+                                            '/_control/emberplus');
+          ws.close();
+        } catch (err) {
+          return skip('Failed to connect to device.');
+        }
+
+        Array.from(document.querySelectorAll('awml-backend')).forEach((b) => {
+          b.type = 'emberplus';
+        });
+
+        await waitForBackend('test1');
+
+        assertNode(await getBackendValue('test1:').wait());
+        assertNode(await getBackendValue('test1:/').wait());
+
+        await checkRecursive('test1:');
+      });
+    </script>
+    <awml-backend name="test1" src="/_control/emberplus" debug></awml-backend>
+    <awml-backend name="test2" src="/_control/emberplus" debug></awml-backend>
+  </head>
+  <body></body>
+</html>

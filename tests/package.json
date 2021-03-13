@@ -1,0 +1,21 @@
+{
+  "name": "awml-tests",
+  "version": "1.0.0",
+  "description": "A testsuite for awml",
+  "main": "bin/serve.js",
+  "type": "module",
+  "private": true,
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "serve": "node bin/serve.js"
+  },
+  "author": "Arne Goedeke",
+  "license": "GPL-2.0-only",
+  "dependencies": {
+    "mime-types": "^2.1.29",
+    "websocket": "^1.0.33",
+    "ws": "^7.4.4"
+  }
+}

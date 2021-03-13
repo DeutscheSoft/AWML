@@ -1,89 +1,107 @@
-import { warn } from './utils/log.js';
 import { DynamicValue } from './dynamic_value.js';
+import { runCleanupHandler } from './utils/run_cleanup_handler.js';
 
 /**
  * Instances of this class represent dynamic values connected to a protocol
  * backend. Internally it interfaces with the API of a backend implementation.
  */
 export class BackendValue extends DynamicValue {
-  _activate() {
-    const backend = this._backend;
-    if (!backend) return;
-
-    backend.subscribe(this._path, this._callback).then(
-      (result) => {
-        // result[0] == this._path
-        const id = result[1];
-
-        // if this happens, disconnectBackend() has been called
-        // while one previous subscribe was still pending. simply
-        // unsubscribe then
-        if (this._backend !== backend) {
-          backend.unsubscribe(id, this._callback);
-          return;
-        }
-
-        this._backendId = id;
-
-        const hasRequestedValue = this._hasRequestedValue;
-        const requestedValue = this._requestedValue;
-
-        if (result.length === 3) {
-          if (!this._hasValue) this._callback(id, result[2]);
-        }
-
-        if (hasRequestedValue) {
-          this._backend.set(id, requestedValue);
-        }
-      },
-      (err) => {
-        this._backend = null;
-
-        // if the backend is not open, this subscription most likely failed
-        // because the backend closed during subscription. There is litle reason
-        // to inform the developer about this, it will likely be resolved after
-        // reconnect
-        if (backend.isOpen)
-          warn('Failed to subscribe to %o: %o', this._path, err);
-      }
-    );
+  _deactivate() {
+    super._deactivate();
+    super.clear();
   }
 
-  _deactivate() {
+  _resubscribe() {
+    if (this.isActive) {
+      this._deactivate();
+      this._activate();
+    }
+  }
+
+  _subscribe() {
+    const info = this._info;
     const backend = this._backend;
-    const backendId = this._backendId;
 
-    this.clear();
+    if (!info || !backend) return null;
 
-    if (this._hasRequestedValue) {
-      this._hasRequestedValue = false;
-      this._requestedValue = null;
+    if ('id' in info) {
+      return backend.observeById(info.id, this._callback);
+    } else {
+      return backend.observeByPath(this._path, this._callback);
+    }
+  }
+
+  _trackPending(task) {
+    if (typeof task !== 'object' || typeof task.then !== 'function')
+      return task;
+
+    const whenDone = () => {
+      this._pending--;
+    };
+
+    task.then(whenDone, whenDone);
+    this._pending++;
+    return task;
+  }
+
+  waitForInfo() {
+    if (this._info !== null) return Promise.resolve();
+
+    if (!this._infoPromise) {
+      this._infoPromise = new Promise((resolve) => {
+        this._infoResolve = resolve;
+      });
     }
 
-    if (!backend) return;
-    if (backendId === null) return;
-
-    try {
-      this._backendId = null;
-      backend.unsubscribe(backendId, this._callback);
-    } catch (err) {
-      warn(err);
-    }
+    return this._infoPromise;
   }
 
   /** @ignore */
   connectBackend(backend) {
-    this._backend = backend;
-    this._backendId = null;
+    runCleanupHandler(this._infoSubscription);
 
-    if (this.isActive) this._activate();
+    this._infoSubscription = backend.observeInfo(
+      this._path,
+      (ok, last, info) => {
+        if (ok) {
+          this._info = info;
+          this._backend = backend;
+        } else {
+          this._info = null;
+          this._backend = null;
+
+          this._callback(ok, last, info);
+        }
+
+        this._resubscribe();
+
+        const resolve = this._infoResolve;
+
+        if (resolve) {
+          this._infoPromise = null;
+          this._infoResolve = null;
+          resolve();
+        }
+      }
+    );
   }
 
   /** @ignore */
   disconnectBackend() {
+    runCleanupHandler(this._infoSubscription);
+    this._infoSubscription = null;
     this._backend = null;
-    this._backendId = null;
-    this._deactivate();
+    this._info = null;
+
+    const resolve = this._infoResolve;
+
+    if (resolve) {
+      this._infoPromise = null;
+      this._infoResolve = null;
+      resolve();
+    }
+
+    this._resubscribe();
   }
 
   /**
@@ -91,10 +109,7 @@ export class BackendValue extends DynamicValue {
    * means that currently no value change is pending.
    */
   get inSync() {
-    return (
-      this._hasValue &&
-      (!this._hasRequestedValue || this._requestedValue === this._value)
-    );
+    return this._pending === 0;
   }
 
   /**
@@ -115,49 +130,65 @@ export class BackendValue extends DynamicValue {
     super();
     this._address = address;
     this._path = address.split(':')[1];
-    // last value sent as a request to the backend
-    this._requestedValue = null;
-    this._hasRequestedValue = false;
     this._backend = null;
-    this._backendId = null;
-    this._callback = (id, value) => {
-      // unsubscribe from the backend
-      if (id === false) {
-        this.disconnectBackend();
-        return;
+    this._info = null;
+    this._infoSubscription = null;
+    this._infoResolve = null;
+    this._infoPromise = null;
+    this._pending = 0;
+    this._callback = (ok, last, value) => {
+      if (ok) {
+        this._updateValue(value);
+      } else {
+        if (value)
+          console.log(
+            'BackendValue(%o) ran into an error: %o',
+            this.uri,
+            value
+          );
       }
-
-      if (this._hasRequestedValue) {
-        if (value === this._requestedValue) {
-          this._hasRequestedValue = false;
-          this._requestedValue = null;
-        }
-      }
-
-      this._updateValue(value);
     };
   }
 
   /**
    * Sets the value in the backend. If the corresponding backend is currently
-   * offline, the value will be kept until it is connected.
+   * offline, an exception will be generated.
    *
    * @param value - The new value.
    */
   set(value) {
-    this._requestedValue = value;
-    this._hasRequestedValue = true;
-
     const backend = this._backend;
-    const backendId = this._backendId;
+    const info = this._info;
 
-    if (backend && backendId !== null) {
-      backend.set(backendId, value);
+    if (!info || !backend) {
+      if (this._infoSubscription) {
+        return this.waitForInfo().then(() => {
+          if (!this._info) throw new Error('Not connected.');
+
+          return this.set(value);
+        });
+      }
+
+      throw new Error('Not connected.');
+    }
+
+    if (info.type === 'parameter') {
+      if ('id' in info) {
+        return this._trackPending(backend.setById(info.id, value));
+      } else {
+        return this._trackPending(backend.setByPath(this._path, value));
+      }
+    } else if (info.type === 'function') {
+      if (!Array.isArray(value))
+        throw new TypeError('Function values expect an array of arguments.');
+
+      if ('id' in info) {
+        return this._trackPending(backend.callById(info.id, value));
+      } else {
+        return this._trackPending(backend.callByPath(this._path, value));
+      }
     } else {
-      // This will subscribe temporarily and
-      // in the process call backend.set() on
-      // the value we have requested.
-      this.wait();
+      throw new Error('Unable to set() a value of type ' + info.type);
     }
   }
 }

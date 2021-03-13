@@ -35,6 +35,11 @@ export function done() {
   window.parent.postMessage({ ok: true, count: tests });
 }
 
+export function skip(reason) {
+  console.log('skipped: %o', reason);
+  window.parent.postMessage({ ok: true, count: 'skipped', reason: reason });
+}
+
 export function failure(err) {
   console.error(err);
   window.parent.postMessage({ ok: false, error: err });

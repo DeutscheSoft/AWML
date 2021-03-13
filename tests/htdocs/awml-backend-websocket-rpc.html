@@ -1,0 +1,58 @@
+<html>
+  <head>
+    <script type="module" src="../../src/index.js"></script>
+    <script type="module">
+      import {
+        define,
+        assertEqual,
+        assertEq,
+        assertFailure,
+        skip,
+      } from './testing.js';
+      import { getBackendValue, waitForBackend } from '../../src/index.js';
+
+      define(async () => {
+        try {
+          if ((await (await fetch('/_api/has_backends')).text()) !== 'ok') {
+            return skip();
+          }
+        } catch (err) {
+          return skip();
+        }
+
+        document.querySelectorAll('awml-backend')[0].type = 'websocket-rpc';
+        document.querySelectorAll('awml-backend')[1].type = 'websocket-rpc';
+
+        await waitForBackend('test1');
+        await waitForBackend('test2');
+
+        const b1 = getBackendValue('test1:foo');
+        const b2 = getBackendValue('test2:foo');
+
+        const history = [];
+
+        await b1.set(0);
+
+        b1.subscribe((val) => history.push(val));
+
+        await b1.set('flu');
+
+        assertEqual(await b2.wait(), 'flu');
+        assertEq(history, [0, 'flu']);
+
+        await b1.set('bar');
+
+        assertEqual(await b2.wait(), 'bar');
+        assertEq(history, [0, 'flu', 'bar']);
+
+        await b2.set('flu');
+        assertEqual(await b1.wait(false), 'flu');
+        assertEqual(await b2.wait(), 'flu');
+        assertEq(history, [0, 'flu', 'bar', 'flu']);
+      });
+    </script>
+    <awml-backend name="test1" src="/_ws/local_one"></awml-backend>
+    <awml-backend name="test2" src="/_ws/local_one"></awml-backend>
+  </head>
+  <body></body>
+</html>

@@ -174,13 +174,13 @@ export function compileSrc(src, getPrefix) {
  *      A regular expression or string to match the prefixes against.
  */
 export function printPrefixes(node, match) {
-  let prefixes = [];
+  const prefixes = [];
   let chars = 0;
   const N = node;
   for (; node && node.attributes; node = node.parentNode) {
     const attrs = node.attributes;
     for (let i = 0; i < attrs.length; ++i) {
-      const pmatch = attrs[i].name.match(/prefix[\-]?([a-zA-Z0-9_]*)$/);
+      const pmatch = attrs[i].name.match(/prefix[-]?([a-zA-Z0-9_]*)$/);
       if (
         pmatch &&
         prefixes.indexOf(pmatch[1]) < 0 &&

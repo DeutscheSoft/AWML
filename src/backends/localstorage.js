@@ -37,43 +37,55 @@ export class LocalStorageBackend extends LocalBackend {
           if (ev.storageArea !== this._storage) return;
           const key = ev.key;
           const val = ev.newValue;
-          if (this._pathToId.has(key)) {
-            this._encodedValues.set(key, val);
-            this.receive(key, JSON.parse(val));
+          if (this._encodedValues.has(key)) {
+            if (this._encodedValues.get(key) !== val) {
+              this._encodedValues.set(key, val);
+              this._receive(key, JSON.parse(val));
+            }
           }
         })
       );
   }
 
-  lowSubscribe(address) {
-    try {
-      const storedValue = this.storage.getItem(address);
+  observeByPath(path, callback) {
+    if (!this._hasSubscribers(path) && !this._values.has(path)) {
+      try {
+        const storedValue = this.storage.getItem(path);
 
-      if (storedValue !== null) {
-        this._encodedValues.set(address, storedValue);
-        this._values.set(address, JSON.parse(storedValue));
+        if (storedValue !== null) {
+          this._encodedValues.set(path, storedValue);
+          this._values.set(path, JSON.parse(storedValue));
+        }
+      } catch (err) {
+        warn('Loading stored value %o from storage failed: %o', path, err);
       }
-    } catch (err) {
-      warn('Loading stored value %o from storage failed: %o', address, err);
     }
-
-    super.lowSubscribe(address);
+    return super.observeByPath(path, callback);
   }
 
-  set(id, value) {
-    super.set(id, value);
+  setByPath(path, value) {
+    const store = () => {
+      try {
+        const encodedValue = JSON.stringify(value);
+        const encodedValues = this._encodedValues;
 
-    try {
-      const encodedValue = JSON.stringify(value);
-      const encodedValues = this._encodedValues;
+        if (encodedValues.get(path) === encodedValue) return;
 
-      if (encodedValues.get(id) === encodedValue) return;
+        this.storage.setItem(path, encodedValue);
+        encodedValues.set(path, encodedValue);
+      } catch (err) {
+        warn('Storing value %o to storage failed: %o', path, err);
+      }
+    };
 
-      this.storage.setItem(id, encodedValue);
-      encodedValues.set(id, encodedValue);
-    } catch (err) {
-      warn('Storing value %o to storage failed: %o', id, err);
-    }
+    const task = super.setByPath(path, value);
+
+    if (typeof task === 'object' && typeof task.then === 'function')
+      return task.then(store);
+
+    store();
+
+    return task;
   }
 
   static argumentsFromNode(node) {
@@ -88,9 +100,5 @@ export class LocalStorageBackend extends LocalBackend {
     options.clear = node.getAttribute('clear') !== null;
 
     return options;
-  }
-
-  destroy() {
-    super.destroy();
   }
 }

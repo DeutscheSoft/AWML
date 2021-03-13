@@ -1,7 +1,12 @@
-import { Backend } from './backend.js';
+import { BackendSubscriberBase } from './subscriber_base.js';
 import { parseAttribute } from '../utils/parse_attribute.js';
 import { fetchJSON } from '../utils/fetch.js';
 import { error } from '../utils/log.js';
+
+const parameterInfo = {
+  type: 'parameter',
+  access: 'rw',
+};
 
 /**
  * This class implements a backend which stores parameters in memory. It can be
@@ -10,7 +15,7 @@ import { error } from '../utils/log.js';
  *
  * It is available with the ``AWML-BACKEND`` component using the type ``local``.
  */
-export class LocalBackend extends Backend {
+export class LocalBackend extends BackendSubscriberBase {
   get delay() {
     return this._delay;
   }
@@ -23,8 +28,9 @@ export class LocalBackend extends Backend {
    *    Delay in milliseconds.
    */
   set delay(v) {
-    if (typeof v !== 'number' || v < 0 || !isFinite(v))
-      throw new TypeError('Expected finite non-negative number.');
+    if (v === void 0) v = -1;
+    if (typeof v !== 'number' || !isFinite(v))
+      throw new TypeError('Expected finite number.');
     this._delay = v;
   }
 
@@ -32,35 +38,36 @@ export class LocalBackend extends Backend {
     return this._src;
   }
 
-  get transformData() {
-    return this._transformData;
-  }
-
   _maybeOpen() {
-    if (--this._pending === 0) this.open();
+    if (--this._pendingImport === 0) this.open();
   }
 
   _importData(data, overwrite) {
     if (this._transformData !== null) data = this._transformData(data);
 
-    // Note: this works because id == path in this backend.
     const values = this._values;
 
     for (const path in data) {
       if (!overwrite && values.has(path)) continue;
-      this.receive(path, data[path]);
+      this._receive(path, data[path]);
     }
+  }
+
+  _receive(path, value) {
+    this._values.set(path, value);
+    super._receive(path, value);
   }
 
   constructor(options) {
     super(options);
-    this.delay = options.delay || 0;
-    this._src = options.src || null;
     this._transformData = options.transformData || null;
-    this._pending = 1;
+    this.delay = options.delay;
+    this._src = options.src || null;
+    this._pendingImport = 1;
+    this._values = new Map();
 
     if (this._src !== null) {
-      this._pending++;
+      this._pendingImport++;
       fetchJSON(this._src).then(
         (data) => {
           if (!this.isInit) return;
@@ -76,7 +83,7 @@ export class LocalBackend extends Backend {
     }
 
     if (this.node !== null) {
-      this._pending++;
+      this._pendingImport++;
       Promise.resolve().then(() => {
         if (!this.isInit) return;
         const data = parseAttribute('json', this.node.textContent, {});
@@ -95,31 +102,53 @@ export class LocalBackend extends Backend {
     });
   }
 
-  set(id, value) {
+  observeInfo(path, callback) {
+    callback(1, 1, parameterInfo);
+    return null;
+  }
+
+  setByPath(path, value) {
     const delay = this._delay;
 
     if (delay > 0) {
-      setTimeout(() => {
-        if (!this.isOpen) return;
-        this.receive(id, value);
-      }, delay);
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          if (!this.isOpen) {
+            reject(new Error('closed.'));
+          } else {
+            this._receive(path, value);
+          }
+        }, delay);
+      });
+    } else if (delay === 0) {
+      return Promise.resolve().then(() => {
+        if (!this.isOpen)
+          throw new Error('closed.');
+        this._receive(path, value);
+      });
     } else {
-      this.receive(id, value);
+      this._receive(path, value);
     }
   }
 
-  lowSubscribe(path) {
-    this._subscribeSuccess(path, path);
+  observeByPath(path, callback) {
+    const sub = super.observeByPath(path, callback);
+    const values = this._values;
+
+    if (values.has(path)) {
+      this._safeCall(callback, 1, 0, values.get(path));
+    }
+
+    return sub;
   }
 
-  lowUnsubscribe(id) {}
-
   static argumentsFromNode(node) {
-    const options = Backend.argumentsFromNode(node);
+    const options = BackendSubscriberBase.argumentsFromNode(node);
     const transformData = node.getAttribute('transform-data');
     const data = node.getAttribute('data');
 
-    options.delay = parseInt(node.getAttribute('delay')) || 0;
+    const delay = node.getAttribute('delay');
+    options.delay = delay ? parseInt(delay) : -1;
     options.src = node.getAttribute('src');
     options.transformData = parseAttribute('javascript', transformData, null);
     options.data = parseAttribute('javascript', data, null);

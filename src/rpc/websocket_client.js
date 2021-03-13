@@ -1,6 +1,5 @@
 import { RPCClientBase } from './client_base.js';
-import { Subscriptions } from '../utils/subscriptions.js';
-import { subscribeDOMEvent } from '../utils/subscribe_dom_event.js';
+import { connectWebSocket } from '../utils/connect_websocket.js';
 
 export class WebSocketRPCClient extends RPCClientBase {
   isClosed() {
@@ -74,24 +73,8 @@ export class WebSocketRPCClient extends RPCClientBase {
   }
 
   static connect(url, protocols) {
-    return new Promise((resolve, reject) => {
-      const subscriptions = new Subscriptions();
-      const websocket = new WebSocket(url, protocols);
-
-      subscriptions.add(
-        subscribeDOMEvent(websocket, 'open', () => {
-          resolve(new this(websocket));
-          subscriptions.unsubscribe();
-        }),
-        subscribeDOMEvent(websocket, 'error', (err) => {
-          reject(err);
-          subscriptions.unsubscribe();
-        }),
-        subscribeDOMEvent(websocket, 'close', () => {
-          reject(new Error('Connection closed while connecting.'));
-          subscriptions.unsubscribe();
-        })
-      );
+    return connectWebSocket(url, protocols).then((websocket) => {
+      return new this(websocket);
     });
   }
 }

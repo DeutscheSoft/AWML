@@ -3,6 +3,7 @@
   "version": "2.1.0",
   "description": "A templating language for aux-widgets.",
   "browser": "src/index.js",
+  "main": "src/index.node.js",
   "module": "src/index.js",
   "type": "module",
   "directories": {},

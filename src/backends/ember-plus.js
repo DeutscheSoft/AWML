@@ -1,22 +1,19 @@
-import { Backend } from './backend.js';
+import { BackendBase } from './backend_base.js';
 import { registerBackendType } from '../components/backend.js';
 import { warn } from '../utils/log.js';
 import { subscribeDOMEvent } from '../utils/subscribe_dom_event.js';
 import { getCurrentWebSocketUrl } from '../utils/fetch.js';
 import { parseAttribute } from '../utils/parse_attribute.js';
 
-/* global OCA */
+import { runCleanupHandler } from '../utils/run_cleanup_handler.js';
+import { ReplayObservable } from './replay_observable.js';
+import { ReplayObservableMap } from './replay_observable_map.js';
+import { forEachAsync } from './for_each_async.js';
+
+/* global EmberPlus */
 
 if (typeof EmberPlus === 'undefined') {
   warn('Cannot find ember-plus library. Missing a script include?');
-}
-
-function runCleanupHandler(cleanup) {
-  try {
-    cleanup();
-  } catch (error) {
-    warn('Cleanup handler threw an exception:', error);
-  }
 }
 
 function splitAtLast(path, delimiter) {
@@ -25,14 +22,6 @@ function splitAtLast(path, delimiter) {
   return pos === -1
     ? [delimiter, path]
     : [path.substr(0, pos + 1), path.substr(pos + 1)];
-}
-
-function unCurry(callback) {
-  return (id, value) => {
-    // if we get unsubscribed, we simply abort
-    if (id === false) return;
-    return callback(value);
-  };
 }
 
 const NodeProperties = [
@@ -66,6 +55,159 @@ const ParameterProperties = [
   'streamDescriptor',
 ];
 
+const allParameterProperties = ParameterProperties.concat([
+  'effectiveValue',
+  'effectiveMinimum',
+  'effectiveMaximum',
+]);
+
+class ObjectContext {
+  hasSubscribers() {
+    return false;
+  }
+
+  /**
+   * @param {EmberPlus.Parameter|EmberPlus.Node} node
+   */
+  constructor(node) {
+    this.node = node;
+    this.info = {
+      type: 'parameter',
+      access: 'r',
+      description: node.identifier,
+      id: node.key,
+    };
+  }
+
+  set() {
+    throw new Error('Read only.');
+  }
+
+  subscribe(callback) {
+    callback(1, 0, this.node);
+    return null;
+  }
+
+  dispose() {
+    this.node = null;
+  }
+}
+
+class ContextWithValue extends ReplayObservable {
+  _receive(ok, last, error) {
+    if (!this.hasSubscribers()) {
+      runCleanupHandler(this._subscription);
+      this._subscription = null;
+      this.hasValue = false;
+      this.value = null;
+    } else {
+      super._receive(ok, last, error);
+    }
+  }
+}
+
+class NodeDirectoryContext extends ContextWithValue {
+  constructor(device, node) {
+    super();
+    this.device = device;
+    this.node = node;
+    this.info = {
+      type: 'directory',
+      access: 'r',
+      description: node.identifier,
+      id: 'd' + node.key,
+    };
+  }
+
+  _subscribe(callback) {
+    return this.device.observeDirectory(this.node, (node) => {
+      callback(1, 0, node);
+    });
+  }
+}
+
+class ParameterPropertyContext extends ContextWithValue {
+  constructor(device, node, propertyName) {
+    super();
+    if (!allParameterProperties.includes(propertyName))
+      throw new Error('No such parameter property.');
+
+    this.device = device;
+    this.node = node;
+    this.propertyName = propertyName;
+    this.info = {
+      type: 'parameter',
+      access: (propertyName === 'value' || propertyName === 'effectiveValue') ? 'rw' : 'r',
+      id: node.key + 'p' + propertyName,
+    };
+  }
+
+  _subscribe(callback) {
+    const { device, node, propertyName } = this;
+    const cb = (value) => {
+      callback(1, 0, value);
+    };
+    if (ParameterProperties.includes(propertyName)) {
+      return device.observeProperty(node, propertyName, cb);
+    } else if (propertyName === 'effectiveValue') {
+      return device.observeProperty(node, 'value', (_) => {
+        callback(1, 0, node.effectiveValue);
+      });
+    } else if (propertyName === 'effectiveMinimum') {
+      return node.observeEffectiveMinimum(cb);
+    } else {
+      return node.observeEffectiveMaximum(cb);
+    }
+  }
+
+  set(value) {
+    const { device, node, propertyName } = this;
+
+    if (propertyName === 'value') {
+      return device.setValue(node, value);
+    } else if (propertyName === 'effectiveValue') {
+      return device.setEffectiveValue(node, value);
+    } else {
+      throw new Error('Read only.');
+    }
+  }
+}
+
+class NodePropertyContext extends ContextWithValue {
+  constructor(device, node, propertyName) {
+    super();
+    if (!NodeProperties.includes(propertyName))
+      throw new Error('No such node property.');
+
+    this.device = device;
+    this.node = node;
+    this.propertyName = propertyName;
+    this.info = {
+      type: 'parameter',
+      access: 'r',
+      id: node.key + 'p' + propertyName,
+    };
+  }
+
+  _subscribe(callback) {
+    return this.node.observeProperty(this.propertyName, (value) => {
+      callback(1, 0, value);
+    });
+  }
+
+  set(value) {
+    throw new Error('Read only.');
+  }
+}
+
+class ContextObservable extends ReplayObservable {
+  constructor(subscribe) {
+    super();
+    this._subscribe = subscribe;
+  }
+}
+
+
 /**
  * This class implements a backend for the Ember+ protocol. It uses the
  * ember-plus https://github.com/DeutscheSoft/ember-plus which is required to be
@@ -98,7 +240,7 @@ const ParameterProperties = [
  * This backend is available with the ``AWML-BACKEND`` component using the type
  * ``emberplus``.
  */
-export class EmberPlusBackend extends Backend {
+export class EmberPlusBackend extends BackendBase {
   get url() {
     return this.options.url;
   }
@@ -131,6 +273,8 @@ export class EmberPlusBackend extends Backend {
     this._path_subscriptions = new Map();
     this._setters = new Map();
     this._delimiter = '/';
+    this._contextObservables = new ReplayObservableMap((path) => this._createContextObservable(path));
+    this._contexts = new Map();
 
     Promise.resolve(this.fetchUrl())
       .then((url) => this.connect(url))
@@ -138,6 +282,140 @@ export class EmberPlusBackend extends Backend {
         if (!this.isInit) return;
         this.error(err);
       });
+  }
+
+  registerContext(ctx) {
+    const contexts = this._contexts;
+    const id = ctx.info.id;
+
+    if (contexts.has(id)) {
+      console.error(ctx);
+      throw new Error('Context already registered.');
+    }
+
+    contexts.set(id, ctx);
+
+    return () => {
+      this._contexts.delete(id);
+    };
+  }
+
+  _observeEach(path, callback) {
+    return forEachAsync((cb) => {
+      return this.observeByPath(path, cb);
+    }, callback);
+  }
+
+  _createContextObservable(path) {
+    return new ContextObservable((callback) => {
+      const delimiter = this._delimiter;
+      const dir = path.endsWith(delimiter);
+      const [parentPath, propertyName] = splitAtLast(
+        dir ? path.substr(0, path.length - 1) : path,
+        delimiter
+      );
+      const device = this._device;
+
+      if (parentPath === '/' && propertyName === '') {
+        const ctx = dir ? new NodeDirectoryContext(device, device.root) : new ObjectContext(device.root);
+        const sub = this.registerContext(ctx);
+        callback(1, 0, ctx);
+        return sub;
+      }
+
+      const cb = (node) => {
+        if (node === null) {
+          // node disappeared (e.g. went offline)
+          callback(0, 0, new Error('Not found.'));
+          return null;
+        }
+
+        if (node instanceof EmberPlus.Parameter) {
+          if (dir) {
+            callback(0, 0, new Error('Could not list directory for parameter Node.'));
+          } else {
+            try {
+              const ctx = new ParameterPropertyContext(device, node, propertyName);
+              const sub = this.registerContext(ctx);
+              callback(1, 0, ctx);
+              return sub;
+            } catch (err) {
+              callback(0, 0, err);
+              return null;
+            }
+          }
+        } else if (node instanceof EmberPlus.InternalNode) {
+          // Special meaning, this is not a child
+          if (propertyName.startsWith('$') && !dir) {
+            try {
+              const ctx = new NodePropertyContext(device, node, propertyName.substr(1));
+              const sub = this.registerContext(ctx);
+              callback(1, 0, ctx);
+              return sub;
+            } catch (err) {
+              callback(0, 0, err);
+              return null;
+            }
+          }
+
+          const childNames = node.children.map((child) => child.identifier);
+          const pos = childNames.indexOf(propertyName);
+
+          if (pos === -1) {
+            callback(0, 0, new Error('Could not find child in node.'));
+            return null;
+          } else {
+            const child = node.children[pos];
+
+            if (dir && child instanceof EmberPlus.InternalNode) {
+              const ctx = new NodeDirectoryContext(device, child);
+              const sub = this.registerContext(ctx);
+              callback(1, 0, ctx);
+              return sub;
+            } else {
+              const ctx = new ObjectContext(child);
+              const sub = this.registerContext(ctx);
+              callback(1, 0, ctx);
+              return sub;
+            }
+          }
+        } else {
+          this.log('Cannot find %o in %o.', propertyName, node);
+          callback(0, 0, new Error('Cannot find property.'))
+          return null;
+        }
+      };
+
+      return this._observeEach(
+        parentPath.endsWith(delimiter) ? parentPath : parentPath + delimiter,
+        cb
+      );
+    });
+  }
+
+  _observeContext(path, callback) {
+    return this._contextObservables.subscribe(path, callback);
+  }
+
+  observeInfo(path, callback) {
+    //console.log('observeInfo', path);
+    return this._observeContext(path, (ok, last, ctx) => {
+      //console.log(path, ' context ', ctx);
+      callback(ok, last, ok ? ctx.info : ctx);
+    });
+  }
+
+  observeById(id, callback) {
+    //console.log('observe(%o): ctx %o', id, this._contexts.get(id));
+    return this._contexts.get(id).subscribe(callback);
+  }
+
+  setById(id, value) {
+    const ctx = this._contexts.get(id);
+
+    if (!ctx) throw new Error('Unknown property.');
+
+    return ctx.set(value);
   }
 
   connect(src) {
@@ -202,193 +480,8 @@ export class EmberPlusBackend extends Backend {
     setter(value);
   }
 
-  // returns CleanupLogic
-  observe(path, callback) {
-    if (typeof callback !== 'function')
-      throw new TypeError('Expected function.');
-
-    callback = unCurry(callback);
-
-    let id = null;
-
-    this.subscribe(path, callback).then(
-      (a) => {
-        if (id === false) {
-          this.unsubscribe(a[1], callback);
-          return;
-        } else {
-          id = a[1];
-        }
-
-        if (a.length === 3) {
-          callback(id, a[2]);
-        }
-      },
-      (err) => {
-        warn('Subscription failed:', err);
-      }
-    );
-
-    return () => {
-      if (id !== null) {
-        this.unsubscribe(id, callback);
-      } else {
-        // subscribe is still pending
-        id = false;
-      }
-    };
-  }
-
-  _observeEach(path, callback, cmp) {
-    let lastValue = null;
-    let cleanup = null;
-
-    const cb = (o) => {
-      if (lastValue === o) return;
-      if (cmp && cmp(lastValue, o)) return;
-      if (cleanup) runCleanupHandler(cleanup);
-
-      cleanup = callback(o);
-    };
-
-    let sub = this.observe(path, cb);
-
-    return () => {
-      if (cleanup) runCleanupHandler(cleanup);
-      if (sub) runCleanupHandler(sub);
-      sub = null;
-      lastValue = null;
-      cleanup = null;
-    };
-  }
-
-  // Promise<CleanupLogic>
-  doSubscribe(path) {
-    const delimiter = this._delimiter;
-    const dir = path.endsWith(delimiter);
-    const [parentPath, propertyName] = splitAtLast(
-      dir ? path.substr(0, path.length - 1) : path,
-      delimiter
-    );
-
-    if (parentPath === '/' && propertyName === '') {
-      // root Directory subscription
-      return this._device.observeDirectory(this._device.root, (node) => {
-        this.receive(path, node);
-      });
-    }
-
-    const cb = (node) => {
-      if (node === null) {
-        // node disappeared (e.g. went offline)
-        this._setters.delete(path);
-        this.receive(path, void 0);
-        return;
-      }
-
-      const callback = (value) => {
-        this.receive(path, value);
-      };
-
-      if (node instanceof EmberPlus.Parameter) {
-        if (dir) {
-          this.log(
-            'Could not list directory for child %o in parameter Node %o',
-            propertyName,
-            node
-          );
-        } else {
-          if (ParameterProperties.includes(propertyName)) {
-            if (propertyName === 'value') {
-              this._setters.set(path, (value) => {
-                this._device.setValue(node, value);
-              });
-            }
-
-            return this._device.observeProperty(node, propertyName, callback);
-          } else if (propertyName === 'effectiveValue') {
-            this._setters.set(path, (value) => {
-              this._device.setEffectiveValue(node, value);
-            });
-            return this._device.observerProperty(node, 'value', (value) => {
-              callback(node.effectiveValue);
-            });
-          } else if (propertyName === 'effectiveMinimum') {
-            return node.observeEffectiveMinimum(callback);
-          } else if (propertyName === 'effectiveMaximum') {
-            return node.observeEffectiveMaximum(callback);
-          } else {
-            this.log(
-              'Property %o does not exist on Parameter Node.',
-              propertyName
-            );
-          }
-        }
-      } else if (node instanceof EmberPlus.InternalNode) {
-        // Special meaning, this is not a child
-        if (propertyName.startsWith('$') && !dir) {
-          const tmp = propertyName.substr(1);
-
-          if (NodeProperties.includes(tmp)) {
-            return node.observeProperty(tmp, callback);
-          } else {
-            this.log('Unknown node property %o', tmp);
-            return;
-          }
-        }
-
-        const childNames = node.children.map((child) => child.identifier);
-        const pos = childNames.indexOf(propertyName);
-
-        if (pos === -1) {
-          this.log(
-            'Could not find child %o in node children %o',
-            propertyName,
-            node.children
-          );
-        } else {
-          const child = node.children[pos];
-
-          if (dir && child instanceof EmberPlus.InternalNode) {
-            return this._device.observeDirectory(child, callback);
-          } else {
-            this.receive(path, child);
-          }
-        }
-      } else {
-        this.log('Cannot find property %o inside of %o.', propertyName, node);
-      }
-    };
-
-    // get a directory query for the parent object
-    return this._observeEach(
-      parentPath.endsWith(delimiter) ? parentPath : parentPath + delimiter,
-      cb
-    );
-  }
-
-  lowSubscribe(path) {
-    try {
-      const cleanup = this.doSubscribe(path);
-      if (cleanup) this._path_subscriptions.set(path, cleanup);
-      this._subscribeSuccess(path, path);
-    } catch (error) {
-      this._subscribeFailure(path, error);
-    }
-  }
-
-  lowUnsubscribe(id) {
-    const m = this._path_subscriptions;
-    if (m.has(id)) {
-      const sub = m.get(id);
-      m.delete(id);
-      runCleanupHandler(sub);
-    }
-    this._values.delete(id);
-  }
-
   static argumentsFromNode(node) {
-    const options = Backend.argumentsFromNode(node);
+    const options = BackendBase.argumentsFromNode(node);
 
     const src = node.getAttribute('src');
 
