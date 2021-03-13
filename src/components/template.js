@@ -11,6 +11,7 @@ let oldQueue = [];
 function redraw() {
   const q = redrawQueue;
   redrawQueue = oldQueue;
+  oldQueue = q;
 
   q.forEach((cb) => {
     try {
