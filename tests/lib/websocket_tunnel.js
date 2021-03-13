@@ -4,6 +4,8 @@ import { parse } from 'url';
 import ws from 'ws';
 const { Server } = ws;
 
+import { handleWebSocket } from './handle_websocket.js';
+
 function connect(destination) {
   return new Promise((resolve, reject) => {
     const socket = createConnection(destination, () => {
@@ -18,14 +20,12 @@ function tunnel(socket, ws, head) {
     socket.end();
   });
   ws.on('error', (err) => {
-    console.error(err);
     socket.end();
   });
   socket.on('end', () => {
     ws.close();
   });
   socket.on('error', (err) => {
-    console.error(err);
     ws.close();
   });
   ws.on('message', (buf) => {
@@ -40,20 +40,22 @@ function tunnel(socket, ws, head) {
 export function setupWSTunnel(server, path, destination) {
   const wss = new Server({ noServer: true });
 
-  server.on('upgrade', async (request, socket, head) => {
+  server.on('upgrade', (request, socket, head) => {
     const pathname = parse(request.url).pathname;
 
     if (pathname !== path) return;
 
-    try {
-      const tcpSocket = await connect(destination);
+    handleWebSocket(request, async () => {
+      try {
+        const tcpSocket = await connect(destination);
 
-      wss.handleUpgrade(request, socket, head, (ws) => {
-        tunnel(tcpSocket, ws, head);
-        console.log('Created tunnel to %o', destination);
-      });
-    } catch (err) {
-      socket.end();
-    }
+        wss.handleUpgrade(request, socket, head, (ws) => {
+          tunnel(tcpSocket, ws, head);
+          console.log('Created tunnel to %o', destination);
+        });
+      } catch (err) {
+        socket.end();
+      }
+    });
   });
 }

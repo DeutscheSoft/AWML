@@ -8,6 +8,8 @@ import {
   WebSocketRPCServer,
 } from '../../src/index.node.js';
 
+import { handleWebSocket } from './handle_websocket.js';
+
 export function setupWSBackendConnections(server, prefix, getBackend) {
   const wss = new Server({ noServer: true });
 
@@ -21,18 +23,20 @@ export function setupWSBackendConnections(server, prefix, getBackend) {
 
     if (apiPrefix !== prefix) return;
 
-    try {
-      const backend = getBackend(backendName);
+    handleWebSocket(request, () => {
+      try {
+        const backend = getBackend(backendName);
 
-      wss.handleUpgrade(request, socket, head, (ws) => {
-        new RPCServerBackendConnector(
-          WebSocketRPCServer.getFactory(ws),
-          backend
-        );
-      });
-    } catch (err) {
-      socket.end();
-      console.error(err);
-    }
+        wss.handleUpgrade(request, socket, head, (ws) => {
+          new RPCServerBackendConnector(
+            WebSocketRPCServer.getFactory(ws),
+            backend
+          );
+        });
+      } catch (err) {
+        socket.end();
+        console.error(err);
+      }
+    });
   });
 }
