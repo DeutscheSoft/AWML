@@ -3,6 +3,7 @@ import { parseAttribute } from '../utils/parse_attribute.js';
 import {
   isCustomElement,
   isCustomElementDefined,
+  subscribeCustomElement,
 } from '../utils/aux-support.js';
 import { registerPrefixTagName } from '../utils/prefix.js';
 import { Bindings } from '../bindings.js';

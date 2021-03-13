@@ -1,4 +1,3 @@
-import { BaseComponent } from './base_component.js';
 import { DOMTemplate } from '../utils/dom_template.js';
 import { warn } from '../utils/log.js';
 import { bindingFromComponent } from '../utils/aux-support.js';

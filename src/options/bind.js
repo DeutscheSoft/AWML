@@ -2,6 +2,7 @@ import { Option } from './option.js';
 import { parseAttribute } from '../utils/parse_attribute.js';
 import { bindingFromComponent } from '../utils/aux-support.js';
 import { connect } from '../operators/connect.js';
+import { error } from '../utils/log.js';
 
 /**
  * This option type is used to create two-way bindings between backend values

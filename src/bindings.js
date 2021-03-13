@@ -3,15 +3,7 @@ import { collectPrefix, compileSrc } from './utils/prefix.js';
 import { getBackendValue } from './backends.js';
 import { ListValue } from './list_value.js';
 import { bindingFromComponent } from './utils/aux-support.js';
-
-function safeCall(cb) {
-  if (!cb) return;
-  try {
-    cb();
-  } catch (err) {
-    error('Unsubscribe handler error: %o', err);
-  }
-}
+import { runCleanupHandler } from './utils/run_cleanup_handler.js';
 
 function dependsOnPrefix(binding, handle) {
   const srcPrefix = binding.srcPrefix || null;
@@ -195,7 +187,7 @@ export class Bindings {
     subscriptions.forEach((sub, options) => {
       if (n.has(options)) return;
       subscriptions.delete(options);
-      safeCall(sub);
+      runCleanupHandler(sub);
     });
     n.forEach((options) => {
       const sub = createBinding(
@@ -218,7 +210,7 @@ export class Bindings {
     const subscriptions = this._subscriptions;
     subscriptions.forEach((sub, options) => {
       if (!dependsOnPrefix(options, handle)) return;
-      safeCall(sub);
+      runCleanupHandler(sub);
       sub = createBinding(
         this._targetNode,
         this._sourceNode,
@@ -236,7 +228,7 @@ export class Bindings {
   dispose() {
     const tmp = Array.from(this._subscriptions.values());
     this._subscriptions.clear();
-    tmp.forEach(safeCall);
+    tmp.forEach(runCleanupHandler);
     this._bindings = null;
   }
 }

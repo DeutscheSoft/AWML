@@ -376,7 +376,7 @@ function containsPlaceholders(input) {
 }
 
 function mergeTokens(strings, expressions) {
-  let tokens = [];
+  const tokens = [];
 
   for (let i = 0; i < expressions.length; i++) {
     tokens.push(strings[i]);
