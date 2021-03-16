@@ -154,7 +154,9 @@ export class BackendValue extends DynamicValue {
    * Sets the value in the backend. If the corresponding backend is currently
    * offline, an exception will be generated.
    *
-   * @param value - The new value.
+   * @param {*} value
+   *    The new value.
+   * @returns {Promise}
    */
   set(value) {
     const backend = this._backend;
@@ -190,5 +192,24 @@ export class BackendValue extends DynamicValue {
     } else {
       throw new Error('Unable to set() a value of type ' + info.type);
     }
+  }
+
+  /**
+   * Waits for this backend value to be connected and then call set().
+   * This function works similarly to how set() used to work in previous
+   * versions of AWML.
+   *
+   * @param {*} value
+   *    The new value.
+   * @returns {Promise}
+   */
+  setWhenConnected(value) {
+    const backend = this._backend;
+    const info = this._info;
+
+    if (info && backend)
+      return this.set(value);
+
+    return this.waitForInfo().then(() => this.setWhenConnected(value));
   }
 }
