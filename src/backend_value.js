@@ -1,11 +1,25 @@
 import { DynamicValue } from './dynamic_value.js';
 import { runCleanupHandler } from './utils/run_cleanup_handler.js';
 
+import { safeCall } from './utils/safe_call.js';
+import { initSubscribers, addSubscriber, removeSubscriber, callSubscribers } from './utils/subscribers.js';
+
 /**
  * Instances of this class represent dynamic values connected to a protocol
  * backend. Internally it interfaces with the API of a backend implementation.
  */
 export class BackendValue extends DynamicValue {
+
+  get info() {
+    const _info = this._info;
+
+    if (_info !== null) return _info;
+
+    if (this._infoError) throw this._infoError;
+
+    return this._info;
+  }
+
   _deactivate() {
     super._deactivate();
     super.clear();
@@ -44,16 +58,41 @@ export class BackendValue extends DynamicValue {
     return task;
   }
 
-  waitForInfo() {
-    if (this._info !== null) return Promise.resolve(this._info);
+  observeInfo(callback) {
+    this._infoSubscribers = addSubscriber(this._infoSubscribers, callback);
 
-    if (!this._infoPromise) {
-      this._infoPromise = new Promise((resolve) => {
-        this._infoResolve = resolve;
-      });
+    if (this._infoError) {
+      safeCall(callback, 0, 0, this._infoError);
+    } else {
+      safeCall(callback, 1, 0, this._info);
     }
 
-    return this._infoPromise;
+    return () => {
+      if (callback === null) return;
+      this._infoSubscribers = removeSubscriber(this._infoSubscribers, callback);
+      callback = null;
+    };
+  }
+
+  waitForInfo() {
+    return new Promise((resolve, reject) => {
+      const info = this.info;
+
+      if (info !== null) {
+        resolve(info);
+      } else {
+        let sub;
+
+        sub = this.observeInfo((ok, last, info) => {
+          // ignore disconnects
+          if (ok && info === null) return;
+
+          sub();
+
+          (ok ? resolve : reject)(info);
+        });
+      }
+    });
   }
 
   /** @ignore */
@@ -65,23 +104,20 @@ export class BackendValue extends DynamicValue {
       (ok, last, info) => {
         if (ok) {
           this._info = info;
+          this._infoError = null;
           this._backend = backend;
+
+          safeCall(this._infoSubscribers, 1, 0, info);
         } else {
           this._info = null;
+          this._infoError = info;
           this._backend = null;
 
           this._callback(ok, last, info);
+          safeCall(this._infoSubscribers, 0, 0, info);
         }
 
         this._resubscribe();
-
-        const resolve = this._infoResolve;
-
-        if (resolve) {
-          this._infoPromise = null;
-          this._infoResolve = null;
-          resolve(this._info);
-        }
       }
     );
   }
@@ -92,15 +128,9 @@ export class BackendValue extends DynamicValue {
     this._infoSubscription = null;
     this._backend = null;
     this._info = null;
+    this._infoError = null;
 
-    const resolve = this._infoResolve;
-
-    if (resolve) {
-      this._infoPromise = null;
-      this._infoResolve = null;
-      resolve(null);
-    }
-
+    safeCall(this._infoSubscribers, 1, 0, null);
     this._resubscribe();
   }
 
@@ -132,9 +162,9 @@ export class BackendValue extends DynamicValue {
     this._path = address.split(':')[1];
     this._backend = null;
     this._info = null;
+    this._infoError = null;
     this._infoSubscription = null;
-    this._infoResolve = null;
-    this._infoPromise = null;
+    this._infoSubscribers = initSubscribers();
     this._pending = 0;
     this._callback = (ok, last, value) => {
       if (ok) {
@@ -160,13 +190,11 @@ export class BackendValue extends DynamicValue {
    */
   set(value) {
     const backend = this._backend;
-    const info = this._info;
+    const info = this.info;
 
     if (!info || !backend) {
       if (this._infoSubscription) {
-        return this.waitForInfo().then(() => {
-          if (!this._info) throw new Error('Not connected.');
-
+        return this.waitForInfo().then((info) => {
           return this.set(value);
         });
       }
@@ -205,7 +233,7 @@ export class BackendValue extends DynamicValue {
    */
   setWhenConnected(value) {
     const backend = this._backend;
-    const info = this._info;
+    const info = this.info;
 
     if (info && backend)
       return this.set(value);

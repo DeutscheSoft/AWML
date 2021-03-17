@@ -1,13 +1,5 @@
 import { runCleanupHandler } from '../utils/run_cleanup_handler.js';
-
-export function safeCall(cb, ...args) {
-  if (cb === null) return;
-  try {
-    cb(...args);
-  } catch (err) {
-    console.error('Unsubscribe callback generated an exception: %o.', err);
-  }
-}
+import { safeCall } from '../utils/safe_call.js';
 
 export class ReplayObservable {
   constructor() {
