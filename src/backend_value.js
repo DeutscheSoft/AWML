@@ -45,7 +45,7 @@ export class BackendValue extends DynamicValue {
   }
 
   waitForInfo() {
-    if (this._info !== null) return Promise.resolve();
+    if (this._info !== null) return Promise.resolve(this._info);
 
     if (!this._infoPromise) {
       this._infoPromise = new Promise((resolve) => {
@@ -80,7 +80,7 @@ export class BackendValue extends DynamicValue {
         if (resolve) {
           this._infoPromise = null;
           this._infoResolve = null;
-          resolve();
+          resolve(this._info);
         }
       }
     );
@@ -98,7 +98,7 @@ export class BackendValue extends DynamicValue {
     if (resolve) {
       this._infoPromise = null;
       this._infoResolve = null;
-      resolve();
+      resolve(null);
     }
 
     this._resubscribe();
