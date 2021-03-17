@@ -1,6 +1,9 @@
 export class RPCServerBackendConnector {
   constructor(rpcFactory, backend) {
     this.backend = backend;
+    backend.on('destroy', () => {
+      this._client.close();
+    });
     this._client = rpcFactory({
       capabilities: () => {
         return {
