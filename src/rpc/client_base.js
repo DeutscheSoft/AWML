@@ -67,6 +67,10 @@ class RPCRequestContext {
 }
 
 export class RPCClientBase {
+  isClosed() {
+    return false;
+  }
+
   constructor() {
     this._requests = new Map();
     this._debug = false;
@@ -98,7 +102,8 @@ export class RPCClientBase {
       callback = null;
       context.unsubscribe();
 
-      this._send([0, '_cancel', [id]]);
+      if (!this.isClosed())
+        this._send([0, '_cancel', [id]]);
     };
   }
 

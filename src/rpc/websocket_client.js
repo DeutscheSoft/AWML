@@ -10,6 +10,10 @@ export class WebSocketRPCClient extends RPCClientBase {
     if (!this.isClosed()) this._websocket.close();
   }
 
+  get websocket() {
+    return this._websocket;
+  }
+
   constructor(websocket) {
     super();
     this._websocket = websocket;
