@@ -42,14 +42,14 @@ export class LocalBackend extends BackendSubscriberBase {
     if (--this._pendingImport === 0) this.open();
   }
 
-  _importData(data, overwrite) {
+  _importData(data) {
     if (this._transformData !== null) data = this._transformData(data);
 
     const values = this._values;
 
     for (const path in data) {
-      if (!overwrite && values.has(path)) continue;
-      this._receive(path, data[path]);
+      const value = data[path];
+      this._defaultValues.set(path, value);
     }
   }
 
@@ -65,13 +65,14 @@ export class LocalBackend extends BackendSubscriberBase {
     this._src = options.src || null;
     this._pendingImport = 1;
     this._values = new Map();
+    this._defaultValues = new Map();
 
     if (this._src !== null) {
       this._pendingImport++;
       fetchJSON(this._src).then(
         (data) => {
           if (!this.isInit) return;
-          this._importData(data, false);
+          this._importData(data);
           this._maybeOpen();
         },
         (err) => {
@@ -87,13 +88,13 @@ export class LocalBackend extends BackendSubscriberBase {
       Promise.resolve().then(() => {
         if (!this.isInit) return;
         const data = parseAttribute('json', this.node.textContent, {});
-        this._importData(data, false);
+        this._importData(data);
         this._maybeOpen();
       });
     }
 
     if (options.data !== null) {
-      this._importData(options.data, false);
+      this._importData(options.data);
     }
 
     Promise.resolve().then(() => {
@@ -134,6 +135,11 @@ export class LocalBackend extends BackendSubscriberBase {
   observeByPath(path, callback) {
     const sub = super.observeByPath(path, callback);
     const values = this._values;
+    const defaultValues = this._defaultValues;
+
+    if (!values.has(path) && defaultValues.has(path)) {
+      values.set(path, defaultValues.get(path));
+    }
 
     if (values.has(path)) {
       this._safeCall(callback, 1, 0, values.get(path));
