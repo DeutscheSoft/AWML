@@ -52,6 +52,7 @@ export class RPCServerBase {
       subscribe((ok, last, data) => {
         if (!active) return;
         if (last) dispose(false);
+        if (!ok) data = data.toString();
         this._sendResponse(id, ok, last, data);
       }) || null;
 
