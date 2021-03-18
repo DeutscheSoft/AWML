@@ -2,10 +2,17 @@ import { RPCClientBackend } from './rpc_client.js';
 import { getCurrentWebSocketUrl } from '../utils/fetch.js';
 import { WebSocketRPCClient } from '../rpc/websocket_client.js';
 import { subscribeDOMEvent } from '../utils/subscribe_dom_event.js';
+import { parseAttribute } from '../utils/parse_attribute.js';
 
 export class WebSocketRPCBackend extends RPCClientBackend {
-  _connectWebSocket() {
-    return WebSocketRPCClient.connect(this.options.url);
+  async _connectWebSocket() {
+    const transformSrc = this.options.transformSrc;
+    let src = this.options.url;
+
+    if (typeof transformSrc === 'function')
+      src = await transformSrc.call(this, src);
+
+    return await WebSocketRPCClient.connect(src);
   }
 
   async _connect() {
@@ -46,6 +53,9 @@ export class WebSocketRPCBackend extends RPCClientBackend {
     } else {
       url = src;
     }
+
+
+    options.transformSrc = parseAttribute('javascript', node.getAttribute('transform-src'), null);
 
     options.url = url;
 
