@@ -223,7 +223,20 @@ class StyleValueExpression extends PropertyValueExpression {
     const template = this._template;
 
     if (template.update(ctx)) {
-      this._node.style[this._propertyName] = template.get();
+      const cssValue = template.get();
+
+      const style = this._node.style;
+      const propertyName = this._propertyName;
+
+      if (Array.isArray(cssValue)) {
+        if (cssValue.length !== 2)
+          throw new TypeError('Expected array [ value, priority ].');
+
+        style.setProperty(propertyName, cssValue[0], cssValue[1]);
+      } else {
+        style.setProperty(propertyName, cssValue);
+      }
+
       return true;
     } else {
       return false;

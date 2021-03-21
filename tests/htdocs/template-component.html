@@ -183,6 +183,14 @@
           document.body.appendChild(myComponent);
           await waitForFrame();
           assertEqual(div.style.color, 'red');
+
+          // Test if we can pass a priority
+          myComponent.color = [ 'blue', 'important' ];
+          assertEqual(div.style.color, 'red');
+          await waitForFrame();
+          assertEqual(div.style.color, 'blue');
+          assertEqual(div.style.getPropertyPriority('color'), 'important');
+
           myComponent.remove();
         }
 
