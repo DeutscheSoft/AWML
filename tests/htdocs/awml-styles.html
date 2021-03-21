@@ -4,14 +4,29 @@
     <script type="module">
       import { assertEqual, define, waitForFrame } from './testing.js';
       define(async () => {
-        const div = document.querySelector('div');
-        const awmlStyles = div.querySelector('awml-styles');
+        {
+          const div = document.querySelector('div#one');
+          const awmlStyles = div.querySelector('awml-styles');
 
-        await waitForFrame();
+          await waitForFrame();
 
-        assertEqual(div.style.display, 'none');
-        awmlStyles.remove();
-        assertEqual(div.style.display, '');
+          assertEqual(div.style.display, 'none');
+          assertEqual(div.style.getPropertyPriority('display'), '');
+          awmlStyles.remove();
+          assertEqual(div.style.display, '');
+        }
+
+        {
+          const div = document.querySelector('div#two');
+          const awmlStyles = div.querySelector('awml-styles');
+
+          await waitForFrame();
+
+          assertEqual(div.style.display, 'none');
+          assertEqual(div.style.getPropertyPriority('display'), 'important');
+          awmlStyles.remove();
+          assertEqual(div.style.display, '');
+        }
       });
     </script>
     <awml-backend name="test" type="local">
@@ -19,9 +34,14 @@
     </awml-backend>
   </head>
   <body>
-    <div>
+    <div id=one>
       <awml-styles src="test:foo">
         function (v) { return { display: 'none' }; }
+      </awml-styles>
+    </div>
+    <div id=two>
+      <awml-styles src="test:foo">
+        function (v) { return { display: [ 'none', 'important'] }; }
       </awml-styles>
     </div>
   </body>
