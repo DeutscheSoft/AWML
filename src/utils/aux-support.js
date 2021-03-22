@@ -121,7 +121,7 @@ export function subscribeInteractionChange(widget, timeout, callback) {
 
       state = value;
 
-      tid = call_out(() => {
+      call_out(() => {
         tid = void 0;
         if (state) return;
         callback(state);
