@@ -137,8 +137,8 @@ export class DynamicValue {
     const a = this._subscribers;
 
     if (a === null) {
-      this._subscribers = subscriber;
       this._activate();
+      this._subscribers = subscriber;
     } else if (typeof a === 'function') {
       this._subscribers = [a, subscriber];
     } else {
