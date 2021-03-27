@@ -69,6 +69,15 @@ MediaOption
 
 .. _Backends:
 
+.. _BackendBase:
+
+BackendBase
+^^^^^^^^^^^
+
+.. js:autoclass:: BackendBase
+  :members: resolvePath, resolveId, setByPath, observeInfo, fetchInfo,
+    observeById, observeByPath, supportsIds, callById, callByPath
+
 .. _LocalBackend:
 
 LocalBackend

@@ -25,6 +25,9 @@ import { Subscriptions } from '../utils/subscriptions.js';
  *      An optional human readable description.
  */
 
+/**
+ * A base class for backend implementations.
+ */
 export class BackendBase extends EventTarget {
   get transformPath() {
     return this._transformPath;
@@ -155,11 +158,10 @@ export class BackendBase extends EventTarget {
   }
 
   /**
-   * @function resolvePath
-   *
    * This optional method can be used to resolve the given path to an id
    * which identifies the same parameter.
    *
+   * @function BackendBase#resolvePath
    * @param {string} path
    *    The path name.
    * @returns {*|Promise<*>}
@@ -178,10 +180,10 @@ export class BackendBase extends EventTarget {
   }
 
   /**
-   * @function resolveId
-   *
    * This optional method can be used to resolve the given id to the
    * corresponding path.
+   *
+   * @function BackendBase#resolveId
    *
    * @param {*} id
    *    The identifier.
@@ -190,9 +192,9 @@ export class BackendBase extends EventTarget {
    */
 
   /**
-   * @function setByPath
+   * Set the value of a parameter with given path name.
    *
-   * Set's the value of a parameter with given path name.
+   * @function BackendBase#setByPath
    *
    * @param {string} path
    *    The parameter path.
@@ -223,10 +225,10 @@ export class BackendBase extends EventTarget {
    */
 
   /**
-   * @function observeInfo
-   *
    * Subscribes to the information about the given path. If successful, this
    * subscription will emit information about the given path.
+   *
+   * @function BackendBase#observeInfo
    *
    * @param {string} path
    *    The path name.
@@ -237,10 +239,10 @@ export class BackendBase extends EventTarget {
    */
 
   /**
-   * @function fetchInfo
-   *
    * Fetches the information about the given path. If successful, this
    * subscription will emit information about the given path.
+   *
+   * @function BackendBase#fetchInfo
    *
    * @param {string} path
    *    The path name.
@@ -262,28 +264,37 @@ export class BackendBase extends EventTarget {
   }
 
   /**
-   * @function observeById
-   *
+   * @callback ObserveCallback
+   * @param {boolean} ok
+   *    True if this event is not an error.
+   * @param {boolean} last
+   *    True if the corresponing subscription has been terminated.
+   * @param {*} value
+   *    The value. In case of an error this will be an Error object.
+   *    Otherwise it will be the latest value emitted.
+   */
+
+  /**
    * Subscribe to changes of a parameter.
+   *
+   * @function BackendBase#observeById
    *
    * @param {string|number} id
    *    The id.
-   * @param {(ok: boolean, last: boolean, data) => void} callback
+   * @param {ObserveCallback} callback
    *    The subscription callback.
-   * @returns {() => void}
+   * @returns {function}
    *    A unsubscription callback.
    */
 
   /**
-   * @function observeByPath
-   *
    * Subscribe to changes of a parameter.
    *
    * @param {string} path
    *    The parameter path.
-   * @param {(ok: boolean, last: boolean, data) => void} callback
+   * @param {ObserveCallback} callback
    *    The subscription callback.
-   * @returns {() => void}
+   * @returns {function}
    *    A unsubscription callback.
    */
   observeByPath(path, callback) {
@@ -322,10 +333,10 @@ export class BackendBase extends EventTarget {
    * Calls a method with the given id. This method can only be used on paths
    * which have type ``function``.
    *
-   * @function callById
+   * @function BackendBase#callById
    * @param {string|int} id
    *    The unique id of this function.
-   * @param {*[]} args
+   * @param {Array<*>} args
    *    The arguments to this function.
    * @returns {Promise<*>}
    *    The return value.
@@ -335,10 +346,9 @@ export class BackendBase extends EventTarget {
    * Calls a method with the given path. This method can only be used on paths
    * which have type ``function``.
    *
-   * @function callById
    * @param {string|int} id
    *    The unique id of this function.
-   * @param {*[]} args
+   * @param {Array<*>} args
    *    The arguments to this function.
    * @returns {Promise<*>}
    *    The return value.

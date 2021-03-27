@@ -155,7 +155,7 @@ export class TemplateComponent extends HTMLElement {
   /**
    * Subscribe to the given event.
    *
-   * @param {String} name
+   * @param {string} name
    *    The event name.
    * @param {Function} cb
    *    The event handler.
@@ -234,7 +234,7 @@ export class TemplateComponent extends HTMLElement {
    * Mark a certain property as changed and (if necessary) trigger
    * redraw() to be called in the next rendering frame.
    *
-   * @param {String} propertyName
+   * @param {string} propertyName
    *    The name of the property which changed.
    */
   triggerUpdate(propertyName) {
@@ -252,7 +252,7 @@ export class TemplateComponent extends HTMLElement {
    * Internal method called when a binding is created. This is used by
    * BindOption to create binding with template components.
    *
-   * @param {String} name
+   * @param {string} name
    *    The binding name.
    * @param {Object} options
    *    The binding options. See bindingFromComponent for option values.
@@ -305,7 +305,7 @@ export class TemplateComponent extends HTMLElement {
   /**
    * Creates a component class from a template string.
    *
-   * @param {String|object} input
+   * @param {string|object} input
    *    The template string.
    * @returns {class}
    *    A subclass of TemplateComponent which - when instantiated - will

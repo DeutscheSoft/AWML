@@ -58,6 +58,14 @@ export class BackendValue extends DynamicValue {
     return task;
   }
 
+  /**
+   * Observe the parameter info.
+   *
+   * @param {ObserveInfoCallback} callback
+   *    A call back which will be called with the parameter info.
+   * @returns {function}
+   *    A unsubscription callback.
+   */
   observeInfo(callback) {
     this._infoSubscribers = addSubscriber(this._infoSubscribers, callback);
 
@@ -74,6 +82,12 @@ export class BackendValue extends DynamicValue {
     };
   }
 
+  /**
+   * Returns a promise which resolves either to the parameter info or fails
+   * if the parameter cannot be found.
+   *
+   * @returns {Promise<IPathInfo>}
+   */
   waitForInfo() {
     return new Promise((resolve, reject) => {
       const info = this.info;
