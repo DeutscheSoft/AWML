@@ -269,6 +269,31 @@
           assertEqual(await p, 'bar');
           assertEqual(await pReplay, 'foo');
         }
+
+        {
+          const myTemplate = `{{ this.name1 }} {{ this.name2 }} {{ this.name1$ }}`;
+
+          {
+            const componentClass = TemplateComponent.fromString(myTemplate);
+
+            assertEqual(componentClass.dynamicProperties.includes('name1'), true);
+            assertEqual(componentClass.dynamicProperties.includes('name2'), true);
+            assertEqual(componentClass.dynamicProperties.includes('name1$'), false);
+          }
+
+          {
+            const componentClass = TemplateComponent.create({
+              template: myTemplate,
+              ignoreProperties: [ 'name1' ],
+              properties: [ 'name3' ],
+            });
+
+            assertEqual(componentClass.dynamicProperties.includes('name1'), false);
+            assertEqual(componentClass.dynamicProperties.includes('name2'), true);
+            assertEqual(componentClass.dynamicProperties.includes('name1$'), false);
+            assertEqual(componentClass.dynamicProperties.includes('name3'), true);
+          }
+        }
       });
     </script>
     <awml-backend name="test" type="local" data="initialValues"></awml-backend>

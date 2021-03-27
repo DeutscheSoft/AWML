@@ -322,9 +322,12 @@ export class TemplateComponent extends HTMLElement {
    * @param {object} options
    * @param {string|DOMTemplate} options.template
    *    The template.
-   * @param {string[]} [properties]
+   * @param {string[]} [options.properties]
    *    An optional list of property names. They are added
    *    to the list of properties referenced from the template itself.
+   * @param {string[]} [options.ignoreProperties]
+   *    An optional list of property names which should not automatically
+   *    create dynamic properties.
    * @returns {class}
    *    A subclass of TemplateComponent which - when instantiated - will
    *    clone the template.
@@ -342,13 +345,30 @@ export class TemplateComponent extends HTMLElement {
 
     const referenceNames = Array.from(template.references.keys());
 
-
+    // Remove trailing $
     let dependencies = template.dependencies;
+
+    dependencies = dependencies.map((name) => {
+        if (name.endsWith('$'))
+          name = name.slice(0, name.length - 1);
+
+        return name;
+      }).filter((name, index, a) => name.length && a.indexOf(name) === index);
+
+    if (Array.isArray(options.ignoreProperties)) {
+      dependencies = dependencies.filter((name) => {
+        return !options.ignoreProperties.includes(name);
+      });
+    }
 
     if (Array.isArray(options.properties)) {
       dependencies = dependencies.concat(options.properties)
         .filter((entry, i, a) => typeof entry === 'string' && a.indexOf(entry) === i);
     }
+
+    dependencies = dependencies.filter((name) => {
+      return !referenceNames.includes(name);
+    });
 
     const component = class extends TemplateComponent {
       constructor() {
@@ -371,6 +391,10 @@ export class TemplateComponent extends HTMLElement {
           this['_' + name] = void 0;
         });
       }
+
+      static get dynamicProperties() {
+        return dependencies;
+      }
     };
 
     referenceNames.forEach((name) => {
@@ -385,7 +409,6 @@ export class TemplateComponent extends HTMLElement {
     });
 
     dependencies.forEach((name) => {
-      if (referenceNames.includes(name)) return;
       const privName = '_' + name;
       const evName = name + 'Changed';
       Object.defineProperty(component.prototype, name, {
