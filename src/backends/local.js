@@ -45,8 +45,6 @@ export class LocalBackend extends BackendSubscriberBase {
   _importData(data) {
     if (this._transformData !== null) data = this._transformData(data);
 
-    const values = this._values;
-
     for (const path in data) {
       const value = data[path];
       this._defaultValues.set(path, value);
