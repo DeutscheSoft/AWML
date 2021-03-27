@@ -121,14 +121,14 @@ export class BackendValue extends DynamicValue {
           this._infoError = null;
           this._backend = backend;
 
-          safeCall(this._infoSubscribers, 1, 0, info);
+          callSubscribers(this._infoSubscribers, 1, 0, info);
         } else {
           this._info = null;
           this._infoError = info;
           this._backend = null;
 
           this._callback(ok, last, info);
-          safeCall(this._infoSubscribers, 0, 0, info);
+          callSubscribers(this._infoSubscribers, 0, 0, info);
         }
 
         this._resubscribe();
@@ -144,7 +144,7 @@ export class BackendValue extends DynamicValue {
     this._info = null;
     this._infoError = null;
 
-    safeCall(this._infoSubscribers, 1, 0, null);
+    callSubscribers(this._infoSubscribers, 1, 0, null);
     this._resubscribe();
   }
 
