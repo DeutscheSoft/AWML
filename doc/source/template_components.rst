@@ -170,3 +170,21 @@ similar to :ref:`BindComponent`. The main advantage to using a
 See the documentation of :ref:`IBindingDescription` for a specification of the
 possible parameters. All bindings will calculate their prefix starting from the
 node which they are installed on.
+
+Properties of template expressions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Template components automatically extract properties from template expressions.
+Those properties are then defined as properties on the resulting template
+component. Specifically, for a property named ``VAR``, the actual value is
+stored in the property ``_VAR`` and initialized to ``null``; a getter is defined
+which returns the value and a setter is defined which updates the value and
+notifies all template expressions depending on this property to be updated in
+the next rendering frame.
+In addition for each property a getter is defined called ``VAR$`` which returns
+a dynamic value which represents the property. This can, for example, be used to
+bind properties to e.g. widget options.
+
+Properties are detected inside of template expressions as matches of the regular
+expression ``/this\.([\w0-9$_]+)/``. The resulting list of properties can be
+controlled with parameters to :ref:`TemplateComponent.create`.
