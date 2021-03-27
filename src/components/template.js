@@ -402,7 +402,7 @@ export class TemplateComponent extends HTMLElement {
       Object.defineProperty(component.prototype, name+'$', {
         enumerable: true,
         get: function () {
-          return bindingFromProperty(this, privName, {});
+          return bindingFromProperty(this, name, {});
         },
       });
     });
