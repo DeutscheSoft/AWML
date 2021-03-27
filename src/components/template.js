@@ -35,6 +35,7 @@ function bindingFromProperty(component, name, options) {
 
   const subscribeFun = !options.writeonly
     ? function (cb) {
+        cb(component[name]);
         return component.subscribeEvent(name + 'Changed', (value) => {
           if (recurse) return;
           cb(value);
@@ -136,6 +137,11 @@ export class TemplateComponent extends HTMLElement {
     });
   }
 
+  /**
+   * Returns a promise which resolves when the DOM template has been redrawn.
+   *
+   * @returns {Promise}
+   */
   whenRedrawn() {
     return new Promise((resolve) => {
       let unsubscribe;
@@ -391,6 +397,12 @@ export class TemplateComponent extends HTMLElement {
           this[privName] = value;
           this.triggerUpdate(name);
           this.emit(evName, value);
+        },
+      });
+      Object.defineProperty(component.prototype, name+'$', {
+        enumerable: true,
+        get: function () {
+          return bindingFromProperty(this, privName, {});
         },
       });
     });

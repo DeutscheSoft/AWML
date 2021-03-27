@@ -255,6 +255,20 @@
           assertEqual(child.auxWidget.get('gain'), await gain.wait());
           assertEqual(child.auxWidget.get('mute'), await mute.wait());
         }
+
+        {
+          const myComponent = document.createElement('my-component1');
+
+          const dv = myComponent.name$;
+
+          assertEqual(await dv.wait(), 'foo');
+          const p = dv.wait(false);
+          const pReplay = dv.wait();
+
+          myComponent.name = 'bar';
+          assertEqual(await p, 'bar');
+          assertEqual(await pReplay, 'foo');
+        }
       });
     </script>
     <awml-backend name="test" type="local" data="initialValues"></awml-backend>
