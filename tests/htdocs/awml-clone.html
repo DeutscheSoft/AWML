@@ -15,7 +15,7 @@
           document.querySelectorAll('awml-clone')
         ).filter((clone) => clone.parentNode === document.body);
 
-        assertEqual(clones.length, 9);
+        assertEqual(clones.length, 10);
 
         await waitForFrame();
 
@@ -98,7 +98,21 @@
 
         {
           const clone = clones[8];
+          await clone.waitForLoad();
           assertEqual(clone.innerText, 'FOO');
+        }
+
+        {
+          const clone = clones[9];
+
+          await clone.waitForLoad();
+
+          const images = Array.from(clone.querySelectorAll('img'));
+
+          assertEqual(images[0].src.endsWith('templates/this_image_does_not_exist1.png'),
+                      true);
+          assertEqual(images[1].src.endsWith('templates/this_image_does_not_exist2.png'),
+                      true);
         }
 
         // stand alone tests
@@ -184,7 +198,9 @@
       fetch
       transform-template="replaceFoo"
       template="templates/t1.html"
-    ></awml-clone
-    ><br />
+    ></awml-clone>
+    <br />
+    <awml-clone fetch template="templates/t8.html"></awml-clone>
+    <br />
   </body>
 </html>

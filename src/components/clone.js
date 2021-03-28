@@ -103,6 +103,12 @@ class Template {
       this._inlines.push(script);
     });
 
+    fragment.querySelectorAll('img').forEach((img) => {
+      const src = img.getAttribute('src');
+      if (src === null) return;
+      img.setAttribute('src', this.getUrl(src));
+    });
+
     if (tasks.length) {
       this._inlining = Promise.all(tasks).then(() => {
         this._inlining = null;
