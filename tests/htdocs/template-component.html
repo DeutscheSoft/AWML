@@ -294,6 +294,67 @@
             assertEqual(componentClass.dynamicProperties.includes('name3'), true);
           }
         }
+
+        {
+          const myTemplate = `<ul %if={{ this.listContent }}>{{ this.listContent }}</ul>`;
+          const componentClass = TemplateComponent.fromString(myTemplate);
+          customElements.define('my-component3', componentClass);
+
+          const setListAndCompare = async (node, list, create) => {
+            node.listContent = list.map(create);
+            await node.whenRedrawn();
+            const lis = node.querySelectorAll('li');
+
+            assertEqual(lis.length, list.length);
+
+            Array.from(lis).forEach((li, i) => {
+              assertEqual(li.textContent, list[i]);
+            });
+          };
+
+          const runTest = async (makeLi) => {
+            const node = document.createElement('my-component3');
+            document.body.appendChild(node);
+
+            await setListAndCompare(node, [ ], makeLi);
+            await setListAndCompare(node, [ 'foo' ], makeLi);
+            await setListAndCompare(node, [ 'foo', 'bar', 'flu' ], makeLi);
+            await setListAndCompare(node, [ 'bar', 'foo', 'flu' ], makeLi);
+            await setListAndCompare(node, [ '1', 'bar', 'foo', 'flu' ], makeLi);
+            await setListAndCompare(node, [ ], makeLi);
+            node.listContent = "hello";
+            await node.whenRedrawn();
+            assertEqual(node.querySelector('li'), null);
+            assertEqual(node.querySelector('ul').textContent, node.listContent);
+            await setListAndCompare(node, [ 'foo' ], makeLi);
+
+            node.remove();
+          };
+
+          {
+            const makeLi = (txt) => {
+              const li = document.createElement('li');
+
+              li.textContent = txt;
+
+              return li;
+            };
+
+            const cacheResult = (create) => {
+              const cache = new Map();
+
+              return (arg) => {
+                if (!cache.has(arg))
+                  cache.set(arg, create(arg));
+
+                return cache.get(arg);
+              };
+            };
+
+            await runTest(makeLi);
+            await runTest(cacheResult(makeLi));
+          }
+        }
       });
     </script>
     <awml-backend name="test" type="local" data="initialValues"></awml-backend>

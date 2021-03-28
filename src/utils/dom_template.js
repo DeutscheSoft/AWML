@@ -94,6 +94,72 @@ class OptionReference extends DOMTemplateDirective {
 
 class DOMTemplateExpression extends DOMTemplateDirective {}
 
+class NodeContentList {
+  constructor(nodes) {
+    this.nodes = nodes;
+  }
+
+  replaceWith(tmp) {
+    const nodes = this.nodes;
+    const firstNode = nodes[0];
+
+    if ('nodeType' in tmp) {
+      firstNode.replaceWith(tmp);
+      for (let i = 1; i < nodes.length; i++) {
+        nodes[i].remove();
+      }
+    } else if (tmp instanceof NodeContentList) {
+      // This is a naive algorithm, it does not try to optimize away operations
+      // on nodes which are already in the right place. We can improve this if
+      // we get into situations where this makes a significant difference.
+      const currentNodes = this.nodes;
+      const newNodes = tmp.nodes;
+      const newNodeSet = new Set(newNodes);
+
+      const placeholder = document.createComment('placeholder');
+      const lastNode = currentNodes[currentNodes.length - 1];
+      const parentNode = lastNode.parentNode;
+
+      parentNode.insertBefore(placeholder, lastNode);
+
+      for (let i = 0; i < currentNodes.length; i++) {
+        const node = currentNodes[i];
+
+        if (newNodeSet.has(node)) continue;
+        node.remove();
+      }
+
+      for (let i = 0; i < newNodes.length; i++) {
+        parentNode.insertBefore(newNodes[i], placeholder);
+      }
+
+      placeholder.remove();
+    } else {
+      throw new TypeError('Bad argument.');
+    }
+  }
+
+  replace(other) {
+    if (other instanceof NodeContentList) {
+      other.replaceWith(this);
+    } else if ('nodeType' in other) {
+      const nodes = this.nodes;
+      const parentNode = other.parentNode;
+      const length = nodes.length;
+
+      const lastNode = nodes[length - 1];
+
+      other.replaceWith(lastNode);
+
+      for (let i = 0; i < length - 1; i++) {
+        parentNode.insertBefore(nodes[i], lastNode);
+      }
+    } else {
+      throw new TypeError('Bad argument.');
+    }
+  }
+}
+
 class NodeContentExpression extends DOMTemplateExpression {
   constructor(path, template) {
     super(path);
@@ -105,10 +171,11 @@ class NodeContentExpression extends DOMTemplateExpression {
 
     if (template.update(ctx)) {
       const data = template.get();
+      const currentNode = this._node;
 
-      if (data === null || data === void 0) {
+      if (data === null || data === void 0 || Array.isArray(data) && data.length === 0) {
         const node = document.createComment(' null placeholder ');
-        this._node.replaceWith(node);
+        currentNode.replaceWith(node);
         this._node = node;
       } else {
         switch (typeof data) {
@@ -116,21 +183,24 @@ class NodeContentExpression extends DOMTemplateExpression {
           case 'number':
           case 'boolean':
             {
-              const node = this._node;
 
-              if (node.nodeType !== 3) {
+              if (currentNode.nodeType !== 3) {
                 const tmp = document.createTextNode(data);
-                node.replaceWith(tmp);
+                currentNode.replaceWith(tmp);
                 this._node = tmp;
               } else {
-                node.data = data;
+                currentNode.data = data;
               }
             }
             break;
           case 'object':
             // is a node.
-            if ('replaceWith' in data) {
-              this._node.replaceWith(data);
+            if (Array.isArray(data)) {
+              const nodeList = new NodeContentList(data);
+              nodeList.replace(currentNode);
+              this._node = nodeList;
+            } else if ('replaceWith' in data) {
+              currentNode.replaceWith(data);
               this._node = data;
             } else {
               throw new TypeError('Unsupported data type.');
