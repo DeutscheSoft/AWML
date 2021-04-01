@@ -24,12 +24,10 @@ export class WebSocketRPCBackend extends RPCClientBackend {
     super.open();
     this.addSubscription(
       subscribeDOMEvent(this._remote.websocket, 'close', () => {
-        console.log('websocket closed');
         if (this.isOpen)
           this.close();
       }),
       subscribeDOMEvent(this._remote.websocket, 'error', (err) => {
-        console.log('websocket errored');
         if (this.isOpen)
           this.error(err);
       }),
