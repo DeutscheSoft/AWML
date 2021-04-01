@@ -141,8 +141,8 @@ export class BackendBase extends EventTarget {
 
       const subs = new Subscriptions();
 
-      const onFail = () => {
-        reject(new Error('Is closed.'));
+      const onFail = (err) => {
+        reject(err || new Error('Is closed.'));
         subs.unsubscribe();
       };
 
