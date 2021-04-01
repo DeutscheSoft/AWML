@@ -3,7 +3,7 @@ import { connectWebSocket } from '../utils/connect_websocket.js';
 
 export class WebSocketRPCClient extends RPCClientBase {
   isClosed() {
-    return this._websocket.readyState !== WebSocket.OPEN;
+    return this._websocket.readyState !== 1; // aka WebSocket.OPEN;
   }
 
   close() {
