@@ -51,9 +51,6 @@ export class ReplayObservable {
       this._subscription = this._subscribe((ok, last, value) => {
         this._receive(ok, last, value);
       });
-
-      // The subscription does not do anything.
-      if (!this._subscription) return null;
     }
 
     return () => {

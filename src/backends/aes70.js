@@ -154,14 +154,17 @@ class PropertyContext extends ContextWithValue {
 
     if (property.static) {
       if (index) throw new Error('Static property has no Min/Max.');
-      this.receive(object[property.name]);
     } else if (!this.getter) {
       throw new Error('Could not subscribe to private property.');
     }
   }
 
   _subscribe(callback) {
-    if (this.property.static) return null;
+    if (this.property.static)
+    {
+      callback(1, 0, this.object[this.property.name]);
+      return () => {};
+    }
 
     let eventHandler = null;
     let active = true;
