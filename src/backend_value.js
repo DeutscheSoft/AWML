@@ -38,10 +38,18 @@ export class BackendValue extends DynamicValue {
 
     if (!info || !backend) return null;
 
-    if ('id' in info) {
-      return backend.observeById(info.id, this._callback);
-    } else {
-      return backend.observeByPath(this._path, this._callback);
+    try {
+      if ('id' in info) {
+        return backend.observeById(info.id, this._callback);
+      } else {
+        return backend.observeByPath(this._path, this._callback);
+      }
+    } catch (err) {
+      console.log(
+        'Subscribing BackendValue(%o) failed: %o',
+        this.uri,
+        err
+      );
     }
   }
 
