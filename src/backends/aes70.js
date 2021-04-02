@@ -221,16 +221,7 @@ class PropertyContext extends ContextWithValue {
       },
       (error) => {
         if (!active) return;
-        // NotImplemented
-        if (error.status.value == 8) {
-          callback(
-            0,
-            0,
-            ['Fetching ', this.property.name, ' failed: not implemented.'].join('')
-          );
-        } else {
-          callback(0, 0, error);
-        }
+        callback(0, 0, error);
       }
     );
 
