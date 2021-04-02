@@ -3,6 +3,7 @@ import { warn } from '../utils/log.js';
 import { bindingFromComponent } from '../utils/aux-support.js';
 import { fromSubscription } from '../operators/from_subscription.js';
 import { registerPrefixTagName } from '../utils/prefix.js';
+import { Bindings } from '../bindings.js';
 
 let redrawQueue = [];
 let oldQueue = [];
@@ -64,6 +65,14 @@ function bindingFromProperty(component, name, options) {
  * TemplateComponent is a base class for components using DOM templates.
  */
 export class TemplateComponent extends HTMLElement {
+  getHostBindings() {
+    return this.constructor.getHostBindings();
+  }
+
+  static getHostBindings() {
+    return null;
+  }
+
   /**
    * @params {DOMTemplate} [template]
    */
@@ -82,6 +91,7 @@ export class TemplateComponent extends HTMLElement {
     };
     this._whenAttached = null;
     this._eventHandlers = null;
+    this._bindings = null;
 
     if (template.requiresPrefix) registerPrefixTagName(this.tagName);
   }
@@ -101,6 +111,13 @@ export class TemplateComponent extends HTMLElement {
     if (this._needsRedraw) this.triggerRedraw();
 
     this._template.connectedCallback();
+
+    const hostBindings = this.getHostBindings();
+
+    if (hostBindings) {
+      this._bindings = new Bindings(this);
+      this._bindings.update(hostBindings);
+    }
   }
 
   /**
@@ -108,6 +125,13 @@ export class TemplateComponent extends HTMLElement {
    */
   disconnectedCallback() {
     this._template.disconnectedCallback();
+
+    const bindings = this._bindings;
+
+    if (bindings) {
+      bindings.dispose();
+      this._bindings = null;
+    }
   }
 
   /**
@@ -278,7 +302,7 @@ export class TemplateComponent extends HTMLElement {
 
       if (!options.sync)
         throw new Error(
-          'sync is required for for template reference bindings.'
+          'sync is required for for template property bindings.'
         );
 
       return bindingFromProperty(this, name, options);
