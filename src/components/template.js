@@ -33,7 +33,7 @@ function requestRedraw(cb) {
 function bindingFromProperty(component, name, options) {
   let recurse = false;
 
-  const subscribeFun = !options.writeonly
+  const subscribeFun = !options.readonly
     ? function (cb) {
         cb(component[name]);
         return component.subscribeEvent(name + 'Changed', (value) => {
@@ -43,7 +43,7 @@ function bindingFromProperty(component, name, options) {
       }
     : null;
 
-  const setFun = !options.readonly
+  const setFun = !options.writeonly
     ? function (value) {
         if (recurse) return;
         recurse = true;
