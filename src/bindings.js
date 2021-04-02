@@ -27,11 +27,16 @@ function dependsOnPrefix(binding, handle) {
   } else {
     if (handle !== srcPrefix) return false;
 
-    if (typeof src !== 'string') return false;
-
-    // Note: index 0 would not be sufficient, the empty
-    // string is not a legal name for a backend
-    return src.indexOf(':') <= 0;
+    if (typeof src === 'string') {
+      // Note: index 0 would not be sufficient, the empty
+      // string is not a legal name for a backend
+      return src.indexOf(':') <= 0;
+    } else if (Array.isArray(src)) {
+      return src.some((str) => src.indexOf(':') <= 0);
+    } else {
+      // illegal
+      return false;
+    }
   }
 }
 
@@ -103,7 +108,7 @@ export function createBinding(targetNode, sourceNode, ctx, options, log) {
       }
     });
 
-    if (log) log('src of binding %o is %o', options, effectiveSrc);
+    if (log) log('Source of binding %o is %o', options, effectiveSrc);
 
     if (effectiveSrc === null) return null;
 
@@ -177,6 +182,14 @@ export class Bindings {
     this._bindings = null;
   }
 
+  log(fmt, ...args) {
+    const log = this._log;
+
+    if (!log) return;
+
+    log(fmt, ...args);
+  }
+
   /**
    * Update the bindings.
    * @param {IBindingDescription[]|null} bindings
@@ -189,6 +202,7 @@ export class Bindings {
       subscriptions.delete(options);
       runCleanupHandler(sub);
     });
+    this.log("Creating %d bindings.", n.size);
     n.forEach((options) => {
       const sub = createBinding(
         this._targetNode,
