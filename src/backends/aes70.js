@@ -137,6 +137,53 @@ class ContextWithValue extends ReplayObservable {
   }
 }
 
+class PropertyImplementedContext extends ContextWithValue {
+  constructor(backend, path, object, property) {
+    super();
+    this.backend = backend;
+    this.path = path;
+    this.property = property;
+    this.object = object;
+    this.info = {
+      type: 'parameter',
+      access: 'r',
+      id: 'o' + object.ObjectNumber + 'pI' + property.name,
+    };
+
+    if (!property.getter(object)) {
+      throw new Error('Could not subscribe to private property.');
+    }
+  }
+
+
+  subscribe(callback) {
+    if (this.property.static)
+    {
+      callback(1, 0, true);
+      return () => {};
+    }
+
+    return this.backend.observeByPath(this.path, (ok, last, value) => {
+      if (ok) {
+        callback(1, 0, true);
+      } else {
+        // NotImplemented
+        if (typeof value === 'object' && 'status' in value && value.status.value === 8) {
+          callback(1, 0, false);
+        } else {
+          callback(0, 0, value);
+        }
+      }
+    });
+  }
+
+  dispose() {
+    this.backend = null;
+    this.object = null;
+    this.property = null;
+  }
+}
+
 class PropertyContext extends ContextWithValue {
   constructor(object, property, index) {
     super();
@@ -399,6 +446,9 @@ class ContextObservable extends ReplayObservable {
  *   concatenated by ``/`` and the property name.
  * - The path for minimum and maximum values for a property (if defined) are
  *   given by the properties path followed by ``/Min`` and ``/Max``, respectively.
+ * - The path of a property followed by ``/Implemented`` will emit ``true`` or
+ *   ``false`` depending on whether or not the corresponding getter is
+ *   implemented or not.
  *
  * Furthermore, it is possible to subscribe to directory contents inside of
  * blocks. These are given by the path of the object followed by a single ``/``.
@@ -591,6 +641,11 @@ export class AES70Backend extends BackendBase {
             if (propertyName === 'Min' || propertyName === 'Max') {
               const index = propertyName === 'Min' ? 1 : 2;
               const ctx = new PropertyContext(o, property, index);
+              const sub = this.registerContext(ctx);
+              callback(1, 0, ctx);
+              return sub;
+            } else if (propertyName === 'Implemented') {
+              const ctx = new PropertyImplementedContext(this, parentPath.slice(0, parentPath.length - 1), o, property);
               const sub = this.registerContext(ctx);
               callback(1, 0, ctx);
               return sub;
