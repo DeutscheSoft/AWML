@@ -140,6 +140,11 @@ export class TemplateComponent extends HTMLElement {
   _updatePrefix(handle) {
     if (!this.isConnected) return;
     this._template._updatePrefix(handle);
+
+    const hostBindings = this._hostBindings;
+
+    if (hostBindings)
+      hostBindings.updatePrefix(handle);
   }
 
   /**
