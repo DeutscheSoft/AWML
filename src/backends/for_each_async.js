@@ -23,4 +23,3 @@ export function forEachAsync(subscribe, callback) {
     cleanup = null;
   };
 }
-

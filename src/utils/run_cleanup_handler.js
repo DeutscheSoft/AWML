@@ -8,4 +8,3 @@ export function runCleanupHandler(cleanup) {
     warn('Cleanup handler threw an exception:', error);
   }
 }
-

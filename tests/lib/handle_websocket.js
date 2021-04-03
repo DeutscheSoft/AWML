@@ -9,6 +9,5 @@ export function handleWebSocket(request, cb) {
 }
 
 export function closeUnhandledWebSockets(request, socket, head) {
-  if (!handled.has(request))
-    socket.end();
+  if (!handled.has(request)) socket.end();
 }

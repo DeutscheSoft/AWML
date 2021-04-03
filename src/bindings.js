@@ -202,7 +202,7 @@ export class Bindings {
       subscriptions.delete(options);
       runCleanupHandler(sub);
     });
-    this.log("Creating %d bindings.", n.size);
+    this.log('Creating %d bindings.', n.size);
     n.forEach((options) => {
       const sub = createBinding(
         this._targetNode,

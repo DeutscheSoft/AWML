@@ -2,14 +2,18 @@ import { DynamicValue } from './dynamic_value.js';
 import { runCleanupHandler } from './utils/run_cleanup_handler.js';
 
 import { safeCall } from './utils/safe_call.js';
-import { initSubscribers, addSubscriber, removeSubscriber, callSubscribers } from './utils/subscribers.js';
+import {
+  initSubscribers,
+  addSubscriber,
+  removeSubscriber,
+  callSubscribers,
+} from './utils/subscribers.js';
 
 /**
  * Instances of this class represent dynamic values connected to a protocol
  * backend. Internally it interfaces with the API of a backend implementation.
  */
 export class BackendValue extends DynamicValue {
-
   get info() {
     const _info = this._info;
 
@@ -45,11 +49,7 @@ export class BackendValue extends DynamicValue {
         return backend.observeByPath(this._path, this._callback);
       }
     } catch (err) {
-      console.log(
-        'Subscribing BackendValue(%o) failed: %o',
-        this.uri,
-        err
-      );
+      console.log('Subscribing BackendValue(%o) failed: %o', this.uri, err);
     }
   }
 
@@ -257,8 +257,7 @@ export class BackendValue extends DynamicValue {
     const backend = this._backend;
     const info = this.info;
 
-    if (info && backend)
-      return this.set(value);
+    if (info && backend) return this.set(value);
 
     return this.waitForInfo().then(() => this.setWhenConnected(value));
   }

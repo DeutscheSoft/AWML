@@ -121,8 +121,7 @@ export class LocalBackend extends BackendSubscriberBase {
       });
     } else if (delay === 0) {
       return Promise.resolve().then(() => {
-        if (!this.isOpen)
-          throw new Error('closed.');
+        if (!this.isOpen) throw new Error('closed.');
         this._receive(path, value);
       });
     } else {

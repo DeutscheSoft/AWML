@@ -15,20 +15,20 @@ const backends = new Map();
 
 function help() {
   console.log(
-`node bin/serve.js [options]
+    `node bin/serve.js [options]
   Options:
     --aes70 <IP>:<PORT>
       Optional destination of an AES70 test device.
     --emberplus <IP>:<PORT>
       Optional destination of an Ember+ test device.
-`);
+`
+  );
 }
 
 function parseDestination(str) {
   const tmp = str.split(':');
 
-  if (tmp.length !== 2)
-    throw new Error('Malformed destination string.');
+  if (tmp.length !== 2) throw new Error('Malformed destination string.');
 
   const host = tmp[0];
   const port = parseInt(tmp[1]);
@@ -38,7 +38,7 @@ function parseDestination(str) {
 
   return {
     host,
-    port
+    port,
   };
 }
 
@@ -124,7 +124,7 @@ setupWSBackendConnections(server, '_ws', getBackend);
 {
   const argv = process.argv;
   for (let i = 2; i < argv.length; i++) {
-    const arg = argv[i] ;
+    const arg = argv[i];
     if (arg === '--aes70') {
       setupWSTunnel(server, '/_control/aes70', parseDestination(argv[++i]));
     } else if (arg === '--emberplus') {

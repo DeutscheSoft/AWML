@@ -102,8 +102,7 @@ export class RPCClientBase {
       callback = null;
       context.unsubscribe();
 
-      if (!this.isClosed())
-        this._send([0, '_cancel', [id]]);
+      if (!this.isClosed()) this._send([0, '_cancel', [id]]);
     };
   }
 

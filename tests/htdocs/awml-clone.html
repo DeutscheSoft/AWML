@@ -109,10 +109,14 @@
 
           const images = Array.from(clone.querySelectorAll('img'));
 
-          assertEqual(images[0].src.endsWith('templates/this_image_does_not_exist1.png'),
-                      true);
-          assertEqual(images[1].src.endsWith('templates/this_image_does_not_exist2.png'),
-                      true);
+          assertEqual(
+            images[0].src.endsWith('templates/this_image_does_not_exist1.png'),
+            true
+          );
+          assertEqual(
+            images[1].src.endsWith('templates/this_image_does_not_exist2.png'),
+            true
+          );
         }
 
         // stand alone tests

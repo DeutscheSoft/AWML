@@ -9,7 +9,7 @@ export function addSubscriber(a, cb) {
     return cb;
   } else if (typeof a === 'function') {
     if (a === cb) throw new Error('Already subscribed.');
-    return [ a, cb ];
+    return [a, cb];
   } else {
     if (a.includes(cb)) throw new Error('Already subscribed.');
     a.push(cb);
@@ -22,8 +22,7 @@ export function removeSubscriber(a, cb) {
     if (a === cb) return null;
   } else if (Array.isArray(a)) {
     const tmp = a.filter((_cb) => _cb !== cb);
-    if (tmp.length !== a.length)
-      return tmp;
+    if (tmp.length !== a.length) return tmp;
   }
 
   throw new Error('Unknown subscriber.');

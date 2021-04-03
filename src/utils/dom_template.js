@@ -173,7 +173,11 @@ class NodeContentExpression extends DOMTemplateExpression {
       const data = template.get();
       const currentNode = this._node;
 
-      if (data === null || data === void 0 || Array.isArray(data) && data.length === 0) {
+      if (
+        data === null ||
+        data === void 0 ||
+        (Array.isArray(data) && data.length === 0)
+      ) {
         const node = document.createComment(' null placeholder ');
         currentNode.replaceWith(node);
         this._node = node;
@@ -183,7 +187,6 @@ class NodeContentExpression extends DOMTemplateExpression {
           case 'number':
           case 'boolean':
             {
-
               if (currentNode.nodeType !== 3) {
                 const tmp = document.createTextNode(data);
                 currentNode.replaceWith(tmp);

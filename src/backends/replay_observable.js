@@ -71,4 +71,3 @@ export class ReplayObservable {
     this._subscription = null;
   }
 }
-

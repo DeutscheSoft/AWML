@@ -38,7 +38,7 @@
         if (obj.children) {
           const node = await getBackendValue(prefix + '/').wait();
           const children = node.children;
-          
+
           for (let i = 0; i < children.length; i++) {
             await checkRecursive(prefix + '/' + children[i].identifier);
           }
@@ -51,8 +51,9 @@
         if (!('EmberPlus' in window))
           return skip('EmberPlus library not loaded.');
         try {
-          const ws = await connectWebSocket('ws://' + location.host +
-                                            '/_control/emberplus');
+          const ws = await connectWebSocket(
+            'ws://' + location.host + '/_control/emberplus'
+          );
           ws.close();
         } catch (err) {
           return skip('Failed to connect to device.');

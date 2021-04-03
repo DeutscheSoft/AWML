@@ -301,9 +301,7 @@ export class TemplateComponent extends HTMLElement {
         );
 
       if (!options.sync)
-        throw new Error(
-          'sync is required for for template property bindings.'
-        );
+        throw new Error('sync is required for for template property bindings.');
 
       return bindingFromProperty(this, name, options);
     }
@@ -338,7 +336,7 @@ export class TemplateComponent extends HTMLElement {
   static fromString(input) {
     return this.create({
       template: input,
-    })
+    });
   }
 
   /**
@@ -372,12 +370,13 @@ export class TemplateComponent extends HTMLElement {
     // Remove trailing $
     let dependencies = template.dependencies;
 
-    dependencies = dependencies.map((name) => {
-        if (name.endsWith('$'))
-          name = name.slice(0, name.length - 1);
+    dependencies = dependencies
+      .map((name) => {
+        if (name.endsWith('$')) name = name.slice(0, name.length - 1);
 
         return name;
-      }).filter((name, index, a) => name.length && a.indexOf(name) === index);
+      })
+      .filter((name, index, a) => name.length && a.indexOf(name) === index);
 
     if (Array.isArray(options.ignoreProperties)) {
       dependencies = dependencies.filter((name) => {
@@ -386,8 +385,11 @@ export class TemplateComponent extends HTMLElement {
     }
 
     if (Array.isArray(options.properties)) {
-      dependencies = dependencies.concat(options.properties)
-        .filter((entry, i, a) => typeof entry === 'string' && a.indexOf(entry) === i);
+      dependencies = dependencies
+        .concat(options.properties)
+        .filter(
+          (entry, i, a) => typeof entry === 'string' && a.indexOf(entry) === i
+        );
     }
 
     dependencies = dependencies.filter((name) => {
@@ -446,7 +448,7 @@ export class TemplateComponent extends HTMLElement {
           this.emit(evName, value);
         },
       });
-      Object.defineProperty(component.prototype, name+'$', {
+      Object.defineProperty(component.prototype, name + '$', {
         enumerable: true,
         get: function () {
           return bindingFromProperty(this, name, {});

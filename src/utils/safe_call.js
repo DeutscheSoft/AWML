@@ -8,4 +8,3 @@ export function safeCall(cb, ...args) {
     warn('Callback generated an exception: %o.', err);
   }
 }
-

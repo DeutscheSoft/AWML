@@ -137,7 +137,10 @@ class ParameterPropertyContext extends ContextWithValue {
     this.propertyName = propertyName;
     this.info = {
       type: 'parameter',
-      access: (propertyName === 'value' || propertyName === 'effectiveValue') ? 'rw' : 'r',
+      access:
+        propertyName === 'value' || propertyName === 'effectiveValue'
+          ? 'rw'
+          : 'r',
       id: node.key + 'p' + propertyName,
     };
   }
@@ -207,7 +210,6 @@ class ContextObservable extends ReplayObservable {
   }
 }
 
-
 /**
  * This class implements a backend for the Ember+ protocol. It uses the
  * ember-plus https://github.com/DeutscheSoft/ember-plus which is required to be
@@ -273,7 +275,9 @@ export class EmberPlusBackend extends BackendBase {
     this._path_subscriptions = new Map();
     this._setters = new Map();
     this._delimiter = '/';
-    this._contextObservables = new ReplayObservableMap((path) => this._createContextObservable(path));
+    this._contextObservables = new ReplayObservableMap((path) =>
+      this._createContextObservable(path)
+    );
     this._contexts = new Map();
 
     Promise.resolve(this.fetchUrl())
@@ -317,7 +321,9 @@ export class EmberPlusBackend extends BackendBase {
       const device = this._device;
 
       if (parentPath === '/' && propertyName === '') {
-        const ctx = dir ? new NodeDirectoryContext(device, device.root) : new ObjectContext(device.root);
+        const ctx = dir
+          ? new NodeDirectoryContext(device, device.root)
+          : new ObjectContext(device.root);
         const sub = this.registerContext(ctx);
         callback(1, 0, ctx);
         return sub;
@@ -332,10 +338,18 @@ export class EmberPlusBackend extends BackendBase {
 
         if (node instanceof EmberPlus.Parameter) {
           if (dir) {
-            callback(0, 0, new Error('Could not list directory for parameter Node.'));
+            callback(
+              0,
+              0,
+              new Error('Could not list directory for parameter Node.')
+            );
           } else {
             try {
-              const ctx = new ParameterPropertyContext(device, node, propertyName);
+              const ctx = new ParameterPropertyContext(
+                device,
+                node,
+                propertyName
+              );
               const sub = this.registerContext(ctx);
               callback(1, 0, ctx);
               return sub;
@@ -348,7 +362,11 @@ export class EmberPlusBackend extends BackendBase {
           // Special meaning, this is not a child
           if (propertyName.startsWith('$') && !dir) {
             try {
-              const ctx = new NodePropertyContext(device, node, propertyName.substr(1));
+              const ctx = new NodePropertyContext(
+                device,
+                node,
+                propertyName.substr(1)
+              );
               const sub = this.registerContext(ctx);
               callback(1, 0, ctx);
               return sub;
@@ -381,7 +399,7 @@ export class EmberPlusBackend extends BackendBase {
           }
         } else {
           this.log('Cannot find %o in %o.', propertyName, node);
-          callback(0, 0, new Error('Cannot find property.'))
+          callback(0, 0, new Error('Cannot find property.'));
           return null;
         }
       };

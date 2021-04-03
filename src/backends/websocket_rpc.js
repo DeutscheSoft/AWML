@@ -24,16 +24,14 @@ export class WebSocketRPCBackend extends RPCClientBackend {
     super.open();
     this.addSubscription(
       subscribeDOMEvent(this._remote.websocket, 'close', () => {
-        if (this.isOpen)
-          this.close();
+        if (this.isOpen) this.close();
       }),
       subscribeDOMEvent(this._remote.websocket, 'error', (err) => {
-        if (this.isOpen)
-          this.error(err);
+        if (this.isOpen) this.error(err);
       }),
       () => {
         this._remote.close();
-      },
+      }
     );
   }
 
@@ -52,8 +50,11 @@ export class WebSocketRPCBackend extends RPCClientBackend {
       url = src;
     }
 
-
-    options.transformSrc = parseAttribute('javascript', node.getAttribute('transform-src'), null);
+    options.transformSrc = parseAttribute(
+      'javascript',
+      node.getAttribute('transform-src'),
+      null
+    );
 
     options.url = url;
 

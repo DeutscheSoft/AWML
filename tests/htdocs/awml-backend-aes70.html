@@ -50,10 +50,11 @@
       // This test is written against a specific test device.
 
       define(async () => {
-        if (!('OCA' in window))
-          return skip('AES70.js not loaded.');
+        if (!('OCA' in window)) return skip('AES70.js not loaded.');
         try {
-          const ws = await connectWebSocket('ws://' + location.host + '/_control/aes70');
+          const ws = await connectWebSocket(
+            'ws://' + location.host + '/_control/aes70'
+          );
           ws.close();
         } catch (err) {
           return skip('Failed to connect to device.');

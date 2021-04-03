@@ -155,10 +155,8 @@ class PropertyImplementedContext extends ContextWithValue {
     }
   }
 
-
   subscribe(callback) {
-    if (this.property.static)
-    {
+    if (this.property.static) {
       callback(1, 0, true);
       return () => {};
     }
@@ -168,7 +166,11 @@ class PropertyImplementedContext extends ContextWithValue {
         callback(1, 0, true);
       } else {
         // NotImplemented
-        if (typeof value === 'object' && 'status' in value && value.status.value === 8) {
+        if (
+          typeof value === 'object' &&
+          'status' in value &&
+          value.status.value === 8
+        ) {
           callback(1, 0, false);
         } else {
           callback(0, 0, value);
@@ -207,8 +209,7 @@ class PropertyContext extends ContextWithValue {
   }
 
   _subscribe(callback) {
-    if (this.property.static)
-    {
+    if (this.property.static) {
       callback(1, 0, this.object[this.property.name]);
       return () => {};
     }
@@ -511,7 +512,9 @@ export class AES70Backend extends BackendBase {
     // Map<ID,Context>
     this._contexts = new Map();
     // Map<path,ContextObservable>
-    this._contextObservables = new ReplayObservableMap((path) => this._createContextObservable(path));
+    this._contextObservables = new ReplayObservableMap((path) =>
+      this._createContextObservable(path)
+    );
     this._connect().then(
       () => {
         this.open();
@@ -556,7 +559,7 @@ export class AES70Backend extends BackendBase {
           return sub;
         } else if (toplevelObjects.indexOf(propertyName) !== -1) {
           const o = this.device[propertyName];
-          const ctx = dir ?  getDirectoryContext(o) : new ObjectContext(o);
+          const ctx = dir ? getDirectoryContext(o) : new ObjectContext(o);
           const sub = this.registerContext(ctx);
           callback(1, 0, ctx);
           return sub;
@@ -645,7 +648,12 @@ export class AES70Backend extends BackendBase {
               callback(1, 0, ctx);
               return sub;
             } else if (propertyName === 'Implemented') {
-              const ctx = new PropertyImplementedContext(this, parentPath.slice(0, parentPath.length - 1), o, property);
+              const ctx = new PropertyImplementedContext(
+                this,
+                parentPath.slice(0, parentPath.length - 1),
+                o,
+                property
+              );
               const sub = this.registerContext(ctx);
               callback(1, 0, ctx);
               return sub;
@@ -666,8 +674,7 @@ export class AES70Backend extends BackendBase {
   }
 
   _observeContext(path, callback) {
-    if (path === 'Root/')
-      path = '/';
+    if (path === 'Root/') path = '/';
     return this._contextObservables.subscribe(path, callback);
   }
 
