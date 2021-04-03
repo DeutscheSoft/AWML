@@ -91,7 +91,7 @@ export class TemplateComponent extends HTMLElement {
     };
     this._whenAttached = null;
     this._eventHandlers = null;
-    this._bindings = null;
+    this._hostBindings = null;
 
     if (template.requiresPrefix) registerPrefixTagName(this.tagName);
   }
@@ -115,8 +115,8 @@ export class TemplateComponent extends HTMLElement {
     const hostBindings = this.getHostBindings();
 
     if (hostBindings) {
-      this._bindings = new Bindings(this);
-      this._bindings.update(hostBindings);
+      this._hostBindings = new Bindings(this);
+      this._hostBindings.update(hostBindings);
     }
   }
 
@@ -126,11 +126,11 @@ export class TemplateComponent extends HTMLElement {
   disconnectedCallback() {
     this._template.disconnectedCallback();
 
-    const bindings = this._bindings;
+    const bindings = this._hostBindings;
 
     if (bindings) {
       bindings.dispose();
-      this._bindings = null;
+      this._hostBindings = null;
     }
   }
 
