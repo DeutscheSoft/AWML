@@ -133,7 +133,15 @@ export function createBinding(targetNode, sourceNode, ctx, options, log) {
     backendValue = tmp;
   }
 
-  const binding = bindingFromComponent(targetNode, options.name, options);
+  const binding = bindingFromComponent(targetNode, options.name, {
+    readonly: options.writeonly,
+    writeonly: options.readonly,
+    sync: options.sync,
+    preventDefault: options.preventDefault,
+    preventChange: options.preventChange,
+    ignoreInteraction: options.ignoreInteraction,
+    receiveDelay: options.receiveDelay,
+  });
 
   if (log)
     log('created binding for %o in component %o.', options.name, targetNode);
