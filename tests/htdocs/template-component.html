@@ -53,6 +53,11 @@
                 src: 'Mute',
                 name: 'mute',
               },
+              {
+                src: 'Mute',
+                name: 'mute2',
+                readonly: true,
+              },
             ];
           }
         }
@@ -203,12 +208,14 @@
 
           assertEqual(child.auxWidget.get('gain'), await gain.wait());
           assertEqual(child.auxWidget.get('mute'), await mute.wait());
+          assertEqual(child.auxWidget.get('mute2'), await mute.wait());
 
           gain.set((await gain.wait()) - 2.0);
           mute.set(!(await mute.wait()));
 
           assertEqual(child.auxWidget.get('gain'), await gain.wait());
           assertEqual(child.auxWidget.get('mute'), await mute.wait());
+          assertEqual(child.auxWidget.get('mute2'), await mute.wait());
 
           // remove the node and check that the bindings are removed
           const parentNode = myComponent.parentNode;
@@ -220,6 +227,7 @@
 
           assertEqual(child.auxWidget.get('gain') - 2.0, await gain.wait());
           assertEqual(!child.auxWidget.get('mute'), await mute.wait());
+          assertEqual(!child.auxWidget.get('mute2'), await mute.wait());
 
           // check that adding the node again will reattach
           // all bindings
@@ -229,6 +237,11 @@
 
           assertEqual(child.auxWidget.get('gain'), await gain.wait());
           assertEqual(child.auxWidget.get('mute'), await mute.wait());
+          assertEqual(child.auxWidget.get('mute2'), await mute.wait());
+
+          // Check that mute2 is a readonly binding
+          child.auxWidget.userset('mute2', !(await mute.wait()));
+          assertEqual(!child.auxWidget.get('mute2'), await mute.wait());
         }
 
         {
