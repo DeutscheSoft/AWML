@@ -4,6 +4,7 @@ import { getBackendValue } from './backends.js';
 import { ListValue } from './list_value.js';
 import { bindingFromComponent } from './utils/aux-support.js';
 import { runCleanupHandler } from './utils/run_cleanup_handler.js';
+import { log as defaultLog } from './utils/log.js';
 
 function dependsOnPrefix(binding, handle) {
   const srcPrefix = binding.srcPrefix || null;
@@ -71,6 +72,11 @@ function dependsOnPrefix(binding, handle) {
  *      Optional partial parameter used if ``src`` specifies a
  *      list of sources. This parameter is passed to the resulting
  *      ListValue.
+ * @property {function} [log]
+ *      An optional function called for generating log output.
+ * @property {boolean} [debug=false]
+ *      If true, and ``log`` is undefined, ``log`` will be set
+ *      to console.log.
  * @property {number} [debounce=0]
  *      Optional parameter used if a ListValue is created.
  */
@@ -95,6 +101,11 @@ function dependsOnPrefix(binding, handle) {
 export function createBinding(targetNode, sourceNode, ctx, options, log) {
   let backendValue = options.backendValue;
 
+  if (log === void 0 && options.debug)
+    log = function (fmt, ...args) {
+      defaultLog('Binding(%o, %o): ' + fmt, targetNode, options, ...args);
+    };
+
   if (!backendValue) {
     const { src, srcPrefix } = options;
 
@@ -108,7 +119,7 @@ export function createBinding(targetNode, sourceNode, ctx, options, log) {
       }
     });
 
-    if (log) log('Source of binding %o is %o', options, effectiveSrc);
+    if (log) log('Source is %o', effectiveSrc);
 
     if (effectiveSrc === null) return null;
 
@@ -144,7 +155,7 @@ export function createBinding(targetNode, sourceNode, ctx, options, log) {
   });
 
   if (log)
-    log('created binding for %o in component %o.', options.name, targetNode);
+    log('Created binding for %o in component %o.', options.name, targetNode);
 
   const transformReceive = options.transformReceive
     ? options.transformReceive.bind(ctx)
@@ -160,7 +171,8 @@ export function createBinding(targetNode, sourceNode, ctx, options, log) {
     transformReceive,
     binding,
     !!options.replaySend,
-    transformSend
+    transformSend,
+    log
   );
 }
 

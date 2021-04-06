@@ -242,6 +242,8 @@
           // Check that mute2 is a readonly binding
           child.auxWidget.userset('mute2', !(await mute.wait()));
           assertEqual(!child.auxWidget.get('mute2'), await mute.wait());
+          child.auxWidget.userset('mute', !(await mute.wait()));
+          assertEqual(child.auxWidget.get('mute'), await mute.wait());
         }
 
         {
