@@ -23,6 +23,13 @@ function combine_subscriptions(callbacks) {
  * If the parent is an AUX widget the event handler will use the AUX widget
  * event mechanism, is the parent is any other DOM node, the standard DOM event
  * API will be used.
+ *
+ * This component has the following properties (and corresponding attributes):
+ *
+ * - :js:attr:`EventComponent.type`
+ * - :js:attr:`EventComponent.callback`
+ * - :js:attr:`BaseComponent.debug`
+ *
  */
 export class EventComponent extends BaseComponent {
   static get observedAttributes() {
@@ -30,7 +37,7 @@ export class EventComponent extends BaseComponent {
   }
 
   /**
-   * Event type, e.g. `"click"`.
+   * Event type, e.g. ``"click"``.
    *
    * @return {string}
    */

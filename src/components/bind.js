@@ -10,7 +10,14 @@ import { Bindings } from '../bindings.js';
 
 /**
  * BindComponent can be used to create a series of bindings between backend
- * values and a component.
+ * values and a its parent component. This component is a lightweight
+ * alternative for situations where many bindings are created on the same
+ * component.
+ *
+ * This component has the following properties (and corresponding attributes):
+ *
+ * - :js:attr:`BindComponent.bindings`
+ * - :js:attr:`BaseComponent.debug`
  */
 export class BindComponent extends BaseComponent {
   /** @ignore */
@@ -19,6 +26,8 @@ export class BindComponent extends BaseComponent {
   }
 
   /**
+   * A list of binding descriptions.
+   *
    * @type {IBindingDescription[]}
    */
   get bindings() {

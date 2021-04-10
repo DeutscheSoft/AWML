@@ -128,8 +128,23 @@ export class VisibilityComponent extends StylesComponentBase {
 }
 
 /**
- * The `AWML-HIDE` component hides its parent widget if the
- * corresponding backend value is true.
+ * The ``AWML-HIDE`` component hides its parent widget if a
+ * backend value is true.
+ *
+ * This component has the following properties (and corresponding attributes):
+ *
+ * - :js:attr:`PrefixComponentBase.src`
+ * - :js:attr:`PrefixComponentBase.srcPrefix`
+ * - :js:attr:`PrefixComponentBase.transformReceive`
+ * - :js:attr:`PrefixComponentBase.transformSend`
+ * - :js:attr:`PrefixComponentBase.transformSrc`
+ * - :js:attr:`PrefixComponentBase.debounce`
+ * - :js:attr:`PrefixComponentBase.partial`
+ * - :js:attr:`PrefixComponentBase.pipe`
+ * - :js:attr:`PrefixComponentBase.replay`
+ * - :js:attr:`PrefixComponentBase.debounce`
+ * - :js:attr:`BaseComponent.debug`
+ *
  */
 export class HideComponent extends VisibilityComponent {
   /** @ignore */
@@ -151,6 +166,20 @@ export class HideComponent extends VisibilityComponent {
 /**
  * The `AWML-SHOW` component makes its parent widget visible if the
  * corresponding backend value is true.
+ *
+ * This component has the following properties (and corresponding attributes):
+ *
+ * - :js:attr:`PrefixComponentBase.src`
+ * - :js:attr:`PrefixComponentBase.srcPrefix`
+ * - :js:attr:`PrefixComponentBase.transformReceive`
+ * - :js:attr:`PrefixComponentBase.transformSend`
+ * - :js:attr:`PrefixComponentBase.transformSrc`
+ * - :js:attr:`PrefixComponentBase.debounce`
+ * - :js:attr:`PrefixComponentBase.partial`
+ * - :js:attr:`PrefixComponentBase.pipe`
+ * - :js:attr:`PrefixComponentBase.replay`
+ * - :js:attr:`PrefixComponentBase.debounce`
+ * - :js:attr:`BaseComponent.debug`
  */
 export class ShowComponent extends VisibilityComponent {
   /** @ignore */

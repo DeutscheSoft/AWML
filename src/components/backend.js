@@ -52,6 +52,13 @@ export function subscribeBackendType(type, callback) {
 /**
  * This component can be used to instantiate backends and register them under a
  * name.
+ *
+ * This component has the following properties (and corresponding attributes):
+ *
+ * - :js:attr:`BackendComponent.type`
+ * - :js:attr:`BackendComponent.name`
+ * - :js:attr:`BackendComponent.retryInterval`
+ * - :js:attr:`BaseComponent.debug`
  */
 export class BackendComponent extends BaseComponent {
   static get observedAttributes() {

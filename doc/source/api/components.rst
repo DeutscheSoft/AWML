@@ -1,6 +1,14 @@
 Components
 ==========
 
+.. _BaseComponent:
+
+BaseComponent
+-------------
+
+.. js:autoclass:: BaseComponent
+  :members: debug
+
 .. _PrefixComponentBase:
 
 PrefixComponentBase
@@ -40,6 +48,7 @@ BackendComponent
 ----------------
 
 .. js:autoclass:: BackendComponent
+  :members: type, name, retryInterval, isOpen, backend, whenOpen
 
 .. _BindComponent:
 
@@ -47,6 +56,7 @@ BindComponent
 -------------
 
 .. js:autoclass:: BindComponent
+  :members: bindings
 
 .. _ClassComponent:
 
@@ -74,6 +84,7 @@ CloneComponent
 --------------
 
 .. js:autoclass:: CloneComponent
+  :members: template, fetch, notemplate, nocache, transformTemplate, triggerResize, importScripts, getLoaded, waitForLoad
 
 .. _EventComponent:
 
@@ -99,6 +110,7 @@ PrefixComponent
 ---------------
 
 .. js:autoclass:: PrefixComponent
+  :members: handle
 
 .. _StylesComponent:
 
@@ -116,7 +128,7 @@ TemplateComponent is a baseclass for building powerful custom components. See
 :doc:`/template_components` for an introduction.
 
 .. js:autoclass:: TemplateComponent
-  :members: constructor, fromString, awmlCreateBinding, whenAttached, triggerUpdate, redraw
+  :members: constructor, fromString, create, awmlCreateBinding, whenAttached, triggerUpdate, redraw
 
 .. _HideComponent:
 

@@ -64,6 +64,23 @@ export function subscribeOptionType(type, callback) {
  * that when these options are changed dynamically, it is necessary to also
  * modify either ``name`` or ``type`` to trigger the option to be reinitialized.
  *
+ * This component has the following properties (and corresponding attributes):
+ *
+ * - :js:attr:`OptionComponent.type`
+ * - :js:attr:`OptionComponent.name`
+ * - :js:attr:`StylesComponentBase.triggerResize`
+ * - :js:attr:`PrefixComponentBase.src`
+ * - :js:attr:`PrefixComponentBase.srcPrefix`
+ * - :js:attr:`PrefixComponentBase.transformReceive`
+ * - :js:attr:`PrefixComponentBase.transformSend`
+ * - :js:attr:`PrefixComponentBase.transformSrc`
+ * - :js:attr:`PrefixComponentBase.debounce`
+ * - :js:attr:`PrefixComponentBase.partial`
+ * - :js:attr:`PrefixComponentBase.pipe`
+ * - :js:attr:`PrefixComponentBase.replay`
+ * - :js:attr:`PrefixComponentBase.debounce`
+ * - :js:attr:`BaseComponent.debug`
+ *
  */
 export class OptionComponent extends PrefixComponentBase {
   /** @ignore */

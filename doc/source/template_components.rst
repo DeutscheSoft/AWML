@@ -187,4 +187,4 @@ bind properties to e.g. widget options.
 
 Properties are detected inside of template expressions as matches of the regular
 expression ``/this\.([\w0-9$_]+)/``. The resulting list of properties can be
-controlled with parameters to :ref:`TemplateComponent.create`.
+controlled with parameters to :js:func:`TemplateComponent.create`.

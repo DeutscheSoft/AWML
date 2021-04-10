@@ -167,8 +167,30 @@ function onLoad(node) {
 }
 
 /**
- * The `AWML-CLONE` component loads and clones templates. It can be combined
+ * The ``AWML-CLONE`` component loads and clones templates. It can be combined
  * with data bindings to dynamically load, modify and clone templates.
+ *
+ * This component has the following properties (and corresponding attributes):
+ *
+ * - :js:attr:`CloneComponent.template`
+ * - :js:attr:`CloneComponent.fetch`
+ * - :js:attr:`CloneComponent.notemplate`
+ * - :js:attr:`CloneComponent.nocache`
+ * - :js:attr:`CloneComponent.transformTemplate`
+ * - :js:attr:`CloneComponent.triggerResize`
+ * - :js:attr:`CloneComponent.importScripts`
+ * - :js:attr:`PrefixComponentBase.src`
+ * - :js:attr:`PrefixComponentBase.srcPrefix`
+ * - :js:attr:`PrefixComponentBase.transformReceive`
+ * - :js:attr:`PrefixComponentBase.transformSend`
+ * - :js:attr:`PrefixComponentBase.transformSrc`
+ * - :js:attr:`PrefixComponentBase.debounce`
+ * - :js:attr:`PrefixComponentBase.partial`
+ * - :js:attr:`PrefixComponentBase.pipe`
+ * - :js:attr:`PrefixComponentBase.replay`
+ * - :js:attr:`PrefixComponentBase.debounce`
+ * - :js:attr:`BaseComponent.debug`
+ *
  */
 export class CloneComponent extends PrefixComponentBase {
   /**
