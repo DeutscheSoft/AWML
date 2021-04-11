@@ -4,6 +4,7 @@ import { warn } from './log.js';
 import { Subscriptions } from './subscriptions.js';
 import { subscribeDOMEvent } from './subscribe_dom_event.js';
 import { Bindings } from '../bindings.js';
+import { setPrefix, removePrefix } from '../utils/prefix.js';
 
 const PLACEHOLDER_START = '\x01';
 const PLACEHOLDER_END = '\x02';
@@ -286,6 +287,51 @@ class PropertyValueExpression extends DOMTemplateExpression {
     return new this.constructor(
       this._path,
       this._propertyName,
+      this._template.clone()
+    );
+  }
+}
+
+class PrefixExpression extends DOMTemplateExpression {
+  get handle() {
+    return this._prefixHandle;
+  }
+
+  constructor(path, prefixHandle, template) {
+    super(path);
+    this._prefixHandle = prefixHandle;
+    this._template = template;
+  }
+
+  update(ctx) {
+    const template = this._template;
+
+    if (template.update(ctx)) {
+      const prefix = template.get();
+      const node = this._node;
+      const handle = this._prefixHandle;
+
+      if (prefix === null) {
+        removePrefix(node, handle);
+      } else {
+        setPrefix(node, prefix, handle);
+      }
+
+      this._node[this._propertyName] = template.get();
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  get dependencies() {
+    return this._template.dependencies;
+  }
+
+  clone() {
+    return new this.constructor(
+      this._path,
+      this._prefixHandle,
       this._template.clone()
     );
   }
@@ -613,6 +659,10 @@ function compileExpressions(childNodes, expressions, nodePath) {
                     tpl.reduceToSingleExpression()
                   );
                 }
+              } else if (name.startsWith('prefix')) {
+                const handle = name === 'prefix' ? null : name.substr('prefix-'.length);
+
+                expr = new PrefixExpression(path, handle, tpl);
               } else {
                 expr = new AttributeValueExpression(path, name, tpl);
               }
@@ -757,12 +807,29 @@ export class DOMTemplate {
     });
   }
 
+  _updatePrefixOn(handle, node) {
+    this._directives.forEach((directive) => {
+      if (!directive.constructor.requiresPrefix) return;
+      if (!node.contains(directive.node)) return;
+      directive.updatePrefix(handle);
+    });
+
+  }
+
   update(ctx) {
     const expressions = this._expressions;
     let changed = false;
 
     for (let i = 0; i < expressions.length; i++) {
-      if (expressions[i].update(ctx)) changed = true;
+      const expression = expressions[i];
+
+      if (expression.update(ctx)) {
+        changed = true;
+
+        if (expression instanceof PrefixExpression) {
+          this._updatePrefixOn(expression.handle, expression.node);
+        }
+      }
     }
 
     return changed;

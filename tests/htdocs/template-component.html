@@ -390,6 +390,71 @@
             await runTest(cacheResult(makeLi));
           }
         }
+
+        {
+          const myTemplate = `
+            <div prefix={{ this.prefix1 }} prefix-foo={{ this.prefix2 }}>
+              <test-component #component %bind={{ this.bindings1 }}>
+                <awml-option type=bind src='/Gain' name='option2'></awml-option>
+                <awml-option type=bind src='/Gain' src-prefix='foo' name='option4'></awml-option>
+              </test-component>
+            </div>
+            `;
+          const componentClass = class extends TemplateComponent.fromString(myTemplate) {
+            constructor() {
+              super();
+              this.prefix1 = ':noprefix:';
+              this.prefix2 = ':noprefix:';
+              this.bindings1 = [
+                {
+                  src: '/Gain',
+                  name: 'option1',
+                },
+                {
+                  src: '/Gain',
+                  srcPrefix: 'foo',
+                  name: 'option3',
+                }
+              ];
+            }
+          }
+
+          customElements.define('my-component4', componentClass);
+
+          const component = document.createElement('my-component4');
+          document.body.appendChild(component);
+
+          await waitForFrame();
+
+          const Gain = getBackendValue('test:channel1/Gain');
+          // no binding should be active
+          assertEqual(component.component.auxWidget.get('option1'), void 0);
+          assertEqual(component.component.auxWidget.get('option2'), void 0);
+          assertEqual(component.component.auxWidget.get('option3'), void 0);
+          assertEqual(component.component.auxWidget.get('option4'), void 0);
+          component.prefix1 = 'test:channel1';
+          await component.whenRedrawn();
+          // bindings for prefix handle null should be active
+          assertEqual(component.component.auxWidget.get('option1'), Gain.value);
+          assertEqual(component.component.auxWidget.get('option2'), Gain.value);
+          assertEqual(component.component.auxWidget.get('option3'), void 0);
+          assertEqual(component.component.auxWidget.get('option4'), void 0);
+          component.prefix2 = 'test:channel1';
+          await component.whenRedrawn();
+          // bindings for both prefix handles should be active
+          assertEqual(component.component.auxWidget.get('option1'), Gain.value);
+          assertEqual(component.component.auxWidget.get('option2'), Gain.value);
+          assertEqual(component.component.auxWidget.get('option3'), Gain.value);
+          assertEqual(component.component.auxWidget.get('option4'), Gain.value);
+          component.prefix1 = null;
+          await component.whenRedrawn();
+          Gain.set(Gain.value - 1.0);
+          // bindings only for handle foo should be active
+          assertEqual(component.component.auxWidget.get('option1'), Gain.value + 1);
+          assertEqual(component.component.auxWidget.get('option2'), Gain.value + 1);
+          assertEqual(component.component.auxWidget.get('option3'), Gain.value);
+          assertEqual(component.component.auxWidget.get('option4'), Gain.value);
+        }
       });
     </script>
     <awml-backend name="test" type="local" data="initialValues"></awml-backend>

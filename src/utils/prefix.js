@@ -78,7 +78,7 @@ export function triggerUpdatePrefix(node, handle) {
 export function setPrefix(node, prefix, handle) {
   if (handle === void 0) {
     handle = null;
-  } else if (typeof handle !== 'string') {
+  } else if (handle !== null && typeof handle !== 'string') {
     throw new TypeError('Expected string.');
   }
 
@@ -103,7 +103,7 @@ export function setPrefix(node, prefix, handle) {
 export function removePrefix(node, handle) {
   if (handle === void 0) {
     handle = null;
-  } else if (typeof handle !== 'string') {
+  } else if (handle !== null && typeof handle !== 'string') {
     throw new TypeError('Expected string.');
   }
 
