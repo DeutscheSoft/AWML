@@ -185,6 +185,25 @@
           awmlOption.replay = true;
           assertEqual(widget.get('foo'), 42);
         }
+
+        {
+          // test behavior of replay property
+          const widget = widgets[10];
+          const value = getBackendValue('test:foo');
+
+          value.set(23);
+          assertEqual(widget.get('foo-ro'), 23);
+          assertEqual(widget.get('foo-wo'), void 0);
+          assertEqual(widget.get('foo-wo-sync'), void 0);
+          widget.userset('foo-ro', 42);
+          assertEqual(value.value, 23);
+          assertEqual(widget.get('foo-wo'), void 0);
+          assertEqual(widget.get('foo-wo-sync'), void 0);
+          widget.userset('foo-wo', 42);
+          assertEqual(value.value, 42);
+          widget.set('foo-wo-sync', 23);
+          assertEqual(value.value, 23);
+        }
       });
     </script>
     <script>
@@ -263,6 +282,12 @@
     </test-component>
     <test-component>
       <awml-option no-replay name="foo" src="test:foo"></awml-option>
+    </test-component>
+    <test-component>
+      <awml-option type="bind" readonly name="foo-ro" src="test:foo"></awml-option>
+      <awml-option type="bind" writeonly name="foo-wo" src="test:foo"></awml-option>
+      <awml-option type="bind" writeonly sync name="foo-wo-sync" src="test:foo">
+      </awml-option>
     </test-component>
   </body>
 </html>

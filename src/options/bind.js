@@ -1,7 +1,7 @@
 import { Option } from './option.js';
 import { parseAttribute } from '../utils/parse_attribute.js';
 import { bindingFromComponent } from '../utils/aux-support.js';
-import { connect } from '../operators/connect.js';
+import { connect, connectTo } from '../operators/connect.js';
 import { error } from '../utils/log.js';
 
 /**
@@ -72,14 +72,22 @@ export class BindOption extends Option {
       return dv;
     }
 
-    this._sub = connect(
-      options.backendValue,
-      options.replay,
-      this.receiveValue.bind(this),
-      dv,
-      false,
-      this.sendValue.bind(this)
-    );
+    if (options.readonly) {
+      this._sub = connectTo(dv, options.backendValue, options.replay,
+                            this.receiveValue.bind(this));
+    } else if (options.writeonly) {
+      this._sub = connectTo(options.backendValue, dv, false,
+                            this.sendValue.bind(this));
+    } else {
+      this._sub = connect(
+        options.backendValue,
+        options.replay,
+        this.receiveValue.bind(this),
+        dv,
+        false,
+        this.sendValue.bind(this)
+      );
+    }
   }
 
   sendValue(value) {

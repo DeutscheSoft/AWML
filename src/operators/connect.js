@@ -16,8 +16,6 @@
  * @param {function} [transform2]
  *      Optional transformation function for values passed from ``value2`` to
  *      ``value1``.
- * @param {function} [log]
- *      Optional logging function.
  *
  * @returns {function}
  *      Returns a subscription. When called, the connection between
@@ -29,8 +27,7 @@ export function connect(
   transform1,
   value2,
   replay2,
-  transform2,
-  log
+  transform2
 ) {
   let rec = false;
 
@@ -38,13 +35,7 @@ export function connect(
     if (rec) return;
     rec = true;
     try {
-      if (transform1) {
-        const tmp = transform1(value);
-        if (log) log("Received value %o -> %o", value, tmp);
-        value = tmp;
-      } else if (log) {
-        log("Received value %o", value);
-      }
+      if (transform1) value = transform1(value);
       value2.set(value);
     } catch (err) {
       throw err;
@@ -57,13 +48,7 @@ export function connect(
     if (rec) return;
     rec = true;
     try {
-      if (transform2) {
-        const tmp = transform2(value);
-        if (log) log("Sending value %o -> %o", value, tmp);
-        value = tmp;
-      } else {
-        if (log) log("Sending value %o", value);
-      }
+      if (transform2) value = transform2(value);
       value1.set(value);
     } catch (err) {
       throw err;

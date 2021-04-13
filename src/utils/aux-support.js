@@ -226,8 +226,10 @@ export function bindingFromWidget(widget, name, options) {
 
   if (!options) options = {};
 
-  if (options.writeonly && options.readonly)
-    throw new Error('Binding cannot be both write- and read-only.');
+  // Note: writeonly is interchanged here with what the user passes
+  // in. We therefore use readonly in the error message.
+  if (options.writeonly && options.sync)
+    throw new Error('Binding cannot be both readonly and sync=true.');
 
   if (!options.writeonly) {
     if (options.sync) {
@@ -332,6 +334,9 @@ export function bindingFromWidget(widget, name, options) {
 export function bindingFromComponent(node, name, options) {
   if (isCustomElementDefined(node)) {
     const widget = node.auxWidget;
+
+    if (options.writeonly && options.readonly)
+      throw new Error('Binding cannot be both write- and read-only.');
 
     if (widget) return bindingFromWidget(widget, name, options);
 

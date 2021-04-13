@@ -59,6 +59,22 @@
               name: 'foo7',
               pipe: (bv) => map(bv, (str) => str + str),
             },
+            {
+              src: 'test:foo',
+              name: 'foo-ro',
+              readonly: true,
+            },
+            {
+              src: 'test:foo',
+              name: 'foo-wo',
+              writeonly: true,
+            },
+            {
+              src: 'test:foo',
+              name: 'foo-wo-sync',
+              writeonly: true,
+              sync: true,
+            },
           ];
 
           assertEqual(await test_foo.wait(), widget.get('foo1'));
@@ -79,6 +95,19 @@
             widget.get('foo6')
           );
           assertEq(bv.value + bv.value, widget.get('foo7'));
+
+          // readonly and writeonly
+          test_foo.set(23);
+          assertEqual(widget.get('foo-ro'), test_foo.value);
+          assertEqual(widget.get('foo-wo'), void 0);
+          assertEqual(widget.get('foo-wo-sync'), void 0);
+          widget.userset('foo-wo', 42);
+          assertEqual(test_foo.value, 42);
+          assertEqual(widget.get('foo-ro'), test_foo.value);
+          assertEqual(widget.get('foo-wo-sync'), void 0);
+          widget.set('foo-wo-sync', 23);
+          assertEqual(test_foo.value, 23);
+          assertEqual(widget.get('foo-ro'), 23);
 
           awmlBind.remove();
 

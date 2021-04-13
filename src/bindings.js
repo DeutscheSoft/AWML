@@ -1,4 +1,4 @@
-import { connect } from './operators/connect.js';
+import { connect, connectTo } from './operators/connect.js';
 import { collectPrefix, compileSrc } from './utils/prefix.js';
 import { getBackendValue } from './backends.js';
 import { ListValue } from './list_value.js';
@@ -81,6 +81,42 @@ function dependsOnPrefix(binding, handle) {
  *      Optional parameter used if a ListValue is created.
  */
 
+function logReceive(log, transform) {
+  if (!log)
+    return transform;
+
+  if (transform) {
+    return function(value) {
+      const tmp = transform(value);
+      log("Received value %o -> %o", value, tmp);
+      return tmp;
+    };
+  } else {
+    return function(value) {
+      log("Received value %o", value);
+      return value;
+    };
+  }
+}
+
+function logSend(log, transform) {
+  if (!log)
+    return transform;
+
+  if (transform) {
+    return function(value) {
+      const tmp = transform(value);
+      log("Sending value %o -> %o", value, tmp);
+      return tmp;
+    };
+  } else {
+    return function(value) {
+      log("Sending value %o", value);
+      return value;
+    };
+  }
+}
+
 /**
  * Creates a binding to a target component.
  *
@@ -101,7 +137,7 @@ function dependsOnPrefix(binding, handle) {
 export function createBinding(targetNode, sourceNode, ctx, options, log) {
   let backendValue = options.backendValue;
 
-  if (log === void 0 && options.debug)
+  if (!log && options.debug)
     log = function (fmt, ...args) {
       defaultLog('Binding(%o, %o): ' + fmt, targetNode, options, ...args);
     };
@@ -157,23 +193,32 @@ export function createBinding(targetNode, sourceNode, ctx, options, log) {
   if (log)
     log('Created binding for %o in component %o.', options.name, targetNode);
 
-  const transformReceive = options.transformReceive
+  const transformReceive = logReceive(log, options.transformReceive
     ? options.transformReceive.bind(ctx)
-    : null;
+    : null);
 
-  const transformSend = options.transformSend
+  const transformSend = logSend(log, options.transformSend
     ? options.transformSend.bind(ctx)
-    : null;
+    : null);
 
-  return connect(
-    backendValue,
-    options.replayReceive === void 0 ? true : !!options.replayReceive,
-    transformReceive,
-    binding,
-    !!options.replaySend,
-    transformSend,
-    log
-  );
+  if (options.readonly) {
+    return connectTo(binding, backendValue,
+                     options.replayReceive === void 0 ? true : !!options.replayReceive,
+                     transformReceive);
+  } else if (options.writeonly) {
+    return connectTo(backendValue, binding,
+                     !!options.replaySend,
+                     transformSend);
+  } else {
+    return connect(
+      backendValue,
+      options.replayReceive === void 0 ? true : !!options.replayReceive,
+      transformReceive,
+      binding,
+      !!options.replaySend,
+      transformSend,
+    );
+  }
 }
 
 /**
