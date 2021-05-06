@@ -40,7 +40,11 @@ export class BackendValue extends DynamicValue {
     const info = this._info;
     const backend = this._backend;
 
-    if (!info || !backend) return null;
+    if (!info || !backend) {
+      if (this._infoError)
+        throw this._infoError;
+      return null;
+    }
 
     try {
       if ('id' in info) {
@@ -135,7 +139,6 @@ export class BackendValue extends DynamicValue {
           this._infoError = info;
           this._backend = null;
 
-          this._callback(ok, last, info);
           callSubscribers(this._infoSubscribers, 0, 0, info);
         }
 
@@ -192,7 +195,7 @@ export class BackendValue extends DynamicValue {
       if (ok) {
         this._updateValue(value);
       } else {
-        if (value)
+        if (value && this.isActive)
           console.log(
             'BackendValue(%o) ran into an error: %o',
             this.uri,
@@ -219,6 +222,8 @@ export class BackendValue extends DynamicValue {
         return this.waitForInfo().then((info) => {
           return this.set(value);
         });
+      } else if (this._infoError) {
+        throw this._infoError;
       }
 
       throw new Error('Not connected.');
