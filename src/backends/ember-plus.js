@@ -206,7 +206,13 @@ class NodePropertyContext extends ContextWithValue {
 class ContextObservable extends ReplayObservable {
   constructor(subscribe) {
     super();
-    this._subscribe = subscribe;
+    this._subscribe = (callback) => {
+      try {
+        return subscribe(callback);
+      } catch (err) {
+        callback(0, 0, err);
+      }
+    };
   }
 }
 
@@ -329,7 +335,12 @@ export class EmberPlusBackend extends BackendBase {
         return sub;
       }
 
-      const cb = (node) => {
+      const cb = (ok, last, node) => {
+        if (!ok) {
+          callback(0, last, node);
+          return null;
+        }
+
         if (node === null) {
           // node disappeared (e.g. went offline)
           callback(0, 0, new Error('Not found.'));
@@ -380,7 +391,7 @@ export class EmberPlusBackend extends BackendBase {
           const pos = childNames.indexOf(propertyName);
 
           if (pos === -1) {
-            callback(0, 0, new Error('Could not find child in node.'));
+            callback(0, 0, new Error(`Could not find child ${propertyName} in node.`));
             return null;
           } else {
             const child = node.children[pos];
@@ -399,7 +410,7 @@ export class EmberPlusBackend extends BackendBase {
           }
         } else {
           this.log('Cannot find %o in %o.', propertyName, node);
-          callback(0, 0, new Error('Cannot find property.'));
+          callback(0, 0, new Error(`Cannot find property ${propertyName}.`));
           return null;
         }
       };

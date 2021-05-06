@@ -151,7 +151,7 @@ class PropertyImplementedContext extends ContextWithValue {
     };
 
     if (!property.getter(object)) {
-      throw new Error('Could not subscribe to private property.');
+      throw new Error(`Could not subscribe to private property ${object.ClassName}.${property.name}`);
     }
   }
 
@@ -202,9 +202,9 @@ class PropertyContext extends ContextWithValue {
     };
 
     if (property.static) {
-      if (index) throw new Error('Static property has no Min/Max.');
+      if (index) throw new Error(`Static property ${object.ClassName}.${property.name} has no Min/Max.`);
     } else if (!this.getter) {
-      throw new Error('Could not subscribe to private property.');
+      throw new Error(`Could not subscribe to private property ${object.ClassName}.${property.name}`);
     }
   }
 
@@ -256,14 +256,7 @@ class PropertyContext extends ContextWithValue {
           callback(
             0,
             0,
-            new Error(
-              [
-                this.property.name,
-                ' in ',
-                this.object.ClassName,
-                ' has neither Min nor Max.',
-              ].join('')
-            )
+            new Error(`${this.object.ClassName}.${this.property.name} has beither Min nor Max.`)
           );
         }
       },
@@ -290,7 +283,7 @@ class PropertyContext extends ContextWithValue {
 class RoleMapContext extends ContextWithValue {
   constructor(object) {
     super();
-    if (!isBlock(object)) throw new TypeError('Expected OcaBlock.');
+    if (!isBlock(object)) throw new TypeError(`Expected OcaBlock, got ${object.ClassName}`);
     this.object = object;
     this.info = {
       type: 'directory',
@@ -428,7 +421,13 @@ function getDirectoryContext(object) {
 class ContextObservable extends ReplayObservable {
   constructor(subscribe) {
     super();
-    this._subscribe = subscribe;
+    this._subscribe = (callback) => {
+      try {
+        return subscribe(callback);
+      } catch (err) {
+        callback(0, 0, err);
+      }
+    };
   }
 }
 
@@ -570,7 +569,11 @@ export class AES70Backend extends BackendBase {
 
       if (dir) {
         //console.log('trying to subscribe directory %o in %o', propertyName, parentPath);
-        cb = (a) => {
+        cb = (ok, last, a) => {
+          if (!ok) {
+            callback(0, last, a);
+            return null;
+          }
           //console.log('%o / %o -> %o', parentPath, propertyName, a);
           const o = a[0];
 
@@ -592,7 +595,7 @@ export class AES70Backend extends BackendBase {
           if (!property) {
             if (!isBlock(o)) {
               this.log('Could not find property %o in %o', propertyName, o);
-              callback(0, 0, new Error('Could not find property.'));
+              callback(0, 0, new Error(`Could not find property ${propertyName}.`));
             }
           } else {
             const ctx = new PropertyDirectoryContext(o, property);
@@ -603,7 +606,12 @@ export class AES70Backend extends BackendBase {
         };
       } else {
         //console.log('trying to subscribe property %o in %o', propertyName, parentPath);
-        cb = (a) => {
+        cb = (ok, last, a) => {
+          if (!ok) {
+            callback(0, last, a);
+            return null;
+          }
+
           const o = a[0];
 
           if (isBlock(o) && a[1] instanceof Map) {
@@ -631,7 +639,7 @@ export class AES70Backend extends BackendBase {
 
             if (!property) {
               this.log('Could not find property %o in %o', propertyName, o);
-              callback(0, 0, new Error('Could not find property.'));
+              callback(0, 0, new Error(`Could not find property ${propertyName}.`));
               return null;
             }
 
@@ -659,7 +667,7 @@ export class AES70Backend extends BackendBase {
               return sub;
             } else {
               this.log('Could not find property %o in %o', propertyName, o);
-              callback(0, 0, new Error('Could not find property.'));
+              callback(0, 0, new Error(`Could not find property ${propertyName}.`));
               return null;
             }
           }

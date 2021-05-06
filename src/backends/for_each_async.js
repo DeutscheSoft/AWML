@@ -9,8 +9,7 @@ export function forEachAsync(subscribe, callback) {
     if (lastValue === o) return;
     runCleanupHandler(cleanup);
 
-    if (ok) cleanup = callback(o);
-    else warn(o);
+    cleanup = callback(ok, last, o);
   };
 
   let sub = subscribe(cb);
