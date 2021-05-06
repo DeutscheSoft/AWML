@@ -803,7 +803,12 @@ export class DOMTemplate {
 
   _updatePrefix(handle) {
     this._directives.forEach((directive) => {
-      if (directive.constructor.requiresPrefix) directive.updatePrefix(handle);
+      try {
+        if (directive.constructor.requiresPrefix)
+          directive.updatePrefix(handle);
+      } catch (err) {
+        warn('Prefix change on template directive %o generated an error: %o', directive, err);
+      }
     });
   }
 
@@ -811,7 +816,11 @@ export class DOMTemplate {
     this._directives.forEach((directive) => {
       if (!directive.constructor.requiresPrefix) return;
       if (!node.contains(directive.node)) return;
-      directive.updatePrefix(handle);
+      try {
+        directive.updatePrefix(handle);
+      } catch (err) {
+        warn('Prefix change on template directive %o generated an error: %o', directive, err);
+      }
     });
 
   }
@@ -823,12 +832,16 @@ export class DOMTemplate {
     for (let i = 0; i < expressions.length; i++) {
       const expression = expressions[i];
 
-      if (expression.update(ctx)) {
-        changed = true;
+      try {
+        if (expression.update(ctx)) {
+          changed = true;
 
-        if (expression instanceof PrefixExpression) {
-          this._updatePrefixOn(expression.handle, expression.node);
+          if (expression instanceof PrefixExpression) {
+            this._updatePrefixOn(expression.handle, expression.node);
+          }
         }
+      } catch (err) {
+        warn('Template expression %o generated an error: %o', expression, err);
       }
     }
 
