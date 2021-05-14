@@ -1,5 +1,6 @@
 <html>
   <head>
+    <script type="module" src="./test-component.js"></script>
     <script type="module">
       import { define, assertEq, assertEqual } from './testing.js';
       import { DOMTemplate } from '../../src/utils/dom_template.js';
@@ -123,9 +124,43 @@
           });
           assertEq(div.className, '1 2');
         }
+
+        {
+          const template = DOMTemplate.fromString(
+            `<div prefix={{ this.prefix }}><div %if={{ this.condition }}><test-component
+            %bind={{ this.binding }}></test-component></div></div>`);
+
+          const container = document.createElement('div');
+
+          container.appendChild(template._fragment);
+
+          const div = container.querySelector('div');
+
+          document.body.appendChild(container);
+          template.connectedCallback();
+
+          const widget = container.querySelector('test-component').auxWidget;
+
+          const ctx = {
+            prefix: 'test:foo',
+            binding: {
+              src: '',
+              name: 'option1',
+            },
+            condition: false,
+          };
+          template.update(ctx);
+          assertEq(widget.get('option1'), void 0);
+          ctx.condition = true;
+          template.update(ctx);
+          assertEq(widget.get('option1'), 'bar');
+        }
       });
     </script>
     <script type="module" src="../../src/index.js"></script>
+    <awml-backend name="test" type="local">
+      { "foo" : "bar", "bar" : "flu" }
+    </awml-backend>
   </head>
   <body></body>
 </html>

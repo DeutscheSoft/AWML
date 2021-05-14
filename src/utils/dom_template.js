@@ -45,6 +45,8 @@ class DOMTemplateDirective {
     this.isConnected = false;
   }
 
+  updateConnected() { }
+
   attach(node) {
     const path = this._path;
     for (let i = 0; i < path.length; i++) {
@@ -455,6 +457,10 @@ class EventBindingExpression extends DOMTemplateExpression {
 }
 
 class OptionalNodeReference extends DOMTemplateExpression {
+  static get changesDOM() {
+    return true;
+  }
+
   constructor(path, template) {
     super(path);
     this._template = template;
@@ -523,6 +529,7 @@ class BindNodeReference extends DOMTemplateExpression {
   }
 
   connectedCallback() {
+    if (!this._node.isConnected) return;
     super.connectedCallback();
     this._bindingsImpl.update(this._template.get());
   }
@@ -530,6 +537,18 @@ class BindNodeReference extends DOMTemplateExpression {
   disconnectedCallback() {
     super.disconnectedCallback();
     this._bindingsImpl.dispose();
+  }
+
+  updateConnected() {
+    const state = this._node.isConnected;
+
+    if (state === this.isConnected) return;
+
+    if (state) {
+      this.connectedCallback();
+    } else {
+      this.disconnectedCallback();
+    }
   }
 
   updatePrefix(handle) {
@@ -831,6 +850,7 @@ export class DOMTemplate {
     this._references = references;
     this._optionReferences = optionReferences;
     this._context = null;
+    this._isConnected = false;
   }
 
   get references() {
@@ -861,11 +881,25 @@ export class DOMTemplate {
   }
 
   connectedCallback() {
-    this._directives.forEach((directive) => directive.connectedCallback());
+    this._isConnected = true;
+    this._directives.forEach((directive) => {
+      try {
+        directive.connectedCallback();
+      } catch (err) {
+        warn('connectedCallback() on template directive %o generated an error: %o', directive, err);
+      }
+    });
   }
 
   disconnectedCallback() {
-    this._directives.forEach((directive) => directive.disconnectedCallback());
+    this._isConnected = false;
+    this._directives.forEach((directive) => {
+      try {
+        directive.disconnectedCallback();
+      } catch (err) {
+        warn('disconnectedCallback() on template directive %o generated an error: %o', directive, err);
+      }
+    });
   }
 
   _updatePrefix(handle) {
@@ -895,6 +929,7 @@ export class DOMTemplate {
   update(ctx) {
     const expressions = this._expressions;
     let changed = false;
+    let changedDOM = false;
 
     for (let i = 0; i < expressions.length; i++) {
       const expression = expressions[i];
@@ -903,6 +938,9 @@ export class DOMTemplate {
         if (expression.update(ctx)) {
           changed = true;
 
+          if (expression.constructor.changesDOM)
+            changedDOM = true;
+
           if (expression instanceof PrefixExpression) {
             this._updatePrefixOn(expression.handle, expression.node);
           }
@@ -910,6 +948,12 @@ export class DOMTemplate {
       } catch (err) {
         warn('Template expression %o generated an error: %o', expression, err);
       }
+    }
+
+    if (changedDOM && this._isConnected) {
+      this._directives.forEach((directive) => {
+        directive.updateConnected();
+      });
     }
 
     return changed;
