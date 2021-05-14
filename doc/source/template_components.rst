@@ -80,6 +80,23 @@ syntax using square brackets. ::
 
     const template1 = `<div [style.color]={{ this.color }}></div>`;
 
+CSS classes
+^^^^^^^^^^^
+
+Template expressions can be used to control classes properties using a special
+syntax using square brackets. ::
+
+    const template1 = `<div [classList]={{ this.classlist }}></div>`;
+
+Allowed expressions are
+
+* strings, which are split into class names or
+* ``null`` and ``undefined``, which are interpreted as no classes or
+* arrays of strings.
+
+Note that only those classes will be removed from the element which have
+previously been set using the same directive.
+
 Event handlers
 ^^^^^^^^^^^^^^
 

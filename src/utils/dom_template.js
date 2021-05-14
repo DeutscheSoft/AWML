@@ -230,6 +230,61 @@ class NodeContentExpression extends DOMTemplateExpression {
   }
 }
 
+class ClassListExpression extends DOMTemplateExpression {
+  constructor(path, template) {
+    super(path);
+    this._template = template;
+    this._list = [];
+  }
+
+  update(ctx) {
+    const template = this._template;
+
+    if (template.update(ctx)) {
+      let list = template.get();
+      const currentList = this._list;
+
+      if (typeof list === 'string')
+      {
+        list = list.split(/\s+/g);
+      }
+      else if (list === null || list === void 0)
+      {
+        list = [];
+      }
+      else if (!Array.isArray(list))
+      {
+        throw new TypeError('Expected string, null or array.');
+      }
+
+      const [ toRemove, toAdd ] = arrayDiff(currentList, list);
+
+      const classList = this._node.classList;
+
+      toRemove.forEach((cl) => {
+        classList.remove(cl);
+      });
+      toAdd.forEach((cl) => {
+        classList.add(cl);
+      });
+
+      this._list = list;
+
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  get dependencies() {
+    return this._template.dependencies;
+  }
+
+  clone() {
+    return new this.constructor(this._path, this._template.clone());
+  }
+}
+
 class AttributeValueExpression extends DOMTemplateExpression {
   constructor(path, attributeName, template) {
     super(path);
@@ -569,6 +624,13 @@ function splitTextNodes(childNodes) {
   });
 }
 
+function arrayDiff(from, to) {
+  const toRemove = from.filter((elem) => !to.includes(elem));
+  const toAdd = to.filter((elem) => !from.includes(elem));
+
+  return [ toRemove, toAdd ];
+}
+
 function compileExpressions(childNodes, expressions, nodePath) {
   let results = [];
 
@@ -645,6 +707,11 @@ function compileExpressions(childNodes, expressions, nodePath) {
                   expr = new StyleValueExpression(
                     path,
                     propertyName.substr('style.'.length),
+                    tpl.reduceToSingleExpression()
+                  );
+                } else if (propertyName.toLowerCase() === 'classlist') {
+                  expr = new ClassListExpression(
+                    path,
                     tpl.reduceToSingleExpression()
                   );
                 } else {
