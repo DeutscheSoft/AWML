@@ -56,6 +56,8 @@ export function triggerUpdatePrefix(node, handle) {
 
   if (node._updatePrefix && node.matches(selector)) node._updatePrefix(handle);
 
+  if (selector.length === 0) return;
+
   const list = node.querySelectorAll(selector);
 
   for (let i = 0; i < list.length; i++) {
