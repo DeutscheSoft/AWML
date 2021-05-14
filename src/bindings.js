@@ -257,9 +257,19 @@ export class Bindings {
 
   /**
    * Update the bindings.
-   * @param {IBindingDescription[]|null} bindings
+   * @param {IBindingDescription|IBindingDescription[]|null} bindings
    */
   update(bindings) {
+    if (bindings === null || bindings === void 0) {
+      bindings = [];
+    } else if (typeof bindings === 'object') {
+      if (!Array.isArray(bindings)) {
+        bindings = [ bindings ];
+      }
+    } else {
+      throw new TypeError('Expected IBindingDescription[].');
+    }
+
     const n = new Set(bindings || []);
     const subscriptions = this._subscriptions;
     subscriptions.forEach((sub, options) => {
