@@ -297,7 +297,7 @@ export class TemplateComponent extends HTMLElement {
 
     if (alias) return bindingFromComponent(alias[0], alias[1], options);
 
-    const dependencies = template.dependencies;
+    const dependencies = this.constructor.dynamicProperties;
 
     if (dependencies.includes(name)) {
       if (options.preventDefault)
