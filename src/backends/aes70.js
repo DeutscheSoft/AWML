@@ -256,7 +256,7 @@ class PropertyContext extends ContextWithValue {
           callback(
             0,
             0,
-            new Error(`${this.object.ClassName}.${this.property.name} has beither Min nor Max.`)
+            new Error(`${this.object.ClassName}.${this.property.name} has neither Min nor Max.`)
           );
         }
       },
