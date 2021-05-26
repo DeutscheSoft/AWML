@@ -286,6 +286,8 @@ export function bindingFromWidget(widget, name, options) {
     setFun = function (value) {
       widget.set(name, value);
     };
+  } else if (setFun === null) {
+    setFun = function (value) {};
   }
 
   if (!options.ignoreInteraction && setFun !== null) {
