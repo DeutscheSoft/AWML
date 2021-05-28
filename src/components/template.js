@@ -74,6 +74,27 @@ export class TemplateComponent extends HTMLElement {
   }
 
   /**
+   * Reinitializes host bindings from getHostBindings().
+   */
+  updateHostBindings() {
+    const bindings = this._hostBindings;
+
+    if (bindings) {
+      bindings.dispose();
+      this._hostBindings = null;
+    }
+
+    if (!this.isConnected) return;
+
+    const hostBindings = this.getHostBindings();
+
+    if (hostBindings) {
+      this._hostBindings = new Bindings(this);
+      this._hostBindings.update(hostBindings);
+    }
+  }
+
+  /**
    * @params {DOMTemplate} [template]
    */
   constructor(template) {
