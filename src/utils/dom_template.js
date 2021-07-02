@@ -9,6 +9,7 @@ import { setPrefix, removePrefix } from '../utils/prefix.js';
 const PLACEHOLDER_START = '\x01';
 const PLACEHOLDER_END = '\x02';
 
+const rePlaceholderSplit = /[\x01]\d+[\x02]/g;
 const rePlaceholder = /[\x01](\d+)[\x02]/g;
 
 function replaceExpressions(tokens) {
@@ -595,7 +596,7 @@ function mergeTokens(strings, expressions) {
 }
 
 function compileStringWithPlaceholders(input, expressions) {
-  const strings = input.split(rePlaceholder);
+  const strings = input.split(rePlaceholderSplit);
   const matches = Array.from(input.matchAll(rePlaceholder));
 
   const tmp = matches.map((match) => {

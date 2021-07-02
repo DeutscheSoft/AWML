@@ -52,6 +52,16 @@
           assertEq(template.dependencies, ['bar']);
           assertEq(template.dependencies, template2.dependencies);
         }
+
+        {
+          const template = StringTemplate.fromString(
+            `container {{ this.open ?  'open' : 'closed' }} {{ this.inprogress ?  'inprogress' : '' }}`
+          );
+
+          assertEqual(template.update({ }), true);
+
+          assertEqual(template.get(), 'container closed ');
+        }
       });
     </script>
     <script type="module" src="../../src/index.js"></script>

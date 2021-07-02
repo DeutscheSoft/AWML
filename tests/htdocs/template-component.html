@@ -458,6 +458,38 @@
           assertEqual(component.component.auxWidget.get('option4'), Gain.value);
           component.remove();
         }
+
+        {
+          const myTemplate = `
+            <div class="container {{ this.open ?  'open' : 'closed' }} {{ this.inprogress ?  'inprogress' : '' }}"></div>
+            `;
+          const componentClass = class extends TemplateComponent.fromString(myTemplate) {
+            constructor() {
+              super();
+              this.open = false;
+              this.inprogress = false;
+            }
+          }
+
+          customElements.define('my-component6', componentClass);
+
+          const component = document.createElement('my-component6');
+          document.body.appendChild(component);
+
+          await waitForFrame();
+
+          const div = component.querySelector('div');
+
+          assertEqual(div.className, 'container closed ');
+          component.open = true;
+          await waitForFrame();
+          assertEqual(div.className, 'container open ');
+          component.inprogress = true;
+          await waitForFrame();
+          assertEqual(div.className, 'container open inprogress');
+
+          component.remove();
+        }
       });
     </script>
     <awml-backend name="test" type="local" data="initialValues"></awml-backend>
