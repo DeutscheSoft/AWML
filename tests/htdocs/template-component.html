@@ -269,6 +269,7 @@
 
           assertEqual(child.auxWidget.get('gain'), await gain.wait());
           assertEqual(child.auxWidget.get('mute'), await mute.wait());
+          myComponent.remove();
         }
 
         {
@@ -283,6 +284,7 @@
           myComponent.name = 'bar';
           assertEqual(await p, 'bar');
           assertEqual(await pReplay, 'foo');
+          myComponent.remove();
         }
 
         {
@@ -454,6 +456,7 @@
           assertEqual(component.component.auxWidget.get('option2'), Gain.value + 1);
           assertEqual(component.component.auxWidget.get('option3'), Gain.value);
           assertEqual(component.component.auxWidget.get('option4'), Gain.value);
+          component.remove();
         }
       });
     </script>
