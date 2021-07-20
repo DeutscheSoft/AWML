@@ -6,7 +6,7 @@
 
       define(async () => {
         await waitForAWMLContentLoaded();
-        assertEqual(document.querySelector('awml-clone').innerText, 'foo');
+        assertEqual(document.querySelector('awml-clone').textContent.trim(), 'foo');
       });
     </script>
     <script type="module" src="../../src/index.js"></script>

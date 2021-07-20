@@ -21,10 +21,10 @@
 
         {
           const clone = clones[0];
-          assertEqual(clone.innerText, 'foo');
+          assertEqual(clone.textContent.trim(), 'foo');
           clone.template = 't2';
           await waitForFrame();
-          assertEqual(clone.innerText, 'bar');
+          assertEqual(clone.textContent.trim(), 'bar');
           // check that the div is still in there
           assertEqual(clone.firstChild.tagName, 'DIV');
         }
@@ -33,21 +33,21 @@
           const clone = clones[1];
           await clone.waitForLoad();
           await waitForFrame();
-          assertEqual(clone.innerText, 'foo');
+          assertEqual(clone.textContent.trim(), 'foo');
           clone.template = 'templates/t2.html';
           await waitForDOMEvent(clone, 'load');
-          assertEqual(clone.innerText, 'bar');
+          assertEqual(clone.textContent.trim(), 'bar');
           clone.template = 'templates/t3.html';
           await waitForDOMEvent(clone, 'load');
           await waitForFrame();
-          assertEqual(clone.innerText, 'foo');
+          assertEqual(clone.textContent.trim(), 'foo');
           // check that the div is still in there
           assertEqual(clone.firstChild.tagName, 'DIV');
         }
 
         {
           const clone = clones[2];
-          assertEqual(clone.innerText, '');
+          assertEqual(clone.textContent.trim(), '');
           clone.fetch = true;
           clone.template = 'templates/this_template_does_not_exist.html';
           await waitForDOMEvent(clone, 'error');
@@ -59,47 +59,47 @@
           const clone = clones[2];
           assertEqual(clone.template, null);
           assertEqual(clone._value, null);
-          assertEqual(clone.innerText, '');
+          assertEqual(clone.textContent.trim(), '');
           clone.src = 'test:template';
           const bv = getBackendValue('test:template');
 
           bv.set('t1');
 
           await waitForDOMEvent(clone, 'load');
-          assertEqual(clone.innerText, 'foo');
+          assertEqual(clone.textContent.trim(), 'foo');
           bv.set(null);
           await waitForDOMEvent(clone, 'load');
           clone.fetch = true;
           bv.set('templates/t3.html');
           await waitForDOMEvent(clone, 'load');
           await waitForFrame();
-          assertEqual(clone.innerText, 'foo');
+          assertEqual(clone.textContent.trim(), 'foo');
         }
 
         {
           const clone = clones[4];
-          assertEqual(clone.innerText, 'FOO');
+          assertEqual(clone.textContent.trim(), 'FOO');
         }
 
         {
           const clone = clones[5];
-          assertEqual(clone.innerText, 'foo');
+          assertEqual(clone.textContent.trim(), 'foo');
         }
 
         {
           const clone = clones[6];
-          assertEqual(clone.innerText, 'hello');
+          assertEqual(clone.textContent.trim(), 'hello');
         }
 
         {
           const clone = clones[7];
-          assertEqual(clone.innerText, '');
+          assertEqual(clone.textContent.trim(), '');
         }
 
         {
           const clone = clones[8];
           await clone.waitForLoad();
-          assertEqual(clone.innerText, 'FOO');
+          assertEqual(clone.textContent.trim(), 'FOO');
         }
 
         {

@@ -21,7 +21,7 @@
 
           await clone.waitForLoad();
 
-          assertEqual(clone.innerText, 'foo');
+          assertEqual(clone.textContent.trim(), 'foo');
         }
 
         {
@@ -29,7 +29,7 @@
 
           await clone.waitForLoad();
 
-          assertEqual(clone.innerText, 'bar');
+          assertEqual(clone.textContent.trim(), 'bar');
         }
       });
     </script>
