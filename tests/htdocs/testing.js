@@ -42,7 +42,7 @@ export function skip(reason) {
 
 export function failure(err) {
   console.error(err);
-  window.parent.postMessage({ ok: false, error: err });
+  window.parent.postMessage({ ok: false, error: err.toString() });
 }
 
 export function define(callback) {
