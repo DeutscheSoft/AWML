@@ -89,12 +89,14 @@
       function runTest(url, timeout) {
         if (!timeout) timeout = 2000;
 
-        const iframe = document.querySelector('iframe');
+        const iframe = document.createElement('iframe');
+        iframe.setAttribute('loading', 'eager');
 
         return new Promise((resolve, reject) => {
           const onmessage = (ev) => {
             const data = ev.data;
             window.removeEventListener('message', onmessage);
+            iframe.remove();
 
             if (data.ok) {
               if (data.count === 'skipped') {
@@ -115,6 +117,7 @@
 
           window.addEventListener('message', onmessage);
           iframe.src = url;
+          document.body.appendChild(iframe);
         });
       }
 
@@ -158,6 +161,5 @@
   </head>
   <body>
     <div id="log"></div>
-    <iframe loading="eager" src="awml-backend.html"></iframe>
   </body>
 </html>
