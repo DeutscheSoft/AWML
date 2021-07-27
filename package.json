@@ -19,6 +19,8 @@
     "./src/options.js",
     "./src/options/*.js",
     "./src/backends/*.registration.js",
+    "./src/backends/ember-plus.js",
+    "./src/backends/aes70.js",
     "./src/components/*.element.js"
   ],
   "author": "Arne Goedeke",
