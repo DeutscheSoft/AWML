@@ -188,6 +188,7 @@ export function createBinding(targetNode, sourceNode, ctx, options, log) {
     preventChange: options.preventChange,
     ignoreInteraction: options.ignoreInteraction,
     receiveDelay: options.receiveDelay,
+    debug: options.debug,
   });
 
   if (log)

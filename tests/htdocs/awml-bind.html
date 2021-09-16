@@ -117,6 +117,93 @@
           // check that the binding is gone
           assertEq(bv.value + bv.value, widget.get('foo7'));
         }
+
+        {
+          // Check that ignoreInteraction works properly
+
+          const component = components[0];
+          const widget = widgets[0];
+          const bv = DynamicValue.fromConstant('bar');
+          const awmlBind = document.createElement('awml-bind');
+          component.appendChild(awmlBind);
+
+          awmlBind.bindings = [
+            {
+              name: 'value1',
+              backendValue: bv,
+              readonly: true,
+            },
+            {
+              name: 'value2',
+              backendValue: bv,
+              readonly: true,
+              receiveDelay: 200,
+            },
+            {
+              name: 'value3',
+              backendValue: bv,
+              readonly: true,
+              ignoreInteraction: true,
+            }
+          ];
+
+          widget.set('value1', 0);
+          widget.set('value2', 0);
+          widget.set('value3', 0);
+
+          bv.set(42);
+
+          assertEqual(widget.get('value1'), 42);
+          assertEqual(widget.get('value2'), 42);
+          assertEqual(widget.get('value3'), 42);
+
+          widget.startInteracting();
+          assertEqual(true, widget.get('interacting'));
+
+          bv.set(23);
+
+          assertEqual(widget.get('value1'), 42);
+          assertEqual(widget.get('value2'), 42);
+          assertEqual(widget.get('value3'), 23);
+
+          // This should not change anything,
+          // the interruption is too short to be
+          // noticed.
+          widget.stopInteracting();
+          await delay(20);
+
+          // This value should still be ignored
+          bv.set(23);
+
+          assertEqual(widget.get('value1'), 42);
+          assertEqual(widget.get('value2'), 42);
+          assertEqual(widget.get('value3'), 23);
+
+          widget.startInteracting();
+
+          assertEqual(widget.get('value1'), 42);
+          assertEqual(widget.get('value2'), 42);
+          assertEqual(widget.get('value3'), 23);
+
+          widget.stopInteracting();
+          assertEqual(false, widget.get('interacting'));
+
+          // default receiveDelay is 500
+
+          await delay(220);
+
+          assertEqual(widget.get('value1'), 42);
+          assertEqual(widget.get('value2'), 23);
+          assertEqual(widget.get('value3'), 23);
+
+          await delay(300);
+
+          assertEqual(widget.get('value1'), 23);
+          assertEqual(widget.get('value2'), 23);
+          assertEqual(widget.get('value3'), 23);
+
+          awmlBind.remove();
+        }
       });
     </script>
     <script></script>

@@ -151,41 +151,59 @@ export function userInteractionFromWidget(widget, timeout) {
   });
 }
 
-function blockWhileInteracting(widget, subscribeReceive, setFun, delay) {
-  let interacting = false;
+function waitForUserInteractionEnd(widget, delay) {
+  return new Promise((resolve, reject) => {
+    let sub1, sub2;
+    let timeout_id;
+
+    sub1 = widget.subscribe('set_interacting', (value) => {
+      if (timeout_id)
+        clearTimeout(timeout_id);
+
+      timeout_id = void 0;
+
+      if (value)
+        return;
+
+      timeout_id = setTimeout(() => {
+        sub1();
+        sub2();
+        if (widget.get('interacting'))
+          resolve(waitForUserInteractionEnd(widget, delay));
+        else
+          resolve();
+      }, delay);
+    });
+    sub2 = widget.subscribe('destroy', () => {
+      reject(new Error('Widget was destroyed.'));
+    });
+  });
+}
+
+function blockWhileInteracting(widget, setFun, delay) {
   let hasValue = false;
   let lastValue = null;
 
-  return [
-    (cb) => {
-      let sub1 = subscribeInteractionChange(widget, delay, (_interacting) => {
-        interacting = _interacting;
-
-        if (!interacting && hasValue) {
-          hasValue = false;
-          setFun(lastValue);
-        }
-      });
-
-      if (!subscribeReceive) return sub1;
-
-      let sub2 = subscribeReceive(cb);
-
-      return () => {
-        sub1();
-        sub2();
-      };
-    },
-    (value) => {
-      if (interacting) {
+  return (value) => {
+    if (!hasValue && !widget.get('interacting')) {
+      hasValue = false;
+      lastValue = null;
+      setFun(value);
+    } else {
+      lastValue = value;
+      if (!hasValue) {
         hasValue = true;
-        lastValue = value;
-      } else {
-        hasValue = false;
-        setFun(value);
+        waitForUserInteractionEnd(widget, delay).then(
+          () => {
+            setFun(lastValue);
+            hasValue = false;
+            lastValue = null;
+          },
+          (err) => {}
+        );
       }
-    },
-  ];
+    }
+  };
 }
 
 /**
@@ -290,11 +308,10 @@ export function bindingFromWidget(widget, name, options) {
   }
 
   if (!options.ignoreInteraction && setFun !== null) {
-    [subscribeFun, setFun] = blockWhileInteracting(
+    setFun = blockWhileInteracting(
       widget,
-      subscribeFun,
       setFun,
-      options.receiveDelay
+      options.receiveDelay || 500
     );
   }
 
