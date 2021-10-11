@@ -310,7 +310,7 @@ export class EmberPlusBackend extends Backend {
             this._setters.set(path, (value) => {
               this._device.setEffectiveValue(node, value);
             });
-            return this._device.observerProperty(node, 'value', (value) => {
+            return this._device.observeProperty(node, 'value', (value) => {
               callback(node.effectiveValue);
             });
           } else if (propertyName === 'effectiveMinimum') {
