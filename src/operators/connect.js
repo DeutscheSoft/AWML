@@ -1,6 +1,7 @@
 /**
  * Connects two dynamic values to each other. Values emitted by
- * one will be set() on the other.
+ * one will be set() on the other. Note that this method will detect
+ * recursions break them.
  *
  * @param {DynamicValue} value1
  *      The first value.
@@ -29,31 +30,31 @@ export function connect(
   replay2,
   transform2
 ) {
-  let rec = false;
+  let rec = 0;
 
   const sub1 = value1.subscribe((value) => {
-    if (rec) return;
-    rec = true;
+    if (rec > 1) return;
+    rec++;
     try {
       if (transform1) value = transform1(value);
       value2.set(value);
     } catch (err) {
       throw err;
     } finally {
-      rec = false;
+      rec--;
     }
   }, replay1);
 
   const sub2 = value2.subscribe((value) => {
-    if (rec) return;
-    rec = true;
+    if (rec > 1) return;
+    rec++;
     try {
       if (transform2) value = transform2(value);
       value1.set(value);
     } catch (err) {
       throw err;
     } finally {
-      rec = false;
+      rec--;
     }
   }, replay2);
 
