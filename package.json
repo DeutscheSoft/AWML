@@ -15,10 +15,19 @@
     "./src/index.js",
     "./src/index.sideeffects.js",
     "./src/custom_elements.js",
-    "./src/options.js",
-    "./src/options/*.js",
+    "./src/options/*.registration.js",
     "./src/backends/*.registration.js",
-    "./src/components/*.element.js"
+    "./src/backends/ember-plus.js",
+    "./src/backends/aes70.js",
+    "./src/components/*.element.js",
+    "*.element.js",
+    "*.registration.js",
+    "index.sideeffects.js",
+    "index.js",
+    "options.js",
+    "ember-plus.js",
+    "aes70.js",
+    "custom_elements.js"
   ],
   "author": "Arne Goedeke",
   "license": "GPL-2.0-only"
