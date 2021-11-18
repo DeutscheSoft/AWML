@@ -2,7 +2,7 @@ import { connect, connectTo } from './operators/connect.js';
 import { collectPrefix, compileSrc } from './utils/prefix.js';
 import { getBackendValue } from './backends.js';
 import { ListValue } from './list_value.js';
-import { bindingFromComponent } from './utils/aux-support.js';
+import { bindingFromComponent, bindingFromWidget } from './utils/aux-support.js';
 import { runCleanupHandler } from './utils/run_cleanup_handler.js';
 import { log as defaultLog } from './utils/log.js';
 
@@ -118,9 +118,9 @@ function logSend(log, transform) {
 }
 
 /**
- * Creates a binding to a target component.
+ * Creates a binding to a target component or target widget.
  *
- * @param {Node} targetNode
+ * @param {Node|Widget} target
  *      The node to bind to.
  * @param {Node} sourceNode
  *      The source node which initiated this binding. This node is used
@@ -134,12 +134,12 @@ function logSend(log, transform) {
  *      An optional callback which is called with debug output. This function
  *      is expected to have the same signature as ``console.log``.
  */
-export function createBinding(targetNode, sourceNode, ctx, options, log) {
+export function createBinding(target, sourceNode, ctx, options, log) {
   let backendValue = options.backendValue;
 
   if (!log && options.debug)
     log = function (fmt, ...args) {
-      defaultLog('Binding(%o, %o): ' + fmt, targetNode, options, ...args);
+      defaultLog('Binding(%o, %o): ' + fmt, target, options, ...args);
     };
 
   if (!backendValue) {
@@ -180,7 +180,8 @@ export function createBinding(targetNode, sourceNode, ctx, options, log) {
     backendValue = tmp;
   }
 
-  const binding = bindingFromComponent(targetNode, options.name, {
+  let binding;
+  const bindingOptions = {
     readonly: options.writeonly,
     writeonly: options.readonly,
     sync: options.sync,
@@ -189,10 +190,19 @@ export function createBinding(targetNode, sourceNode, ctx, options, log) {
     ignoreInteraction: options.ignoreInteraction,
     receiveDelay: options.receiveDelay,
     debug: options.debug,
-  });
+  };
+
+  if (target instanceof Node) {
+    binding = bindingFromComponent(target, options.name, bindingOptions);
+  } else if (typeof target === 'object') {
+    // We assume it is a widget.
+    binding = bindingFromWidget(target, options.name, bindingOptions);
+  } else {
+    throw new TypeError('Expected target node or widget.');
+  }
 
   if (log)
-    log('Created binding for %o in component %o.', options.name, targetNode);
+    log('Created binding for %o in component %o.', options.name, target);
 
   const transformReceive = logReceive(log, options.transformReceive
     ? options.transformReceive.bind(ctx)
@@ -227,9 +237,9 @@ export function createBinding(targetNode, sourceNode, ctx, options, log) {
  */
 export class Bindings {
   /**
-   * @param {Node} targetNode
+   * @param {Node|Widget} target
    *    Node to install bindings on.
-   * @param {Node} [sourceNode=targetNode]
+   * @param {Node} [sourceNode=target]
    *    The source node which initiated this binding. This node is used
    *    for calculating the prefix.
    * @param {*} [ctx=sourceNode]
@@ -239,10 +249,10 @@ export class Bindings {
    *    An optional callback which is called with debug output. This function
    *    is expected to have the same signature as ``console.log``.
    */
-  constructor(targetNode, sourceNode, ctx, log) {
+  constructor(target, sourceNode, ctx, log) {
     this._subscriptions = new Map();
-    this._targetNode = targetNode;
-    this._sourceNode = sourceNode || targetNode;
+    this._target = target;
+    this._sourceNode = sourceNode || (target instanceof Node ? target : target.element);
     this._ctx = ctx || this._sourceNode;
     this._log = log;
     this._bindings = null;
@@ -281,7 +291,7 @@ export class Bindings {
     this.log('Creating %d bindings.', n.size);
     n.forEach((options) => {
       const sub = createBinding(
-        this._targetNode,
+        this._target,
         this._sourceNode,
         this._ctx,
         options,
@@ -302,7 +312,7 @@ export class Bindings {
       if (!dependsOnPrefix(options, handle)) return;
       runCleanupHandler(sub);
       sub = createBinding(
-        this._targetNode,
+        this._target,
         this._sourceNode,
         this._ctx,
         options,
