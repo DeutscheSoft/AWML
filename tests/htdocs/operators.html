@@ -12,8 +12,11 @@
         resolve,
         connect,
         mapItemsCached,
-        mapItemsCachedByKey
+        mapItemsCachedByKey,
+        resolveItems,
       } from '../../src/index.js';
+
+      import { timeout } from '../../src/utils/timeout.js';
 
       function record(dv) {
         const values = [];
@@ -319,6 +322,148 @@
             assertEq(await p, new Map());
             assertEq(await pKey, new Map());
             assertEqual(called, 9);
+          }
+        }
+
+        // resolveItems
+        {
+          // Synchronous case of an array
+          {
+            let called = 0;
+            const input = DynamicValue.fromConstant([]);
+            const result = resolveItems(
+              input,
+              (item, index, items, callback) => {
+                called++;
+                callback(item * 2);
+                return null;
+              }
+            );
+
+            // We want the result dynamic value to be permanently active.
+            result.subscribe(() => {});
+
+            let p;
+
+            assertEq(await result.wait(), []);
+            assertEqual(called, 0);
+
+            p = result.wait(false);
+            input.set([2, 3, 4]);
+            assertEq(await p, [4, 6, 8]);
+            assertEqual(called, 3);
+
+            p = result.wait(false);
+            input.set([0, 2, 3, 4]);
+            assertEq(await p, [0, 4, 6, 8]);
+            assertEqual(called, 4);
+
+            p = result.wait(false);
+            input.set([0]);
+            assertEq(await p, [0]);
+            assertEqual(called, 4);
+          }
+
+          // Asynchronous array case
+          {
+            let called = 0;
+            const input = DynamicValue.fromConstant([]);
+            const result = resolveItems(
+              input,
+              (item, index, items, callback) => {
+                called++;
+                return timeout(() => callback(item * 2), 10 + item * 5);
+              }
+            );
+
+            // We want the result dynamic value to be permanently active.
+            result.subscribe(() => {});
+
+            let p;
+
+            assertEq(await result.wait(), []);
+            assertEqual(called, 0);
+
+            p = result.wait(false);
+            input.set([2, 3, 4]);
+            assertEq(await p, [4, 6, 8]);
+            assertEqual(called, 3);
+
+            p = result.wait(false);
+            input.set([0, 2, 3, 4]);
+            assertEq(await p, [0, 4, 6, 8]);
+            assertEqual(called, 4);
+
+            p = result.wait(false);
+            input.set([0, 4, 5, 6]);
+            assertEq(await p, [0, 8, 10, 12]);
+            assertEqual(called, 6);
+
+            p = result.wait(false);
+            input.set([0]);
+            assertEq(await p, [0]);
+            assertEqual(called, 6);
+          }
+
+          // Asynchromous Map case
+          {
+            let called = 0;
+            const m = new Map();
+            const input = DynamicValue.fromConstant(m);
+            const result = resolveItems(
+              input,
+              (item, index, items, callback) => {
+                called++;
+                return timeout(() => callback(item * 2), 10 + item * 5);
+              }
+            );
+
+            // We want the result dynamic value to be permanently active.
+            result.subscribe(() => {});
+
+            let p = result.wait();
+            assertEq(await p, new Map());
+            assertEqual(called, 0);
+
+            p = result.wait(false);
+            m.set('a', 2);
+            m.set('b', 3);
+            m.set('c', 4);
+            m.set('d', 2);
+            input.set(m);
+
+            assertEq(
+              await p,
+              new Map([
+                ['a', 4],
+                ['b', 6],
+                ['c', 8],
+                ['d', 4],
+              ])
+            );
+            assertEqual(called, 3);
+
+            p = result.wait(false);
+            m.set('a', 5);
+            m.set('null', 0);
+            m.delete('c');
+            input.set(m);
+            assertEq(
+              await p,
+              new Map([
+                ['a', 10],
+                ['b', 6],
+                ['d', 4],
+                ['null', 0],
+              ])
+            );
+            assertEqual(called, 5);
+
+            p = result.wait(false);
+            m.clear();
+            input.set(m);
+            assertEq(await p, new Map());
+            assertEqual(called, 5);
           }
         }
       });

@@ -7,3 +7,4 @@ export * from './operators/switch.js';
 export * from './operators/from_subscription.js';
 export * from './operators/from_dom_event.js';
 export * from './operators/map_items_cached.js';
+export * from './operators/resolve_items.js';
