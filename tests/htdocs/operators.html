@@ -2,7 +2,7 @@
   <head>
     <meta charset="utf-8" />
     <script type="module">
-      import { define, delay, assertEqual } from './testing.js';
+      import { define, delay, assertEqual, assertEq } from './testing.js';
       import {
         DynamicValue,
         ListValue,
@@ -11,6 +11,8 @@
         switchMap,
         resolve,
         connect,
+        mapItemsCached,
+        mapItemsCachedByKey
       } from '../../src/index.js';
 
       function record(dv) {
@@ -195,6 +197,128 @@
 
             assertEqual(v2.value, 2);
             assertEqual(v1.value, 4);
+          }
+        }
+
+        // mapItemsCached
+        {
+          // array
+          {
+            let called = 0;
+            const input = DynamicValue.fromConstant([]);
+            const result = mapItemsCached(input, (item, key, items) => {
+              called++;
+              return item * 2;
+            });
+
+            // We want the result dynamic value to be permanently active.
+            result.subscribe(() => {});
+
+            let p;
+
+            assertEq(await result.wait(), []);
+            assertEqual(called, 0);
+
+            p = result.wait(false);
+            input.set([2, 3, 4]);
+            assertEq(await p, [4, 6, 8]);
+            assertEqual(called, 3);
+
+            p = result.wait(false);
+            input.set([0, 2, 3, 4]);
+            assertEq(await p, [0, 4, 6, 8]);
+            assertEqual(called, 4);
+
+            p = result.wait(false);
+            input.set([0]);
+            assertEq(await p, [0]);
+            assertEqual(called, 4);
+          }
+
+          // with Map
+          {
+            let called = 0;
+            const m = new Map();
+            const input = DynamicValue.fromConstant(m);
+            const result = mapItemsCached(input, (item, key, items) => {
+              called++;
+              return item * 2;
+            });
+            const resultByKey = mapItemsCachedByKey(
+              input,
+              (item, key, items) => {
+                called++;
+                return item * 2;
+              }
+            );
+
+            // We want the result dynamic value to be permanently active.
+            result.subscribe(() => {});
+            resultByKey.subscribe(() => {});
+
+            let p, pKey;
+
+            assertEq(await result.wait(), new Map());
+            assertEq(await resultByKey.wait(), new Map());
+            assertEqual(called, 0);
+
+            p = result.wait(false);
+            pKey = resultByKey.wait(false);
+            m.set('a', 2);
+            m.set('b', 3);
+            m.set('c', 4);
+            input.set(m);
+
+            assertEq(
+              await p,
+              new Map([
+                ['a', 4],
+                ['b', 6],
+                ['c', 8],
+              ])
+            );
+            assertEq(
+              await pKey,
+              new Map([
+                ['a', 4],
+                ['b', 6],
+                ['c', 8],
+              ])
+            );
+            assertEqual(called, 6);
+
+            p = result.wait(false);
+            pKey = resultByKey.wait(false);
+            m.set('a', 5);
+            m.set('null', 0);
+            m.delete('c');
+            input.set(m);
+            assertEq(
+              await p,
+              new Map([
+                ['a', 10],
+                ['b', 6],
+                ['null', 0],
+              ])
+            );
+            assertEq(
+              await pKey,
+              new Map([
+                ['a', 4],
+                ['b', 6],
+                ['null', 0],
+              ])
+            );
+            assertEqual(called, 9);
+
+            p = result.wait(false);
+            pKey = resultByKey.wait(false);
+            m.clear();
+            input.set(m);
+
+            assertEq(await p, new Map());
+            assertEq(await pKey, new Map());
+            assertEqual(called, 9);
           }
         }
       });

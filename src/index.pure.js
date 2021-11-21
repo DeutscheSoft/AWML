@@ -23,19 +23,7 @@ export {
 } from './utils/prefix.js';
 export { DynamicValue } from './dynamic_value.js';
 export { ListValue } from './list_value.js';
-export {
-  combineLatest,
-  connect,
-  connectTo,
-  filter,
-  fromSubscription,
-  fromDOMEvent,
-  map,
-  reduce,
-  resolve,
-  switchMap,
-  switchAll,
-} from './operators.js';
+export * from './operators.js';
 export {
   AttributesComponent,
   BackendComponent,
