@@ -59,7 +59,7 @@
             `container {{ this.open ?  'open' : 'closed' }} {{ this.inprogress ?  'inprogress' : '' }}`
           );
 
-          assertEqual(template.update({ }), true);
+          assertEqual(template.update({}), true);
 
           assertEqual(template.get(), 'container closed ');
         }

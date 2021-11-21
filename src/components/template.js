@@ -164,8 +164,7 @@ export class TemplateComponent extends HTMLElement {
 
     const hostBindings = this._hostBindings;
 
-    if (hostBindings)
-      hostBindings.updatePrefix(handle);
+    if (hostBindings) hostBindings.updatePrefix(handle);
   }
 
   /**

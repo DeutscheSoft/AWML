@@ -41,8 +41,7 @@ export class BackendValue extends DynamicValue {
     const backend = this._backend;
 
     if (!info || !backend) {
-      if (this._infoError)
-        throw this._infoError;
+      if (this._infoError) throw this._infoError;
       return null;
     }
 

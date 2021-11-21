@@ -83,7 +83,8 @@
 
         {
           const template = DOMTemplate.fromString(
-            '<div [classList]={{ this.classes }}> </div>');
+            '<div [classList]={{ this.classes }}> </div>'
+          );
 
           const container = document.createElement('div');
 
@@ -101,27 +102,27 @@
           });
           assertEq(div.className, '');
           template.update({
-            classes: [ 'foo' ],
+            classes: ['foo'],
           });
           assertEq(div.className, 'foo');
           template.update({
-            classes: [ 'foo' ],
+            classes: ['foo'],
           });
           assertEq(div.className, 'foo');
           template.update({
-            classes: [ 'foo', 'bar' ],
+            classes: ['foo', 'bar'],
           });
           assertEq(div.className, 'foo bar');
           template.update({
-            classes: [ 'foo', 'bar', 'flu' ],
+            classes: ['foo', 'bar', 'flu'],
           });
           assertEq(div.className, 'foo bar flu');
           template.update({
-            classes: [ 'foo', 'flu' ],
+            classes: ['foo', 'flu'],
           });
           assertEq(div.className, 'foo flu');
           template.update({
-            classes: [ '1', '2' ],
+            classes: ['1', '2'],
           });
           assertEq(div.className, '1 2');
         }
@@ -129,7 +130,8 @@
         {
           const template = DOMTemplate.fromString(
             `<div prefix={{ this.prefix }}><div %if={{ this.condition }}><test-component
-            %bind={{ this.binding }}></test-component></div></div>`);
+            %bind={{ this.binding }}></test-component></div></div>`
+          );
 
           const container = document.createElement('div');
 

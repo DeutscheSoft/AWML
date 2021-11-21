@@ -391,7 +391,11 @@ export class EmberPlusBackend extends BackendBase {
           const pos = childNames.indexOf(propertyName);
 
           if (pos === -1) {
-            callback(0, 0, new Error(`Could not find child ${propertyName} in node.`));
+            callback(
+              0,
+              0,
+              new Error(`Could not find child ${propertyName} in node.`)
+            );
             return null;
           } else {
             const child = node.children[pos];

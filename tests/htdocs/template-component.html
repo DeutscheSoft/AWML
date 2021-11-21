@@ -403,7 +403,9 @@
               </test-component>
             </div>
             `;
-          const componentClass = class extends TemplateComponent.fromString(myTemplate) {
+          const componentClass = class extends TemplateComponent.fromString(
+            myTemplate
+          ) {
             constructor() {
               super();
               this.prefix1 = ':noprefix:';
@@ -417,10 +419,10 @@
                   src: '/Gain',
                   srcPrefix: 'foo',
                   name: 'option3',
-                }
+                },
               ];
             }
-          }
+          };
 
           customElements.define('my-component4', componentClass);
 
@@ -453,8 +455,14 @@
           await component.whenRedrawn();
           Gain.set(Gain.value - 1.0);
           // bindings only for handle foo should be active
-          assertEqual(component.component.auxWidget.get('option1'), Gain.value + 1);
-          assertEqual(component.component.auxWidget.get('option2'), Gain.value + 1);
+          assertEqual(
+            component.component.auxWidget.get('option1'),
+            Gain.value + 1
+          );
+          assertEqual(
+            component.component.auxWidget.get('option2'),
+            Gain.value + 1
+          );
           assertEqual(component.component.auxWidget.get('option3'), Gain.value);
           assertEqual(component.component.auxWidget.get('option4'), Gain.value);
           component.remove();
@@ -464,13 +472,15 @@
           const myTemplate = `
             <div class="container {{ this.open ?  'open' : 'closed' }} {{ this.inprogress ?  'inprogress' : '' }}"></div>
             `;
-          const componentClass = class extends TemplateComponent.fromString(myTemplate) {
+          const componentClass = class extends TemplateComponent.fromString(
+            myTemplate
+          ) {
             constructor() {
               super();
               this.open = false;
               this.inprogress = false;
             }
-          }
+          };
 
           customElements.define('my-component6', componentClass);
 

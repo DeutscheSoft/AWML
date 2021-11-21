@@ -151,7 +151,9 @@ class PropertyImplementedContext extends ContextWithValue {
     };
 
     if (!property.getter(object)) {
-      throw new Error(`Could not subscribe to private property ${object.ClassName}.${property.name}`);
+      throw new Error(
+        `Could not subscribe to private property ${object.ClassName}.${property.name}`
+      );
     }
   }
 
@@ -202,9 +204,14 @@ class PropertyContext extends ContextWithValue {
     };
 
     if (property.static) {
-      if (index) throw new Error(`Static property ${object.ClassName}.${property.name} has no Min/Max.`);
+      if (index)
+        throw new Error(
+          `Static property ${object.ClassName}.${property.name} has no Min/Max.`
+        );
     } else if (!this.getter) {
-      throw new Error(`Could not subscribe to private property ${object.ClassName}.${property.name}`);
+      throw new Error(
+        `Could not subscribe to private property ${object.ClassName}.${property.name}`
+      );
     }
   }
 
@@ -256,7 +263,9 @@ class PropertyContext extends ContextWithValue {
           callback(
             0,
             0,
-            new Error(`${this.object.ClassName}.${this.property.name} has neither Min nor Max.`)
+            new Error(
+              `${this.object.ClassName}.${this.property.name} has neither Min nor Max.`
+            )
           );
         }
       },
@@ -283,7 +292,8 @@ class PropertyContext extends ContextWithValue {
 class RoleMapContext extends ContextWithValue {
   constructor(object) {
     super();
-    if (!isBlock(object)) throw new TypeError(`Expected OcaBlock, got ${object.ClassName}`);
+    if (!isBlock(object))
+      throw new TypeError(`Expected OcaBlock, got ${object.ClassName}`);
     this.object = object;
     this.info = {
       type: 'directory',
@@ -595,7 +605,11 @@ export class AES70Backend extends BackendBase {
           if (!property) {
             if (!isBlock(o)) {
               this.log('Could not find property %o in %o', propertyName, o);
-              callback(0, 0, new Error(`Could not find property ${propertyName}.`));
+              callback(
+                0,
+                0,
+                new Error(`Could not find property ${propertyName}.`)
+              );
             }
           } else {
             const ctx = new PropertyDirectoryContext(o, property);
@@ -639,7 +653,11 @@ export class AES70Backend extends BackendBase {
 
             if (!property) {
               this.log('Could not find property %o in %o', propertyName, o);
-              callback(0, 0, new Error(`Could not find property ${propertyName}.`));
+              callback(
+                0,
+                0,
+                new Error(`Could not find property ${propertyName}.`)
+              );
               return null;
             }
 
@@ -667,7 +685,11 @@ export class AES70Backend extends BackendBase {
               return sub;
             } else {
               this.log('Could not find property %o in %o', propertyName, o);
-              callback(0, 0, new Error(`Could not find property ${propertyName}.`));
+              callback(
+                0,
+                0,
+                new Error(`Could not find property ${propertyName}.`)
+              );
               return null;
             }
           }

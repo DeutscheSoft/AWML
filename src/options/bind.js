@@ -73,11 +73,19 @@ export class BindOption extends Option {
     }
 
     if (options.readonly) {
-      this._sub = connectTo(dv, options.backendValue, options.replay,
-                            this.receiveValue.bind(this));
+      this._sub = connectTo(
+        dv,
+        options.backendValue,
+        options.replay,
+        this.receiveValue.bind(this)
+      );
     } else if (options.writeonly) {
-      this._sub = connectTo(options.backendValue, dv, false,
-                            this.sendValue.bind(this));
+      this._sub = connectTo(
+        options.backendValue,
+        dv,
+        false,
+        this.sendValue.bind(this)
+      );
     } else {
       this._sub = connect(
         options.backendValue,

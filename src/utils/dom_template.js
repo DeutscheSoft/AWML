@@ -46,7 +46,7 @@ class DOMTemplateDirective {
     this.isConnected = false;
   }
 
-  updateConnected() { }
+  updateConnected() {}
 
   attach(node) {
     const path = this._path;
@@ -247,20 +247,15 @@ class ClassListExpression extends DOMTemplateExpression {
       let list = template.get();
       const currentList = this._list;
 
-      if (typeof list === 'string')
-      {
+      if (typeof list === 'string') {
         list = list.split(/\s+/g);
-      }
-      else if (list === null || list === void 0)
-      {
+      } else if (list === null || list === void 0) {
         list = [];
-      }
-      else if (!Array.isArray(list))
-      {
+      } else if (!Array.isArray(list)) {
         throw new TypeError('Expected string, null or array.');
       }
 
-      const [ toRemove, toAdd ] = arrayDiff(currentList, list);
+      const [toRemove, toAdd] = arrayDiff(currentList, list);
 
       const classList = this._node.classList;
 
@@ -648,7 +643,7 @@ function arrayDiff(from, to) {
   const toRemove = from.filter((elem) => !to.includes(elem));
   const toAdd = to.filter((elem) => !from.includes(elem));
 
-  return [ toRemove, toAdd ];
+  return [toRemove, toAdd];
 }
 
 function compileExpressions(childNodes, expressions, nodePath) {
@@ -747,7 +742,8 @@ function compileExpressions(childNodes, expressions, nodePath) {
                   );
                 }
               } else if (name.startsWith('prefix')) {
-                const handle = name === 'prefix' ? null : name.substr('prefix-'.length);
+                const handle =
+                  name === 'prefix' ? null : name.substr('prefix-'.length);
 
                 expr = new PrefixExpression(path, handle, tpl);
               } else {
@@ -887,7 +883,11 @@ export class DOMTemplate {
       try {
         directive.connectedCallback();
       } catch (err) {
-        warn('connectedCallback() on template directive %o generated an error: %o', directive, err);
+        warn(
+          'connectedCallback() on template directive %o generated an error: %o',
+          directive,
+          err
+        );
       }
     });
   }
@@ -898,7 +898,11 @@ export class DOMTemplate {
       try {
         directive.disconnectedCallback();
       } catch (err) {
-        warn('disconnectedCallback() on template directive %o generated an error: %o', directive, err);
+        warn(
+          'disconnectedCallback() on template directive %o generated an error: %o',
+          directive,
+          err
+        );
       }
     });
   }
@@ -909,7 +913,11 @@ export class DOMTemplate {
         if (directive.constructor.requiresPrefix)
           directive.updatePrefix(handle);
       } catch (err) {
-        warn('Prefix change on template directive %o generated an error: %o', directive, err);
+        warn(
+          'Prefix change on template directive %o generated an error: %o',
+          directive,
+          err
+        );
       }
     });
   }
@@ -921,10 +929,13 @@ export class DOMTemplate {
       try {
         directive.updatePrefix(handle);
       } catch (err) {
-        warn('Prefix change on template directive %o generated an error: %o', directive, err);
+        warn(
+          'Prefix change on template directive %o generated an error: %o',
+          directive,
+          err
+        );
       }
     });
-
   }
 
   update(ctx) {
@@ -939,8 +950,7 @@ export class DOMTemplate {
         if (expression.update(ctx)) {
           changed = true;
 
-          if (expression.constructor.changesDOM)
-            changedDOM = true;
+          if (expression.constructor.changesDOM) changedDOM = true;
 
           if (expression instanceof PrefixExpression) {
             this._updatePrefixOn(expression.handle, expression.node);

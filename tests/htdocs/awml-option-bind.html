@@ -285,8 +285,18 @@
       <awml-option no-replay name="foo" src="test:foo"></awml-option>
     </test-component>
     <test-component>
-      <awml-option type="bind" readonly name="foo-ro" src="test:foo"></awml-option>
-      <awml-option type="bind" writeonly name="foo-wo" src="test:foo"></awml-option>
+      <awml-option
+        type="bind"
+        readonly
+        name="foo-ro"
+        src="test:foo"
+      ></awml-option>
+      <awml-option
+        type="bind"
+        writeonly
+        name="foo-wo"
+        src="test:foo"
+      ></awml-option>
       <awml-option type="bind" writeonly sync name="foo-wo-sync" src="test:foo">
       </awml-option>
     </test-component>

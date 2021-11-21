@@ -157,21 +157,18 @@ function waitForUserInteractionEnd(widget, delay) {
     let timeout_id;
 
     sub1 = widget.subscribe('set_interacting', (value) => {
-      if (timeout_id)
-        clearTimeout(timeout_id);
+      if (timeout_id) clearTimeout(timeout_id);
 
       timeout_id = void 0;
 
-      if (value)
-        return;
+      if (value) return;
 
       timeout_id = setTimeout(() => {
         sub1();
         sub2();
         if (widget.get('interacting'))
           resolve(waitForUserInteractionEnd(widget, delay));
-        else
-          resolve();
+        else resolve();
       }, delay);
     });
     sub2 = widget.subscribe('destroy', () => {
@@ -308,11 +305,7 @@ export function bindingFromWidget(widget, name, options) {
   }
 
   if (!options.ignoreInteraction && setFun !== null) {
-    setFun = blockWhileInteracting(
-      widget,
-      setFun,
-      options.receiveDelay || 500
-    );
+    setFun = blockWhileInteracting(widget, setFun, options.receiveDelay || 500);
   }
 
   return fromSubscription(subscribeFun, setFun);

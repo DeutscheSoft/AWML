@@ -2,7 +2,10 @@ import { connect, connectTo } from './operators/connect.js';
 import { collectPrefix, compileSrc } from './utils/prefix.js';
 import { getBackendValue } from './backends.js';
 import { ListValue } from './list_value.js';
-import { bindingFromComponent, bindingFromWidget } from './utils/aux-support.js';
+import {
+  bindingFromComponent,
+  bindingFromWidget,
+} from './utils/aux-support.js';
 import { runCleanupHandler } from './utils/run_cleanup_handler.js';
 import { log as defaultLog } from './utils/log.js';
 
@@ -82,36 +85,34 @@ function dependsOnPrefix(binding, handle) {
  */
 
 function logReceive(log, transform) {
-  if (!log)
-    return transform;
+  if (!log) return transform;
 
   if (transform) {
-    return function(value) {
+    return function (value) {
       const tmp = transform(value);
-      log("Received value %o -> %o", value, tmp);
+      log('Received value %o -> %o', value, tmp);
       return tmp;
     };
   } else {
-    return function(value) {
-      log("Received value %o", value);
+    return function (value) {
+      log('Received value %o', value);
       return value;
     };
   }
 }
 
 function logSend(log, transform) {
-  if (!log)
-    return transform;
+  if (!log) return transform;
 
   if (transform) {
-    return function(value) {
+    return function (value) {
       const tmp = transform(value);
-      log("Sending value %o -> %o", value, tmp);
+      log('Sending value %o -> %o', value, tmp);
       return tmp;
     };
   } else {
-    return function(value) {
-      log("Sending value %o", value);
+    return function (value) {
+      log('Sending value %o', value);
       return value;
     };
   }
@@ -201,25 +202,32 @@ export function createBinding(target, sourceNode, ctx, options, log) {
     throw new TypeError('Expected target node or widget.');
   }
 
-  if (log)
-    log('Created binding for %o in component %o.', options.name, target);
+  if (log) log('Created binding for %o in component %o.', options.name, target);
 
-  const transformReceive = logReceive(log, options.transformReceive
-    ? options.transformReceive.bind(ctx)
-    : null);
+  const transformReceive = logReceive(
+    log,
+    options.transformReceive ? options.transformReceive.bind(ctx) : null
+  );
 
-  const transformSend = logSend(log, options.transformSend
-    ? options.transformSend.bind(ctx)
-    : null);
+  const transformSend = logSend(
+    log,
+    options.transformSend ? options.transformSend.bind(ctx) : null
+  );
 
   if (options.readonly) {
-    return connectTo(binding, backendValue,
-                     options.replayReceive === void 0 ? true : !!options.replayReceive,
-                     transformReceive);
+    return connectTo(
+      binding,
+      backendValue,
+      options.replayReceive === void 0 ? true : !!options.replayReceive,
+      transformReceive
+    );
   } else if (options.writeonly) {
-    return connectTo(backendValue, binding,
-                     !!options.replaySend,
-                     transformSend);
+    return connectTo(
+      backendValue,
+      binding,
+      !!options.replaySend,
+      transformSend
+    );
   } else {
     return connect(
       backendValue,
@@ -227,7 +235,7 @@ export function createBinding(target, sourceNode, ctx, options, log) {
       transformReceive,
       binding,
       !!options.replaySend,
-      transformSend,
+      transformSend
     );
   }
 }
@@ -252,7 +260,8 @@ export class Bindings {
   constructor(target, sourceNode, ctx, log) {
     this._subscriptions = new Map();
     this._target = target;
-    this._sourceNode = sourceNode || (target instanceof Node ? target : target.element);
+    this._sourceNode =
+      sourceNode || (target instanceof Node ? target : target.element);
     this._ctx = ctx || this._sourceNode;
     this._log = log;
     this._bindings = null;
@@ -275,7 +284,7 @@ export class Bindings {
       bindings = [];
     } else if (typeof bindings === 'object') {
       if (!Array.isArray(bindings)) {
-        bindings = [ bindings ];
+        bindings = [bindings];
       }
     } else {
       throw new TypeError('Expected IBindingDescription[].');

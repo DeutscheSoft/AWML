@@ -151,8 +151,7 @@
             const v1 = DynamicValue.fromConstant(42);
             const v2 = DynamicValue.fromConstant(23);
 
-            connect(v1, false, null,
-                    v2, false, null);
+            connect(v1, false, null, v2, false, null);
 
             assertEqual(v1.value, 42);
             assertEqual(v2.value, 23);
@@ -168,8 +167,7 @@
             const v1 = DynamicValue.fromConstant(42);
             const v2 = DynamicValue.fromConstant(23);
 
-            connect(v1, true, null,
-                    v2, false, null);
+            connect(v1, true, null, v2, false, null);
 
             assertEqual(v1.value, 42);
             assertEqual(v2.value, 42);
@@ -180,8 +178,7 @@
             const v1 = DynamicValue.fromConstant(42);
             const v2 = DynamicValue.fromConstant(23);
 
-            connect(v1, false, null,
-                    v2, true, null);
+            connect(v1, false, null, v2, true, null);
 
             assertEqual(v1.value, 23);
             assertEqual(v2.value, 23);
@@ -193,8 +190,14 @@
             const v1 = DynamicValue.fromConstant(0);
             const v2 = DynamicValue.fromConstant(0);
 
-            connect(v1, false, (v) => v*2,
-                    v2, false, (v) => v*2);
+            connect(
+              v1,
+              false,
+              (v) => v * 2,
+              v2,
+              false,
+              (v) => v * 2
+            );
 
             v1.set(1);
 
