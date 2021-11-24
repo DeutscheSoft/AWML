@@ -343,16 +343,16 @@ export function bindingFromWidget(widget, name, options) {
  */
 export function bindingFromComponent(node, name, options) {
   if (isCustomElementDefined(node)) {
-    const widget = node.auxWidget;
-
     if (options.writeonly && options.readonly)
       throw new Error('Binding cannot be both write- and read-only.');
-
-    if (widget) return bindingFromWidget(widget, name, options);
 
     if (node.awmlCreateBinding) {
       return node.awmlCreateBinding(name, options);
     }
+
+    const widget = node.auxWidget;
+
+    if (widget) return bindingFromWidget(widget, name, options);
   } else {
     throw new Error('Cannot create binding with unsupported component.');
   }
