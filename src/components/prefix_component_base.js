@@ -285,6 +285,8 @@ export class PrefixComponentBase extends BaseComponent {
       src = this.transformSrc(src);
     }
 
+    if (src === null) return null;
+
     this.log('Subscribing to %o', src);
 
     let dv;
