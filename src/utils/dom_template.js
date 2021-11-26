@@ -4,7 +4,8 @@ import { warn } from './log.js';
 import { Subscriptions } from './subscriptions.js';
 import { subscribeDOMEvent } from './subscribe_dom_event.js';
 import { Bindings } from '../bindings.js';
-import { setPrefix, removePrefix } from '../utils/prefix.js';
+import { setPrefix, removePrefix } from './prefix.js';
+import { safeCall } from './safe_call.js';
 
 const PLACEHOLDER_START = '\x01';
 const PLACEHOLDER_END = '\x02';
@@ -36,6 +37,10 @@ class DOMTemplateDirective {
     this._path = path;
     this._node = null;
     this.isConnected = false;
+  }
+
+  get path() {
+    return this._path;
   }
 
   connectedCallback() {
@@ -462,6 +467,86 @@ class BindNodeReference extends DOMTemplateExpression {
   }
 }
 
+function subscribePromise(p, callback) {
+  let active = true;
+
+  p.then(
+    (result) => {
+      if (!active)
+        return;
+      callback(result);
+    }
+  );
+
+  return () => {
+    active = false;
+  };
+}
+
+class AsyncPipeDirective extends DOMTemplateExpression {
+  static get requiresPrefix() {
+    return true;
+  }
+
+  constructor(path, template, directive) {
+    super(path, template);
+    this._directive = directive;
+    this._unsubscribe = null;
+    this._valueChanged = (value) => {
+      this._directive.update(value);
+    };
+  }
+
+  attach(node) {
+    super.attach(node);
+    this._directive.attach(node);
+  }
+
+  updateConnected() {
+    super.updateConnected();
+    this._directive.updateConnected();
+  }
+
+  updatePrefix(handle) {
+    if (this.isConnected) {
+      const directive = this._directive;
+
+      if ('updatePrefix' in directive)
+        directive.updatePrefix(handle);
+    }
+  }
+
+  apply(result) {
+    safeCall(this._unsubscribe);
+    this._unsubscribe = null;
+    this._unsubscribe = this._subscribe(result);
+  }
+
+  clone() {
+    return new this.constructor(this._path, this._template.clone(), this._directive.clone());
+  }
+
+  _subscribe(observable) {
+    if (!observable)
+      return null;
+
+    const valueChanged = this._valueChanged;
+
+    switch (typeof observable) {
+    case "function":
+      return observable(valueChanged);
+    case "object":
+      if ('subscribe' in observable) {
+        return observable.subscribe(valueChanged);
+      } else if ('then' in observable) {
+        return subscribePromise(observable, valueChanged);
+      }
+    default:
+      throw new TypeError('Expected Promise|DynamicValue.');
+    }
+  }
+}
+
 function containsPlaceholders(input) {
   return -1 !== input.search(rePlaceholder);
 }
@@ -479,6 +564,32 @@ function mergeTokens(strings, expressions) {
   return tokens;
 }
 
+function extractAsync(templateExpression) {
+  let expr = templateExpression.expression;
+
+  do
+  {
+    if (typeof expr !== 'string')
+      break;
+
+    const tmp = expr.split('|');
+    const last = tmp.pop();
+
+    if (last.trim() !== 'async')
+      break;
+
+    templateExpression = new TemplateExpression(tmp.join('|'));
+
+    return [ templateExpression, true ];
+  } while (false);
+
+  return [ templateExpression, false ];
+}
+
+function asyncTemplateFunction() {
+  return this;
+}
+
 function compileStringWithPlaceholders(input, expressions) {
   const strings = input.split(rePlaceholderSplit);
   const matches = Array.from(input.matchAll(rePlaceholder));
@@ -493,7 +604,30 @@ function compileStringWithPlaceholders(input, expressions) {
     return typeof token !== 'string' || token.length;
   });
 
-  return StringTemplate.fromTokens(tokens);
+  let asyncTemplate = null;
+
+  tokens = tokens.map((token) => {
+    if (typeof token === 'string')
+      return token;
+
+    const [ tpl, isAsync ] = extractAsync(token);
+
+    if (!isAsync)
+      return token;
+
+    if (asyncTemplate)
+      throw new Error('Found two async pipes inside one directive.');
+
+    asyncTemplate = tpl;
+
+    return new TemplateExpression(asyncTemplateFunction);
+  });
+
+  if (asyncTemplate)
+    asyncTemplate = StringTemplate.fromTokens([ asyncTemplate ])
+        .toSingleExpression();
+
+  return [ StringTemplate.fromTokens(tokens), asyncTemplate ];
 }
 
 function attributesToArray(attributes) {
@@ -535,6 +669,17 @@ function arrayDiff(from, to) {
   return [toRemove, toAdd];
 }
 
+function makeAsync(expression, asyncTemplate) {
+  if (!asyncTemplate)
+    return expression;
+
+  return new AsyncPipeDirective(
+    expression.path,
+    asyncTemplate,
+    expression
+  );
+}
+
 function compileExpressions(childNodes, expressions, nodePath) {
   let results = [];
 
@@ -551,6 +696,8 @@ function compileExpressions(childNodes, expressions, nodePath) {
             const attr = attributes[i];
             const { name, value } = attr;
             let expr = null;
+            let asyncTemplate = null;
+            let tpl = null;
 
             if (name.startsWith('#')) {
               if (containsPlaceholders(value) || containsPlaceholders(name))
@@ -576,7 +723,7 @@ function compileExpressions(childNodes, expressions, nodePath) {
                   continue;
                 }
 
-                const tpl = compileStringWithPlaceholders(value, expressions);
+                [ tpl, asyncTemplate ] = compileStringWithPlaceholders(value, expressions);
 
                 expr = new EventBindingExpression(
                   path,
@@ -591,18 +738,18 @@ function compileExpressions(childNodes, expressions, nodePath) {
                 continue;
               }
             } else if (name === '%if') {
-              const tpl = compileStringWithPlaceholders(value, expressions);
+              [ tpl, asyncTemplate ] = compileStringWithPlaceholders(value, expressions);
 
               expr = new OptionalNodeReference(path, tpl.toSingleExpression());
             } else if (name === '%bind') {
-              const tpl = compileStringWithPlaceholders(value, expressions);
+              [ tpl, asyncTemplate ] = compileStringWithPlaceholders(value, expressions);
 
               expr = new BindNodeReference(path, tpl.toSingleExpression());
             } else if (containsPlaceholders(value)) {
               if (containsPlaceholders(name))
                 throw new Error('Templates in attribute names not supported.');
 
-              const tpl = compileStringWithPlaceholders(value, expressions);
+              [ tpl, asyncTemplate ] = compileStringWithPlaceholders(value, expressions);
 
               if (name.startsWith('[') && name.endsWith(']')) {
                 const propertyName = name.substr(1, name.length - 2);
@@ -642,7 +789,7 @@ function compileExpressions(childNodes, expressions, nodePath) {
 
             if (expr === null) continue;
 
-            results.push(expr);
+            results.push(makeAsync(expr, asyncTemplate));
             node.removeAttribute(name);
           }
         }
@@ -656,10 +803,10 @@ function compileExpressions(childNodes, expressions, nodePath) {
 
           node.data = '';
 
-          const tpl = compileStringWithPlaceholders(data, expressions);
+          const [ tpl, asyncTemplate ] = compileStringWithPlaceholders(data, expressions);
           const tmp = new NodeContentExpression(path, tpl.toSingleExpression());
 
-          results.push(tmp);
+          results.push(makeAsync(tmp, asyncTemplate));
         }
         break;
     }

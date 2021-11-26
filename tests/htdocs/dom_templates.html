@@ -5,6 +5,7 @@
     <script type="module">
       import { define, assertEq, assertEqual } from './testing.js';
       import { DOMTemplate } from '../../src/utils/dom_template.js';
+      import { DynamicValue } from '../../src/dynamic_value.js';
 
       define(async () => {
         [
@@ -157,6 +158,32 @@
           ctx.condition = true;
           template.update(ctx);
           assertEq(widget.get('option1'), 'bar');
+
+          container.remove();
+        }
+
+        {
+          const template = DOMTemplate.fromString(
+            `{{ this.data | async }}`
+          );
+          const container = document.createElement('div');
+
+          container.appendChild(template._fragment);
+          document.body.appendChild(container);
+
+          assertEq(container.innerText, "");
+
+          template.update({ data: Promise.resolve(42) });
+          await Promise.resolve();
+          assertEq(container.innerText, "42");
+
+          const bv = DynamicValue.fromConstant(23);
+          template.update({ data: bv });
+          assertEq(container.innerText, "23");
+          bv.set(24);
+          assertEq(container.innerText, "24");
+
+          container.remove();
         }
       });
     </script>
