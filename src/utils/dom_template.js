@@ -106,6 +106,17 @@ class DOMTemplateExpression extends DOMTemplateDirective {
     return this._template.dependencies;
   }
 
+  update(ctx) {
+    const template = this._template;
+
+    if (!template.update(ctx))
+      return false;
+
+    this.apply(template.get());
+
+    return true;
+  }
+
   clone() {
     return new this.constructor(this._path, this._template.clone());
   }
@@ -178,57 +189,48 @@ class NodeContentList {
 }
 
 class NodeContentExpression extends DOMTemplateExpression {
-  update(ctx) {
-    const template = this._template;
+  apply(data) {
+    const currentNode = this._node;
 
-    if (template.update(ctx)) {
-      const data = template.get();
-      const currentNode = this._node;
-
-      if (
-        data === null ||
-        data === void 0 ||
-        (Array.isArray(data) && data.length === 0)
-      ) {
-        const node = document.createComment(' null placeholder ');
-        currentNode.replaceWith(node);
-        this._node = node;
-      } else {
-        switch (typeof data) {
-          case 'string':
-          case 'number':
-          case 'boolean':
-            {
-              if (currentNode.nodeType !== 3) {
-                const tmp = document.createTextNode(data);
-                currentNode.replaceWith(tmp);
-                this._node = tmp;
-              } else {
-                currentNode.data = data;
-              }
-            }
-            break;
-          case 'object':
-            // is a node.
-            if (Array.isArray(data)) {
-              const nodeList = new NodeContentList(data);
-              nodeList.replace(currentNode);
-              this._node = nodeList;
-            } else if ('replaceWith' in data) {
-              currentNode.replaceWith(data);
-              this._node = data;
-            } else {
-              throw new TypeError('Unsupported data type.');
-            }
-            break;
-          default:
-            throw new TypeError('Unsupported type.');
-        }
-      }
-
-      return true;
+    if (
+      data === null ||
+      data === void 0 ||
+      (Array.isArray(data) && data.length === 0)
+    ) {
+      const node = document.createComment(' null placeholder ');
+      currentNode.replaceWith(node);
+      this._node = node;
     } else {
-      return false;
+      switch (typeof data) {
+        case 'string':
+        case 'number':
+        case 'boolean':
+          {
+            if (currentNode.nodeType !== 3) {
+              const tmp = document.createTextNode(data);
+              currentNode.replaceWith(tmp);
+              this._node = tmp;
+            } else {
+              currentNode.data = data;
+            }
+          }
+          break;
+        case 'object':
+          // is a node.
+          if (Array.isArray(data)) {
+            const nodeList = new NodeContentList(data);
+            nodeList.replace(currentNode);
+            this._node = nodeList;
+          } else if ('replaceWith' in data) {
+            currentNode.replaceWith(data);
+            this._node = data;
+          } else {
+            throw new TypeError('Unsupported data type.');
+          }
+          break;
+        default:
+          throw new TypeError('Unsupported type.');
+      }
     }
   }
 }
@@ -239,38 +241,29 @@ class ClassListExpression extends DOMTemplateExpression {
     this._list = [];
   }
 
-  update(ctx) {
-    const template = this._template;
+  apply(list) {
+    const currentList = this._list;
 
-    if (template.update(ctx)) {
-      let list = template.get();
-      const currentList = this._list;
-
-      if (typeof list === 'string') {
-        list = list.split(/\s+/g);
-      } else if (list === null || list === void 0) {
-        list = [];
-      } else if (!Array.isArray(list)) {
-        throw new TypeError('Expected string, null or array.');
-      }
-
-      const [toRemove, toAdd] = arrayDiff(currentList, list);
-
-      const classList = this._node.classList;
-
-      toRemove.forEach((cl) => {
-        classList.remove(cl);
-      });
-      toAdd.forEach((cl) => {
-        classList.add(cl);
-      });
-
-      this._list = list;
-
-      return true;
-    } else {
-      return false;
+    if (typeof list === 'string') {
+      list = list.split(/\s+/g);
+    } else if (list === null || list === void 0) {
+      list = [];
+    } else if (!Array.isArray(list)) {
+      throw new TypeError('Expected string, null or array.');
     }
+
+    const [toRemove, toAdd] = arrayDiff(currentList, list);
+
+    const classList = this._node.classList;
+
+    toRemove.forEach((cl) => {
+      classList.remove(cl);
+    });
+    toAdd.forEach((cl) => {
+      classList.add(cl);
+    });
+
+    this._list = list;
   }
 }
 
@@ -280,15 +273,8 @@ class AttributeValueExpression extends DOMTemplateExpression {
     this._attributeName = attributeName;
   }
 
-  update(ctx) {
-    const template = this._template;
-
-    if (template.update(ctx)) {
-      this._node.setAttribute(this._attributeName, template.get());
-      return true;
-    } else {
-      return false;
-    }
+  apply(attributeValue) {
+    this._node.setAttribute(this._attributeName, attributeValue);
   }
 
   clone() {
@@ -306,15 +292,8 @@ class PropertyValueExpression extends DOMTemplateExpression {
     this._propertyName = propertyName;
   }
 
-  update(ctx) {
-    const template = this._template;
-
-    if (template.update(ctx)) {
-      this._node[this._propertyName] = template.get();
-      return true;
-    } else {
-      return false;
-    }
+  apply(propertyValue) {
+    this._node[this._propertyName] = propertyValue;
   }
 
   clone() {
@@ -336,24 +315,14 @@ class PrefixExpression extends DOMTemplateExpression {
     this._prefixHandle = prefixHandle;
   }
 
-  update(ctx) {
-    const template = this._template;
+  apply(prefix) {
+    const node = this._node;
+    const handle = this._prefixHandle;
 
-    if (template.update(ctx)) {
-      const prefix = template.get();
-      const node = this._node;
-      const handle = this._prefixHandle;
-
-      if (prefix === null) {
-        removePrefix(node, handle);
-      } else {
-        setPrefix(node, prefix, handle);
-      }
-
-      this._node[this._propertyName] = template.get();
-      return true;
+    if (prefix === null) {
+      removePrefix(node, handle);
     } else {
-      return false;
+      setPrefix(node, prefix, handle);
     }
   }
 
@@ -367,27 +336,17 @@ class PrefixExpression extends DOMTemplateExpression {
 }
 
 class StyleValueExpression extends PropertyValueExpression {
-  update(ctx) {
-    const template = this._template;
+  apply(cssValue) {
+    const style = this._node.style;
+    const propertyName = this._propertyName;
 
-    if (template.update(ctx)) {
-      const cssValue = template.get();
+    if (Array.isArray(cssValue)) {
+      if (cssValue.length !== 2)
+        throw new TypeError('Expected array [ value, priority ].');
 
-      const style = this._node.style;
-      const propertyName = this._propertyName;
-
-      if (Array.isArray(cssValue)) {
-        if (cssValue.length !== 2)
-          throw new TypeError('Expected array [ value, priority ].');
-
-        style.setProperty(propertyName, cssValue[0], cssValue[1]);
-      } else {
-        style.setProperty(propertyName, cssValue);
-      }
-
-      return true;
+      style.setProperty(propertyName, cssValue[0], cssValue[1]);
     } else {
-      return false;
+      style.setProperty(propertyName, cssValue);
     }
   }
 }
@@ -399,19 +358,12 @@ class EventBindingExpression extends DOMTemplateExpression {
     this._subscriptions = new Subscriptions();
   }
 
-  update(ctx) {
-    const template = this._template;
-
-    if (template.update(ctx)) {
-      this._subscriptions.unsubscribe();
-      this._subscriptions = new Subscriptions();
-      this._subscriptions.add(
-        subscribeDOMEvent(this._node, this._eventName, template.get())
-      );
-      return true;
-    } else {
-      return false;
-    }
+  apply(callback) {
+    this._subscriptions.unsubscribe();
+    this._subscriptions = new Subscriptions();
+    this._subscriptions.add(
+      subscribeDOMEvent(this._node, this._eventName, callback)
+    );
   }
 
   clone() {
@@ -445,27 +397,19 @@ class OptionalNodeReference extends DOMTemplateExpression {
     return commentNode;
   }
 
-  update(ctx) {
-    const template = this._template;
+  apply(state) {
+    state = !!state;
+    const node = this._node;
+    const attached = node.parentNode !== null;
 
-    if (template.update(ctx)) {
-      const state = !!template.get();
-      const node = this._node;
-      const attached = node.parentNode !== null;
+    if (state === attached) return false;
 
-      if (state === attached) return false;
+    const commentNode = this.commentNode;
 
-      const commentNode = this.commentNode;
-
-      if (state) {
-        commentNode.replaceWith(node);
-      } else {
-        node.replaceWith(commentNode);
-      }
-
-      return true;
+    if (state) {
+      commentNode.replaceWith(node);
     } else {
-      return false;
+      node.replaceWith(commentNode);
     }
   }
 }
@@ -514,17 +458,10 @@ class BindNodeReference extends DOMTemplateExpression {
     }
   }
 
-  update(ctx) {
-    const template = this._template;
-
-    if (template.update(ctx)) {
-      if (this.isConnected) this._bindingsImpl.update(template.get());
-      return true;
-    } else {
-      return false;
-    }
+  apply(bindings) {
+    if (this.isConnected)
+      this._bindingsImpl.update(bindings);
   }
-
 }
 
 function containsPlaceholders(input) {
