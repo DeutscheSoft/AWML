@@ -96,7 +96,20 @@ class OptionReference extends DOMTemplateDirective {
   }
 }
 
-class DOMTemplateExpression extends DOMTemplateDirective {}
+class DOMTemplateExpression extends DOMTemplateDirective {
+  constructor(path, template) {
+    super(path);
+    this._template = template;
+  }
+
+  get dependencies() {
+    return this._template.dependencies;
+  }
+
+  clone() {
+    return new this.constructor(this._path, this._template.clone());
+  }
+}
 
 class NodeContentList {
   constructor(nodes) {
@@ -165,11 +178,6 @@ class NodeContentList {
 }
 
 class NodeContentExpression extends DOMTemplateExpression {
-  constructor(path, template) {
-    super(path);
-    this._template = template;
-  }
-
   update(ctx) {
     const template = this._template;
 
@@ -223,20 +231,11 @@ class NodeContentExpression extends DOMTemplateExpression {
       return false;
     }
   }
-
-  get dependencies() {
-    return this._template.dependencies;
-  }
-
-  clone() {
-    return new this.constructor(this._path, this._template.clone());
-  }
 }
 
 class ClassListExpression extends DOMTemplateExpression {
   constructor(path, template) {
-    super(path);
-    this._template = template;
+    super(path, template);
     this._list = [];
   }
 
@@ -273,21 +272,12 @@ class ClassListExpression extends DOMTemplateExpression {
       return false;
     }
   }
-
-  get dependencies() {
-    return this._template.dependencies;
-  }
-
-  clone() {
-    return new this.constructor(this._path, this._template.clone());
-  }
 }
 
 class AttributeValueExpression extends DOMTemplateExpression {
   constructor(path, attributeName, template) {
-    super(path);
+    super(path, template);
     this._attributeName = attributeName;
-    this._template = template;
   }
 
   update(ctx) {
@@ -301,10 +291,6 @@ class AttributeValueExpression extends DOMTemplateExpression {
     }
   }
 
-  get dependencies() {
-    return this._template.dependencies;
-  }
-
   clone() {
     return new this.constructor(
       this._path,
@@ -316,9 +302,8 @@ class AttributeValueExpression extends DOMTemplateExpression {
 
 class PropertyValueExpression extends DOMTemplateExpression {
   constructor(path, propertyName, template) {
-    super(path);
+    super(path, template);
     this._propertyName = propertyName;
-    this._template = template;
   }
 
   update(ctx) {
@@ -330,10 +315,6 @@ class PropertyValueExpression extends DOMTemplateExpression {
     } else {
       return false;
     }
-  }
-
-  get dependencies() {
-    return this._template.dependencies;
   }
 
   clone() {
@@ -351,9 +332,8 @@ class PrefixExpression extends DOMTemplateExpression {
   }
 
   constructor(path, prefixHandle, template) {
-    super(path);
+    super(path, template);
     this._prefixHandle = prefixHandle;
-    this._template = template;
   }
 
   update(ctx) {
@@ -375,10 +355,6 @@ class PrefixExpression extends DOMTemplateExpression {
     } else {
       return false;
     }
-  }
-
-  get dependencies() {
-    return this._template.dependencies;
   }
 
   clone() {
@@ -418,9 +394,8 @@ class StyleValueExpression extends PropertyValueExpression {
 
 class EventBindingExpression extends DOMTemplateExpression {
   constructor(path, eventName, template) {
-    super(path);
+    super(path, template);
     this._eventName = eventName;
-    this._template = template;
     this._subscriptions = new Subscriptions();
   }
 
@@ -439,10 +414,6 @@ class EventBindingExpression extends DOMTemplateExpression {
     }
   }
 
-  get dependencies() {
-    return this._template.dependencies;
-  }
-
   clone() {
     return new this.constructor(
       this._path,
@@ -458,8 +429,7 @@ class OptionalNodeReference extends DOMTemplateExpression {
   }
 
   constructor(path, template) {
-    super(path);
-    this._template = template;
+    super(path, template);
     this._commentNode = null;
   }
 
@@ -498,14 +468,6 @@ class OptionalNodeReference extends DOMTemplateExpression {
       return false;
     }
   }
-
-  get dependencies() {
-    return this._template.dependencies;
-  }
-
-  clone() {
-    return new this.constructor(this._path, this._template.clone());
-  }
 }
 
 class BindNodeReference extends DOMTemplateExpression {
@@ -514,8 +476,7 @@ class BindNodeReference extends DOMTemplateExpression {
   }
 
   constructor(path, template) {
-    super(path);
-    this._template = template;
+    super(path, template);
     this._bindingsImpl = null;
   }
 
@@ -564,13 +525,6 @@ class BindNodeReference extends DOMTemplateExpression {
     }
   }
 
-  get dependencies() {
-    return this._template.dependencies;
-  }
-
-  clone() {
-    return new this.constructor(this._path, this._template.clone());
-  }
 }
 
 function containsPlaceholders(input) {
