@@ -46,7 +46,17 @@ class DOMTemplateDirective {
     this.isConnected = false;
   }
 
-  updateConnected() {}
+  updateConnected() {
+    const state = this._node.isConnected;
+
+    if (state === this.isConnected) return;
+
+    if (state) {
+      this.connectedCallback();
+    } else {
+      this.disconnectedCallback();
+    }
+  }
 
   attach(node) {
     const path = this._path;
@@ -438,18 +448,6 @@ class BindNodeReference extends DOMTemplateExpression {
   disconnectedCallback() {
     super.disconnectedCallback();
     this._bindingsImpl.dispose();
-  }
-
-  updateConnected() {
-    const state = this._node.isConnected;
-
-    if (state === this.isConnected) return;
-
-    if (state) {
-      this.connectedCallback();
-    } else {
-      this.disconnectedCallback();
-    }
   }
 
   updatePrefix(handle) {
