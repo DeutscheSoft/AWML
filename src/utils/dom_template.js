@@ -391,13 +391,22 @@ class EventBindingExpression extends DOMTemplateExpression {
 }
 
 class OptionalNodeReference extends DOMTemplateExpression {
-  static get changesDOM() {
+  get changesDOM() {
     return true;
+  }
+
+  set onDOMModified(cb) {
+    this._onDOMModified = cb;
+  }
+
+  get onDOMModified() {
+    return this._onDOMModified;
   }
 
   constructor(path, template) {
     super(path, template);
     this._commentNode = null;
+    this._onDOMModified = null;
   }
 
   get commentNode() {
@@ -426,11 +435,16 @@ class OptionalNodeReference extends DOMTemplateExpression {
     } else {
       node.replaceWith(commentNode);
     }
+
+    const onDOMModified = this.onDOMModified;
+
+    if (onDOMModified !== null)
+      safeCall(onDOMModified);
   }
 }
 
 class BindNodeReference extends DOMTemplateExpression {
-  static get requiresPrefix() {
+  static requiresPrefix() {
     return true;
   }
 
@@ -451,6 +465,8 @@ class BindNodeReference extends DOMTemplateExpression {
   }
 
   disconnectedCallback() {
+    if (!this.isConnected)
+      return;
     super.disconnectedCallback();
     this._bindingsImpl.dispose();
   }
@@ -484,8 +500,20 @@ function subscribePromise(p, callback) {
 }
 
 class AsyncPipeDirective extends DOMTemplateExpression {
-  static get requiresPrefix() {
-    return true;
+  get requiresPrefix() {
+    return this._directive.requiresPrefix;
+  }
+
+  get changesDOM() {
+    return this._directive.changesDOM;
+  }
+
+  set onDOMModified(cb) {
+    this._directive.onDOMModified = cb;
+  }
+
+  get onDOMModified() {
+    return this._directive.onDOMModified;
   }
 
   constructor(path, template, directive) {
@@ -828,6 +856,22 @@ export class DOMTemplate {
     return this._requiresPrefix;
   }
 
+  get onDOMModified() {
+    if (!this._onDOMModified) {
+      this._onDOMModified = () => {
+        if (this._delayUpdateDOM) {
+          this._domModified = true;
+        } else if (this._isConnected) {
+          this._directives.forEach((directive) => {
+            directive.updateConnected();
+          });
+        }
+      };
+    }
+
+    return this._onDOMModified;
+  }
+
   constructor(fragment, directives, dependencies) {
     this._original = fragment;
     this._directives = directives;
@@ -836,12 +880,17 @@ export class DOMTemplate {
       return directive instanceof DOMTemplateExpression;
     });
     this._dependencies = dependencies || null;
+    this._onDOMModified = null;
+    this._delayUpdateDOM = false;
+    this._domModified = false;
 
     let requiresPrefix = false;
 
     directives.forEach((directive) => {
       directive.attach(this._fragment);
-      if (directive.constructor.requiresPrefix) requiresPrefix = true;
+      if (directive.requiresPrefix) requiresPrefix = true;
+      if (directive.changesDOM)
+        directive.onDOMModified = this.onDOMModified;
     });
 
     this._requiresPrefix = requiresPrefix;
@@ -917,7 +966,7 @@ export class DOMTemplate {
     this._isConnected = true;
     this._directives.forEach((directive) => {
       try {
-        directive.connectedCallback();
+        directive.updateConnected();
       } catch (err) {
         warn(
           'connectedCallback() on template directive %o generated an error: %o',
@@ -932,7 +981,7 @@ export class DOMTemplate {
     this._isConnected = false;
     this._directives.forEach((directive) => {
       try {
-        directive.disconnectedCallback();
+        directive.updateConnected();
       } catch (err) {
         warn(
           'disconnectedCallback() on template directive %o generated an error: %o',
@@ -977,7 +1026,8 @@ export class DOMTemplate {
   update(ctx) {
     const expressions = this._expressions;
     let changed = false;
-    let changedDOM = false;
+
+    this._delayUpdateDOM = true;
 
     for (let i = 0; i < expressions.length; i++) {
       const expression = expressions[i];
@@ -985,8 +1035,6 @@ export class DOMTemplate {
       try {
         if (expression.update(ctx)) {
           changed = true;
-
-          if (expression.constructor.changesDOM) changedDOM = true;
 
           if (expression instanceof PrefixExpression) {
             this._updatePrefixOn(expression.handle, expression.node);
@@ -997,10 +1045,11 @@ export class DOMTemplate {
       }
     }
 
-    if (changedDOM && this._isConnected) {
-      this._directives.forEach((directive) => {
-        directive.updateConnected();
-      });
+    this._delayUpdateDOM = false;
+
+    if (this._domModified) {
+      this.onDOMModified();
+      this._domModified = false;
     }
 
     return changed;
