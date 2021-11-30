@@ -4,6 +4,7 @@ import { bindingFromComponent } from '../utils/aux-support.js';
 import { fromSubscription } from '../operators/from_subscription.js';
 import { registerPrefixTagName } from '../utils/prefix.js';
 import { Bindings } from '../bindings.js';
+import { DynamicValue } from '../dynamic_value.js';
 
 let redrawQueue = [];
 let oldQueue = [];
@@ -341,6 +342,14 @@ export class TemplateComponent extends HTMLElement {
           options
         );
       }
+    }
+
+    {
+      const name$ = name + '$';
+      const tmp = this[name$];
+
+      if (tmp && tmp instanceof DynamicValue)
+        return tmp;
     }
 
     throw new Error('No such option in component: ' + name);
