@@ -325,9 +325,6 @@ export class TemplateComponent extends HTMLElement {
           'preventDefault is not supported for template reference bindings.'
         );
 
-      if (!options.sync)
-        throw new Error('sync is required for for template property bindings.');
-
       return bindingFromProperty(this, name, options);
     }
 
