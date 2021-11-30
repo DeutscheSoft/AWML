@@ -393,11 +393,6 @@ export class TemplateComponent extends HTMLElement {
     let dependencies = template.dependencies;
 
     dependencies = dependencies
-      .map((name) => {
-        if (name.endsWith('$')) name = name.slice(0, name.length - 1);
-
-        return name;
-      })
       .filter((name, index, a) => name.length && a.indexOf(name) === index);
 
     if (Array.isArray(options.ignoreProperties)) {
@@ -470,12 +465,13 @@ export class TemplateComponent extends HTMLElement {
           this.emit(evName, value);
         },
       });
-      Object.defineProperty(component.prototype, name + '$', {
-        enumerable: true,
-        get: function () {
-          return bindingFromProperty(this, name, {});
-        },
-      });
+      if (!dependencies.includes(name + '$'))
+        Object.defineProperty(component.prototype, name + '$', {
+          enumerable: true,
+          get: function () {
+            return bindingFromProperty(this, name, {});
+          },
+        });
     });
 
     return component;
