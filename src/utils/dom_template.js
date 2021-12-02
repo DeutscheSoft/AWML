@@ -768,10 +768,21 @@ function compileExpressions(childNodes, expressions, nodePath) {
 
           for (let i = 0; i < attributes.length; i++) {
             const attr = attributes[i];
-            let { name, value } = attr;
+            const attributeName = attr.name;
+            const value = attr.value;
             let expr = null;
             let asyncTemplate = null;
             let tpl = null;
+            let name;
+
+            if (containsPlaceholders(attributeName)) {
+              name = extractAttributeName(attributeName, expressions);
+
+              if (!name)
+                throw new Error('Templates in attribute names not supported.');
+            } else {
+              name = attributeName;
+            }
 
             if (name.startsWith('#')) {
               if (containsPlaceholders(value) || containsPlaceholders(name))
@@ -820,14 +831,6 @@ function compileExpressions(childNodes, expressions, nodePath) {
 
               expr = new BindNodeReference(path, tpl.toSingleExpression());
             } else if (containsPlaceholders(value)) {
-              if (containsPlaceholders(name))
-              {
-                name = extractAttributeName(name, expressions);
-
-                if (!name)
-                  throw new Error('Templates in attribute names not supported.');
-              }
-
               [ tpl, asyncTemplate ] = compileStringWithPlaceholders(value, expressions);
 
               if (name.startsWith('[') && name.endsWith(']')) {
@@ -869,7 +872,7 @@ function compileExpressions(childNodes, expressions, nodePath) {
             if (expr === null) continue;
 
             results.push(makeAsync(expr, asyncTemplate));
-            node.removeAttribute(name);
+            node.removeAttribute(attributeName);
           }
         }
         break;
