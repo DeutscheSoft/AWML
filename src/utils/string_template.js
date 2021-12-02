@@ -1,4 +1,5 @@
 import { TemplateExpression, tokenizeTemplate } from './tokenize_template.js';
+import { error } from './log.js';
 
 export class SingleExpressionTemplate {
   constructor(compiledExpression) {
@@ -14,13 +15,19 @@ export class SingleExpressionTemplate {
   update(ctx) {
     const compiledExpression = this._compiledExpression;
 
-    const result = compiledExpression.call(ctx);
+    try {
+      const result = compiledExpression.call(ctx);
 
-    if (this._initially === false && result === this._output) return false;
+      if (this._initially === false && result === this._output) return false;
 
-    this._initially = false;
-    this._output = result;
-    return true;
+      this._initially = false;
+      this._output = result;
+      return true;
+    } catch (err) {
+      error('Exception when evaluating template expression \'%s\': %o',
+            compiledExpression, err);
+      throw err;
+    }
   }
 
   get dependencies() {
@@ -55,14 +62,20 @@ export class StringTemplate {
 
       if (typeof expression === 'string') continue;
 
-      const result = expression.call(ctx);
-      const previousResult = results[i];
+      try {
+        const result = expression.call(ctx);
+        const previousResult = results[i];
 
-      if (result === previousResult && !isNaN(result) && !isNaN(previousResult))
-        continue;
+        if (result === previousResult && !isNaN(result) && !isNaN(previousResult))
+          continue;
 
-      results[i] = result;
-      changed = true;
+        results[i] = result;
+        changed = true;
+      } catch (err) {
+        error('Exception when evaluating template expression \'%s\': %o',
+              expression, err);
+        throw err;
+      }
     }
 
     if (changed) {

@@ -12,13 +12,19 @@ export class TemplateExpression {
     const expr = this.expression;
 
     if (typeof expr === 'string') {
-      const fun = new Function('return (' + this.expression + ');');
+      try {
+        const fun = new Function('return (' + this.expression + ');');
 
-      const dependencies = this.usedProperties();
+        const dependencies = this.usedProperties();
 
-      if (dependencies !== void 0) fun._dependencies = dependencies;
+        if (dependencies !== void 0) fun._dependencies = dependencies;
 
-      return fun;
+        return fun;
+      } catch (err) {
+        console.error('Failed to compile template expression \'%s\;: %o',
+                      expr, err);
+        throw err;
+      }
     } else if (typeof expr === 'function') {
       return expr;
     }
