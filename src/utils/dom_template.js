@@ -1,6 +1,6 @@
 import { TemplateExpression, tokenizeTemplate as tokenizeStringTemplate } from './tokenize_template.js';
 import { StringTemplate } from './string_template.js';
-import { warn } from './log.js';
+import { warn, error } from './log.js';
 import { Subscriptions } from './subscriptions.js';
 import { subscribeDOMEvent } from './subscribe_dom_event.js';
 import { Bindings } from '../bindings.js';
@@ -505,7 +505,15 @@ class BindNodeReference extends DOMTemplateExpression {
   connectedCallback() {
     if (!this._node.isConnected) return;
     super.connectedCallback();
-    this._bindingsImpl.update(this._template.get());
+    const bindings = this._template.get();
+
+    try {
+      this._bindingsImpl.update(bindings);
+    } catch (err) {
+      error('Exception when updating bindings %o in %s: %o',
+            bindings, this._template.toString(), err);
+      throw err;
+    }
   }
 
   disconnectedCallback() {
@@ -522,8 +530,16 @@ class BindNodeReference extends DOMTemplateExpression {
   }
 
   apply(bindings) {
-    if (this.isConnected)
+    if (!this.isConnected)
+      return;
+
+    try {
       this._bindingsImpl.update(bindings);
+    } catch (err) {
+      error('Exception when updating bindings %o in %s: %o',
+            bindings, this._template.toString(), err);
+      throw err;
+    }
   }
 }
 

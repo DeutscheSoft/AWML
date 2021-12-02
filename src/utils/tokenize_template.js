@@ -1,3 +1,5 @@
+import { error } from './log.js';
+
 // FIXME: this is not exact.
 const reUsedProperties = /this\.([\w0-9$_]+)/g;
 
@@ -21,8 +23,8 @@ export class TemplateExpression {
 
         return fun;
       } catch (err) {
-        console.error('Failed to compile template expression \'%s\;: %o',
-                      expr, err);
+        error('Failed to compile template expression \'%s\;: %o',
+              expr, err);
         throw err;
       }
     } else if (typeof expr === 'function') {

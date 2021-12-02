@@ -37,6 +37,10 @@ export class SingleExpressionTemplate {
   get() {
     return this._output;
   }
+
+  toString() {
+    return `{{ ${ this._compiledExpression } }}`;
+  }
 }
 
 export class StringTemplate {
@@ -133,5 +137,12 @@ export class StringTemplate {
 
   static $(name) {
     return 'this.' + name;
+  }
+
+  toString() {
+    return this._compiledExpressions.map((expr) => {
+      return (typeof expr === 'string')
+        ? expr : `{{ ${ expr } }}`;
+    }).join('');
   }
 }
