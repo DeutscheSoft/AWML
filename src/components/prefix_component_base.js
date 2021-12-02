@@ -76,12 +76,10 @@ export class PrefixComponentBase extends BaseComponent {
   set debounce(v) {
     if (typeof v !== 'number' || !(v >= 0))
       throw new TypeError('Expected non-negative number.');
+    if (this._debounce === v)
+      return;
     this._debounce = v;
-
-    const backendValue = this._backendValue;
-
-    if (backendValue !== null && backendValue instanceof ListValue)
-      backendValue.debounce = v;
+    this._resubscribe();
   }
 
   /**
@@ -95,12 +93,10 @@ export class PrefixComponentBase extends BaseComponent {
   }
   set partial(v) {
     if (typeof v !== 'boolean') throw new TypeError('Expected boolean.');
+    if (this._partial === v)
+      return;
     this._partial = v;
-
-    const backendValue = this._backendValue;
-
-    if (backendValue !== null && backendValue instanceof ListValue)
-      backendValue.partial = v;
+    this._resubscribe();
   }
 
   /**
@@ -230,6 +226,20 @@ export class PrefixComponentBase extends BaseComponent {
     if (this._replay) this._resubscribe();
   }
 
+  /**
+   * Directly sets the dynamic value.
+   */
+  set backendValue(bv) {
+    if (this._backendValue === bv)
+      return;
+    this._backendValue = bv;
+    this._resubscribe();
+  }
+
+  get backendValue() {
+    return this._backendValue;
+  }
+
   constructor() {
     super();
     this._srcPrefix = null;
@@ -281,28 +291,30 @@ export class PrefixComponentBase extends BaseComponent {
   }
 
   _getBackendValue() {
-    let src = this.effectiveSrc;
+    let dv = this._backendValue;
 
-    if (src === null) return null;
+    if (dv === null) {
+      let src = this.effectiveSrc;
 
-    if (this.transformSrc !== null) {
-      src = this.transformSrc(src);
-    }
+      if (src === null) return null;
 
-    if (src === null) return null;
+      if (this.transformSrc !== null) {
+        src = this.transformSrc(src);
+      }
 
-    this.log('Subscribing to %o', src);
+      if (src === null) return null;
 
-    let dv;
+      this.log('Subscribing to %o', src);
 
-    if (typeof src === 'string') {
-      dv = getBackendValue(src);
-    } else {
-      dv = new ListValue(
-        src.map(getBackendValue),
-        this._partial,
-        this._debounce
-      );
+      if (typeof src === 'string') {
+        dv = getBackendValue(src);
+      } else {
+        dv = new ListValue(
+          src.map(getBackendValue),
+          this._partial,
+          this._debounce
+        );
+      }
     }
 
     if (this._pipe !== null) {
@@ -313,17 +325,15 @@ export class PrefixComponentBase extends BaseComponent {
   }
 
   _subscribe() {
-    const backendValue = this._getBackendValue();
+    let backendValue = this._getBackendValue();
 
     if (backendValue === null) return null;
-
-    this._backendValue = backendValue;
 
     const subs = backendValue.subscribe((value) => {
       const transformReceive = this._transformReceive;
 
       if (transformReceive !== null) {
-        const tmp = transformReceive.call(this._backendValue, value, this);
+        const tmp = transformReceive.call(backendValue, value, this);
         this.log('Received value %o -> %o', value, tmp);
         value = tmp;
       } else {
@@ -334,8 +344,8 @@ export class PrefixComponentBase extends BaseComponent {
     });
 
     return () => {
-      if (this._backendValue === null) return;
-      this._backendValue = null;
+      if (backendValue === null) return;
+      backendValue = null;
       subs();
     };
   }

@@ -338,7 +338,7 @@ export class CloneComponent extends PrefixComponentBase {
 
     // no source there, we can just load the template now if we know which
     // one it will be
-    if (this._backendValue === null) {
+    if (this._getBackendValue() === null) {
       if (this.notemplate || this.template !== null) {
         // we know which template we want, let's load it
         this._reloadTemplate();
@@ -440,8 +440,7 @@ export class CloneComponent extends PrefixComponentBase {
           let node = template.importNode();
 
           if (this._transformTemplate) {
-            const value =
-              this._backendValue !== null ? this._backendValue.value : void 0;
+            const value = this._value;
             node = withUrl(this._baseUrl, () => {
               return this._transformTemplate(node, value);
             });
