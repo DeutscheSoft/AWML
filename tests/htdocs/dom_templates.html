@@ -185,6 +185,24 @@
 
           container.remove();
         }
+
+        {
+          const template = DOMTemplate.fromString(
+            `<div [fooBar]={{ this.fooBar }}>`
+          );
+          const container = document.createElement('div');
+
+          container.appendChild(template._fragment);
+          document.body.appendChild(container);
+
+          const div = container.firstChild;
+
+          assertEqual(div.fooBar, void 0);
+          template.update({ fooBar: window });
+          assertEqual(div.fooBar, window);
+
+          container.remove();
+        }
       });
     </script>
     <script type="module" src="../../src/index.js"></script>

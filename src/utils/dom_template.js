@@ -1,4 +1,4 @@
-import { TemplateExpression, tokenizeTemplate } from './tokenize_template.js';
+import { TemplateExpression, tokenizeTemplate as tokenizeStringTemplate } from './tokenize_template.js';
 import { StringTemplate } from './string_template.js';
 import { warn } from './log.js';
 import { Subscriptions } from './subscriptions.js';
@@ -12,6 +12,50 @@ const PLACEHOLDER_END = '\x02';
 
 const rePlaceholderSplit = /[\x01]\d+[\x02]/g;
 const rePlaceholder = /[\x01](\d+)[\x02]/g;
+const reSinglePlaceholder = /^[\x01](\d+)[\x02]$/g;
+
+const rePropertyAssignmentSplit = /\s\[[\w$-\.\d]+\]=/g;
+const rePropertyAssignment = /\s\[([\w$-\.\d]+)\]=/g;
+
+class AttributeAssignmentExpression {
+  constructor(attributeName) {
+    this.attributeName = attributeName;
+  }
+}
+
+function mergeTokens(strings, expressions) {
+  const tokens = [];
+
+  for (let i = 0; i < expressions.length; i++) {
+    tokens.push(strings[i]);
+    tokens.push(expressions[i]);
+  }
+
+  tokens.push(strings[strings.length - 1]);
+
+  return tokens;
+}
+
+function tokenizeTemplate(input) {
+  const result = tokenizeStringTemplate(input);
+
+  return result.map((token) => {
+    if (typeof token !== 'string')
+      return token;
+
+    if (token.match(rePropertyAssignment)) {
+      const strings = token.split(rePropertyAssignmentSplit)
+      const expressions = Array.from(token.matchAll(rePropertyAssignment))
+        .map((match) => {
+          return [ ' ', new AttributeAssignmentExpression(`[${match[1]}]`), '=' ];
+        });
+
+      return mergeTokens(strings, expressions).flat();
+    }
+
+    return token;
+  }).flat();
+}
 
 function replaceExpressions(tokens) {
   const expressions = [];
@@ -21,7 +65,7 @@ function replaceExpressions(tokens) {
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i];
 
-    if (token instanceof TemplateExpression) {
+    if (typeof token !== 'string') {
       tmp[i] = PLACEHOLDER_START + expressions.length + PLACEHOLDER_END;
       expressions.push(token);
     } else {
@@ -579,19 +623,6 @@ function containsPlaceholders(input) {
   return -1 !== input.search(rePlaceholder);
 }
 
-function mergeTokens(strings, expressions) {
-  const tokens = [];
-
-  for (let i = 0; i < expressions.length; i++) {
-    tokens.push(strings[i]);
-    tokens.push(expressions[i]);
-  }
-
-  tokens.push(strings[strings.length - 1]);
-
-  return tokens;
-}
-
 function extractAsync(templateExpression) {
   let expr = templateExpression.expression;
 
@@ -616,6 +647,21 @@ function extractAsync(templateExpression) {
 
 function asyncTemplateFunction() {
   return this;
+}
+
+function extractAttributeName(name, expressions) {
+  const match = Array.from(name.matchAll(reSinglePlaceholder));
+
+  if (!match)
+    return null;
+
+  const expr = expressions[parseInt(match[0][1])];
+
+  if (expr instanceof AttributeAssignmentExpression) {
+    return expr.attributeName;
+  }
+
+  return null;
 }
 
 function compileStringWithPlaceholders(input, expressions) {
@@ -722,7 +768,7 @@ function compileExpressions(childNodes, expressions, nodePath) {
 
           for (let i = 0; i < attributes.length; i++) {
             const attr = attributes[i];
-            const { name, value } = attr;
+            let { name, value } = attr;
             let expr = null;
             let asyncTemplate = null;
             let tpl = null;
@@ -775,7 +821,12 @@ function compileExpressions(childNodes, expressions, nodePath) {
               expr = new BindNodeReference(path, tpl.toSingleExpression());
             } else if (containsPlaceholders(value)) {
               if (containsPlaceholders(name))
-                throw new Error('Templates in attribute names not supported.');
+              {
+                name = extractAttributeName(name, expressions);
+
+                if (!name)
+                  throw new Error('Templates in attribute names not supported.');
+              }
 
               [ tpl, asyncTemplate ] = compileStringWithPlaceholders(value, expressions);
 
@@ -788,7 +839,7 @@ function compileExpressions(childNodes, expressions, nodePath) {
                     propertyName.substr('style.'.length),
                     tpl.reduceToSingleExpression()
                   );
-                } else if (propertyName.toLowerCase() === 'classlist') {
+                } else if (propertyName === 'classList') {
                   expr = new ClassListExpression(
                     path,
                     tpl.reduceToSingleExpression()
