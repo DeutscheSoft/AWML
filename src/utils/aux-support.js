@@ -312,7 +312,10 @@ export function bindingFromWidget(widget, name, options) {
     };
   }
 
-  if (!options.ignoreInteraction && setFun !== null) {
+  const ignoreInteraction = setFun === null || options.ignoreInteraction
+    || (options.ignoreInteraction === void 0 && options.writeonly);
+
+  if (!ignoreInteraction) {
     setFun = blockWhileInteracting(widget, setFun, options.receiveDelay || 500);
   }
 
