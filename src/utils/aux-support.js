@@ -151,10 +151,20 @@ export function userInteractionFromWidget(widget, timeout) {
   });
 }
 
-function waitForUserInteractionEnd(widget, delay) {
+function waitForUserInteractionEnd(widget, delay, debug) {
   return new Promise((resolve, reject) => {
     let sub1, sub2;
     let timeout_id;
+
+    const interactionEnded = () => {
+      timeout_id = setTimeout(() => {
+        sub1();
+        sub2();
+        if (widget.get('interacting'))
+          resolve(waitForUserInteractionEnd(widget, delay));
+        else resolve();
+      }, delay);
+    };
 
     sub1 = widget.subscribe('set_interacting', (value) => {
       if (timeout_id) clearTimeout(timeout_id);
@@ -163,21 +173,18 @@ function waitForUserInteractionEnd(widget, delay) {
 
       if (value) return;
 
-      timeout_id = setTimeout(() => {
-        sub1();
-        sub2();
-        if (widget.get('interacting'))
-          resolve(waitForUserInteractionEnd(widget, delay));
-        else resolve();
-      }, delay);
+      interactionEnded();
     });
     sub2 = widget.subscribe('destroy', () => {
       reject(new Error('Widget was destroyed.'));
     });
+
+    if (!widget.get('interacting'))
+      interactionEnded();
   });
 }
 
-function blockWhileInteracting(widget, setFun, delay) {
+function blockWhileInteracting(widget, setFun, delay, debug) {
   let hasValue = false;
   let lastValue = null;
 
@@ -190,8 +197,9 @@ function blockWhileInteracting(widget, setFun, delay) {
       lastValue = value;
       if (!hasValue) {
         hasValue = true;
-        waitForUserInteractionEnd(widget, delay).then(
+        waitForUserInteractionEnd(widget, delay, debug).then(
           () => {
+            if (!hasValue) return;
             setFun(lastValue);
             hasValue = false;
             lastValue = null;
