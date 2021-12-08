@@ -122,6 +122,15 @@ export class BackendComponent extends BaseComponent {
   }
 
   /**
+   * Trigger a reconnection attempt right now. If the backend is already
+   * connected, this method will do nothing.
+   */
+  triggerReconnect() {
+    if (!this.isOpen)
+      this._resubscribe();
+  }
+
+  /**
    * Returns true is the backend is open.
    */
   get isOpen() {
