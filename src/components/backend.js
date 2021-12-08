@@ -66,6 +66,7 @@ export class BackendComponent extends BaseComponent {
       'name',
       'type',
       'retry-interval',
+      'max-retry-interval',
     ]);
   }
 
@@ -116,6 +117,27 @@ export class BackendComponent extends BaseComponent {
   }
 
   /**
+   * The maximum interval between reconnect attempts. The default value is
+   * 30 seconds.
+   */
+  get maxRetryInterval() {
+    return this._maxRetryInterval || 30*1000;
+  }
+
+  set maxRetryInterval(value) {
+    this._maxRetryInterval = value;
+  }
+
+  /**
+   * Trigger a reconnection attempt right now. If the backend is already
+   * connected, this method will do nothing.
+   */
+  triggerReconnect() {
+    if (!this.isOpen)
+      this._resubscribe();
+  }
+
+  /**
    * Returns true is the backend is open.
    */
   get isOpen() {
@@ -147,9 +169,11 @@ export class BackendComponent extends BaseComponent {
 
   /** @ignore */
   calculateRetryInterval() {
-    const interval = this.retryInterval;
+    let interval = this.retryInterval;
 
-    return interval * (1 + Math.log(Math.pow(1 + this._retries, 2)));
+    interval *= (1 + Math.log(Math.pow(1 + this._retries, 2)));
+
+    return Math.min(interval, this.maxRetryInterval);
   }
 
   constructor() {
@@ -157,7 +181,8 @@ export class BackendComponent extends BaseComponent {
     this._name = null;
     this._type = null;
     this._backend = null;
-    this._retryInterval = null;
+    this._retryInterval = 0;
+    this._maxRetryInterval = 0;
     this._retries = 0;
   }
 
@@ -263,7 +288,7 @@ export class BackendComponent extends BaseComponent {
 
     if (backend.isError || backend.isClosed) {
       // do this after return
-      setTimeout(retry, 0);
+      Promise.resolve().then(retry);
     }
 
     return () => {
@@ -281,6 +306,9 @@ export class BackendComponent extends BaseComponent {
         break;
       case 'retry-interval':
         this.retryInterval = newValue !== null ? parseInt(newValue) : null;
+        break;
+      case 'max-retry-interval':
+        this.maxRetryInterval = newValue !== null ? parseInt(newValue) : null;
         break;
       default:
         super.attributeChangedCallback(name, oldValue, newValue);
