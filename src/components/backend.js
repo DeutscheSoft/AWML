@@ -280,7 +280,7 @@ export class BackendComponent extends BaseComponent {
 
     if (backend.isError || backend.isClosed) {
       // do this after return
-      setTimeout(retry, 0);
+      Promise.resolve().then(retry);
     }
 
     return subscriptions.unsubscribe.bind(subscriptions);
