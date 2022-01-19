@@ -76,6 +76,7 @@ export class DynamicValue {
     if (sub !== null) {
       this._subscription = null;
       sub();
+      this.clear();
     }
   }
 
@@ -207,7 +208,7 @@ export class DynamicValue {
   wait(replay) {
     if (replay === void 0) replay = true;
     return new Promise((resolve) => {
-      if (replay && this._hasValue) {
+      if (replay && this._hasValue && this.isActive) {
         resolve(this._value);
         return;
       }
