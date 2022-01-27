@@ -253,9 +253,7 @@ export class BackendBase extends EventTarget {
     if (typeof path !== 'string') throw new TypeError('Expected path.');
 
     return new Promise((resolve, reject) => {
-      let sub;
-
-      sub = this.observeInfo(path, (ok, last, data) => {
+      const sub = this.observeInfo(path, (ok, last, data) => {
         if (!last) sub();
 
         (ok ? resolve : reject)(data);

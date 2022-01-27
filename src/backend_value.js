@@ -106,9 +106,7 @@ export class BackendValue extends DynamicValue {
       if (info !== null) {
         resolve(info);
       } else {
-        let sub;
-
-        sub = this.observeInfo((ok, last, info) => {
+          const sub = this.observeInfo((ok, last, info) => {
           // ignore disconnects
           if (ok && info === null) return;
 

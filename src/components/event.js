@@ -11,7 +11,8 @@ function combine_subscriptions(callbacks) {
   return () => {
     if (callbacks === null) return;
     const tmp = callbacks;
-    callbacks === null;
+    // TODO: what is this supposed to do?
+    //callbacks === null;
     tmp.forEach((cb) => cb());
   };
 }
