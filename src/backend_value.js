@@ -106,6 +106,7 @@ export class BackendValue extends DynamicValue {
       if (info !== null) {
         resolve(info);
       } else {
+        /* eslint-disable prefer-const */
         let sub;
 
         sub = this.observeInfo((ok, last, info) => {

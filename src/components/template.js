@@ -176,6 +176,7 @@ export class TemplateComponent extends HTMLElement {
       if (this._attached) {
         resolve();
       } else {
+        /* eslint-disable prefer-const */
         let unsubscribe;
         unsubscribe = this.subscribeEvent('attached', () => {
           resolve();
@@ -192,6 +193,7 @@ export class TemplateComponent extends HTMLElement {
    */
   whenRedrawn() {
     return new Promise((resolve) => {
+      /* eslint-disable prefer-const */
       let unsubscribe;
       unsubscribe = this.subscribeEvent('redraw', () => {
         resolve();

@@ -109,6 +109,7 @@ export class RPCClientBase {
   callWait(method, ...args) {
     return new Promise((resolve, reject) => {
       let active = true;
+      /* eslint-disable prefer-const */
       let unsubscribe;
 
       const dispose = () => {

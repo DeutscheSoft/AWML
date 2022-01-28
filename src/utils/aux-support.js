@@ -153,6 +153,7 @@ export function userInteractionFromWidget(widget, timeout) {
 
 function waitForUserInteractionEnd(widget, delay, debug) {
   return new Promise((resolve, reject) => {
+    /* eslint-disable prefer-const */
     let sub1, sub2;
     let timeout_id;
 

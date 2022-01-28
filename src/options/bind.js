@@ -157,7 +157,7 @@ export class BindOption extends Option {
 
   destroy() {
     super.destroy();
-    let sub = this._sub;
+    const sub = this._sub;
     if (sub !== null) sub();
   }
 }

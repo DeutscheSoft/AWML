@@ -26,7 +26,7 @@ export function mapItemsCached(dv, projection, getKey) {
   let currentItems = new Map();
 
   return map(dv, (items) => {
-    let newItems = new Map();
+    const newItems = new Map();
 
     const result = mapContainer(items, (item, index, items) => {
       const key = getKey(item, index, items);

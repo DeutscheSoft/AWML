@@ -1,5 +1,4 @@
 import { runCleanupHandler } from '../utils/run_cleanup_handler.js';
-import { warn } from '../utils/log.js';
 
 export function forEachAsync(subscribe, callback) {
   let lastValue = null;

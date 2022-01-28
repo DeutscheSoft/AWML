@@ -82,8 +82,6 @@ export class VisibilityComponent extends StylesComponentBase {
   }
 
   _changeVisibility(hidden) {
-    const target = this.target;
-
     const currentMode = this._determineVisibilityMode();
     const lastMode = this._visbilityMode;
 
