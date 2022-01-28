@@ -111,7 +111,7 @@ export class StylesComponentBase extends RedrawComponentBase {
   /** @ignore */
   connectedCallback() {
     // Note: this initializes this._target
-    this.target = undefined;
+    this.target;
     super.connectedCallback();
   }
 
