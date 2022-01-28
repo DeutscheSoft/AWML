@@ -633,6 +633,7 @@ class AsyncPipeDirective extends DOMTemplateExpression {
       } else if ('then' in observable) {
         return subscribePromise(observable, valueChanged);
       }
+      break;
     default:
       throw new TypeError('Expected Promise|DynamicValue.');
     }
@@ -646,21 +647,14 @@ function containsPlaceholders(input) {
 function extractAsync(templateExpression) {
   const expr = templateExpression.expression;
 
-  do
-  {
-    if (typeof expr !== 'string')
-      break;
-
+  if (typeof expr === 'string') {
     const tmp = expr.split('|');
     const last = tmp.pop();
 
-    if (last.trim() !== 'async')
-      break;
-
-    templateExpression = new TemplateExpression(tmp.join('|'));
-
-    return [ templateExpression, true ];
-  } while (false);
+    if (last.trim() === 'async') {
+      return [ new TemplateExpression(tmp.join('|')), true ];
+    }
+  }
 
   return [ templateExpression, false ];
 }
