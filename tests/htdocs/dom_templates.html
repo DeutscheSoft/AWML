@@ -129,6 +129,8 @@
         }
 
         {
+          // Test that removing/adding a node correctly triggers a binding to be
+          // re-instated.
           const template = DOMTemplate.fromString(
             `<div prefix={{ this.prefix }}><div %if={{ this.condition }}><test-component
             %bind={{ this.binding }}></test-component></div></div>`
@@ -200,6 +202,42 @@
           assertEqual(div.fooBar, void 0);
           template.update({ fooBar: window });
           assertEqual(div.fooBar, window);
+
+          container.remove();
+        }
+
+        {
+          // Test that removing/adding a node using an async pipe correctly triggers a binding to be
+          // re-instated.
+          const template = DOMTemplate.fromString(
+            `<div prefix={{ this.prefix }}><div %if={{ this.condition | async }}><test-component
+            %bind={{ this.binding }}></test-component></div></div>`
+          );
+
+          const container = document.createElement('div');
+
+          container.appendChild(template._fragment);
+
+          const div = container.querySelector('div');
+
+          document.body.appendChild(container);
+          template.connectedCallback();
+
+          const widget = container.querySelector('test-component').auxWidget;
+          const condition = DynamicValue.fromConstant(false);
+
+          const ctx = {
+            prefix: 'test:foo',
+            binding: {
+              src: '',
+              name: 'option1',
+            },
+            condition,
+          };
+          template.update(ctx);
+          assertEq(widget.get('option1'), void 0);
+          condition.set(true);
+          assertEq(widget.get('option1'), 'bar');
 
           container.remove();
         }
