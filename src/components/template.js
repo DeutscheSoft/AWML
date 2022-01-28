@@ -51,8 +51,6 @@ function bindingFromProperty(component, name, options) {
         recurse = true;
         try {
           component[name] = value;
-        } catch (err) {
-          throw err;
         } finally {
           recurse = false;
         }

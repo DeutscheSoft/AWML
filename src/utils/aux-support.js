@@ -280,8 +280,6 @@ export function bindingFromWidget(widget, name, options) {
         rec = true;
         try {
           widget.set(name, value);
-        } catch (err) {
-          throw err;
         } finally {
           rec = false;
         }

@@ -38,8 +38,6 @@ export function connect(
     try {
       if (transform1) value = transform1(value);
       value2.set(value);
-    } catch (err) {
-      throw err;
     } finally {
       rec--;
     }
@@ -51,8 +49,6 @@ export function connect(
     try {
       if (transform2) value = transform2(value);
       value1.set(value);
-    } catch (err) {
-      throw err;
     } finally {
       rec--;
     }
