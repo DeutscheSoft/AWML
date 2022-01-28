@@ -2,3 +2,7 @@
 /doc/*
 /prettier/*
 .eslintrc.js
+/tests/htdocs/AES70.es5.js
+/tests/htdocs/ember-plus.browser.js
+# eslint cannot parse import.meta
+/tests/bin/serve.js
