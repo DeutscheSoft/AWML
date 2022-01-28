@@ -23,7 +23,7 @@ export class TemplateExpression {
 
         return fun;
       } catch (err) {
-        error('Failed to compile template expression \'%s\;: %o',
+        error('Failed to compile template expression \'%s\': %o',
               expr, err);
         throw err;
       }
