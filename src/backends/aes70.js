@@ -293,7 +293,8 @@ export class AES70Backend extends Backend {
         const rolemap = new Map();
 
         for (let i = 0; i < members.length; i++) {
-          let key = roles[i];
+          const role = roles[i];
+          let key = role;
 
           if (rolemap.has(key)) {
             let n = 1;
