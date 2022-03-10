@@ -390,7 +390,7 @@ var f = (function(w, AWML) {
       getter().then(
         (x) => {
           if (!active) return;
-          if (x instanceof OCA.SP.Arguments && index < x.length) {
+          if (typeof x === 'object' && typeof x.item === 'function' && index < x.length) {
             callback(x.item(index));
           } else if (!index) {
             callback(x);
