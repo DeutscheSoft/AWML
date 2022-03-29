@@ -137,7 +137,7 @@
       }
     },
     set: function(value) {
-      if (value === this.requested_value && value === this.value) return;
+      if (this.has_value && value === this.requested_value && value === this.value) return;
       this.requested_value = value;
       this.has_requested_value = true;
       if (this.id !== false) {
