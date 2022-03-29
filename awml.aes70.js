@@ -115,11 +115,7 @@ var f = (function(w, AWML) {
     },
     destroy: function() {
       proto.destroy.call(this);
-      if (this.device)
-      {
-        this.device.removeEventListener('close', this.close_cb);
-        this.device = null;
-      }
+      this.device = null;
       if (this.ws)
       {
         this.ws.removeEventListener('close', this.close_cb);
