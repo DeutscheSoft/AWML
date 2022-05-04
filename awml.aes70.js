@@ -22,6 +22,22 @@ var f = (function(w, AWML) {
       : [path.substr(0, pos + 1), path.substr(pos + 1)];
   }
 
+  function combineCleanupHandlers(...cbs) {
+    cbs = cbs.filter((cb) => !!cb);
+
+    if (!cbs.length)
+      return null;
+
+    if (cbs.length === 1)
+      return cbs[0];
+
+    return () => {
+      if (cbs === null) return;
+      cbs.forEach(runCleanupHandler);
+      cbs = null;
+    };
+  }
+
   const toplevelObjects = [
     'DeviceManager',
     'SecurityManager',
@@ -333,7 +349,7 @@ var f = (function(w, AWML) {
 
       if (property.static) {
         if (index === 0) {
-          callback(o[property.name]);
+          callback(true, o[property.name]);
         } else {
           AWML.warn(
             'Static property %o in %o has no Min/Max.',
@@ -374,7 +390,7 @@ var f = (function(w, AWML) {
             default:
               return;
           }
-          callback(value);
+          callback(true, value);
         };
         event.subscribe(eventHandler).catch((err) => {
           AWML.warn('Failed to subscribe to %o: %o.\n', property.name, err);
@@ -387,14 +403,15 @@ var f = (function(w, AWML) {
         (x) => {
           if (!active) return;
           if (typeof x === 'object' && typeof x.item === 'function' && index < x.length) {
-            callback(x.item(index));
+            callback(true, x.item(index));
           } else if (!index) {
-            callback(x);
+            callback(true, x);
           } else {
             AWML.warn('%o in %o has neither Min nor Max.', property.name, o.ClassName);
           }
         },
         (error) => {
+          callback(false, null);
           if (!active) return;
           // NotImplemented
           if (error.status.value == 8) {
@@ -421,7 +438,7 @@ var f = (function(w, AWML) {
         const rolemap = a[1];
 
         if (rolemap && rolemap.has(propertyName)) {
-          callback(rolemap.get(propertyName));
+          callback(true, rolemap.get(propertyName));
           return;
         }
 
@@ -440,6 +457,7 @@ var f = (function(w, AWML) {
         if (!property) {
           if (!noError)
             AWML.log('Could not find property %o in %o.', propertyName, properties);
+          callback(false, null);
           return;
         }
 
@@ -463,6 +481,8 @@ var f = (function(w, AWML) {
             callback
           );
         }
+      } else {
+        callback(false, null);
       }
     },
     _observeEach: function(path, callback) {
@@ -499,22 +519,32 @@ var f = (function(w, AWML) {
       // we are at the top level
       if (parentPath === '/') {
         if (propertyName == '') {
-          return this._observeDirectory(this.device.Root, (a) => {
-            this.receive(path, a);
-          });
+          return combineCleanupHandlers(
+            this._observeDirectory(this.device.Root, (a) => {
+              this.receive(path, a);
+            }),
+            () => {
+              this.clearValue(path);
+            });
         } else if (toplevelObjects.indexOf(propertyName) !== -1) {
           const o = this.device[propertyName];
 
           if (!dir) {
             // just pass the object
             this.receive(path, o);
-            return;
+            return () => {
+              this.clearValue(path);
+            };
           } else {
             // we got a slash, we subscribe object, rolemap/properties
             //console.log('trying to subscribe top level %o', path);
-            return this._observeDirectory(o, (a) => {
-              this.receive(path, a);
-            });
+            return combineCleanupHandlers(
+              this._observeDirectory(o, (a) => {
+                this.receive(path, a);
+              }),
+              () => {
+                this.clearValue(path);
+              });
           }
         }
       }
@@ -524,6 +554,11 @@ var f = (function(w, AWML) {
       if (dir) {
         //console.log('trying to subscribe directory %o in %o', propertyName, parentPath);
         callback = (a) => {
+          if (a === AWML.DELETED) {
+            this.clearValue(path);
+            return;
+          }
+
           //console.log('%o / %o -> %o', parentPath, propertyName, a);
           const o = a[0];
           let noError = false;
@@ -532,12 +567,16 @@ var f = (function(w, AWML) {
             const rolemap = a[1];
 
             if (rolemap.has(propertyName)) {
-              return this._observeDirectory(
-                rolemap.get(propertyName),
-                (value) => {
-                  this.receive(path, value);
-                }
-              );
+              return combineCleanupHandlers(
+                this._observeDirectory(
+                  rolemap.get(propertyName),
+                  (value) => {
+                    this.receive(path, value);
+                  }
+                ),
+                () => {
+                  this.clearValue(path);
+                });
             }
 
             noError = true;
@@ -548,17 +587,35 @@ var f = (function(w, AWML) {
 
           if (!property && !noError) {
             AWML.log('Could not find property %o in %o', propertyName, o);
+            this.clearValue(path);
+          } else if (!isBlock(o)) {
+            this.receive(path, [o, property]);
+            return () => {
+              this.clearValue(path);
+            };
           }
-
-          if (!isBlock(o)) this.receive(path, [o, property]);
         };
       } else {
         //console.log('trying to subscribe property %o in %o', propertyName, parentPath);
         callback = (a) => {
-          return this._observeProperty(a, propertyName, path, (value) => {
-            //console.log('%o -> %o', path, value);
-            this.receive(path, value);
-          });
+          if (a === AWML.DELETED) {
+            this.clearValue(path);
+            return;
+          }
+
+          return combineCleanupHandlers(
+            this._observeProperty(a, propertyName, path, (ok, value) => {
+              //console.log('%o -> %o', path, value);
+              if (ok) {
+                this.receive(path, value);
+              } else {
+                this.clearValue(path);
+              }
+            }),
+            () => {
+              this.clearValue(path);
+            }
+          );
         };
       }
 
