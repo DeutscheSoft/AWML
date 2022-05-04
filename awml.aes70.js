@@ -415,6 +415,7 @@ var f = (function(w, AWML) {
     _observeProperty: function(a, propertyName, path, callback) {
       //console.log('_observeProperty(%o, %o, %o)', a, propertyName, path);
       const o = a[0];
+      let noError = false;
 
       if (isBlock(o) && a[1] instanceof Map) {
         const rolemap = a[1];
@@ -426,6 +427,9 @@ var f = (function(w, AWML) {
 
         // try property lookup
         a = [o];
+
+        // No need to warn here.
+        noError = true;
       }
 
       // actual property lookup
@@ -434,7 +438,8 @@ var f = (function(w, AWML) {
         const property = properties.find_property(propertyName);
 
         if (!property) {
-          AWML.log('Could not find property %o in %o.', propertyName, properties);
+          if (!noError)
+            AWML.log('Could not find property %o in %o.', propertyName, properties);
           return;
         }
 
@@ -521,6 +526,7 @@ var f = (function(w, AWML) {
         callback = (a) => {
           //console.log('%o / %o -> %o', parentPath, propertyName, a);
           const o = a[0];
+          let noError = false;
 
           if (isBlock(o) && a[1] instanceof Map) {
             const rolemap = a[1];
@@ -533,12 +539,14 @@ var f = (function(w, AWML) {
                 }
               );
             }
+
+            noError = true;
           }
 
           // check the properties, this is for meta-info lookup
           const property = o.get_properties().find_property(propertyName);
 
-          if (!property) {
+          if (!property && !noError) {
             AWML.log('Could not find property %o in %o', propertyName, o);
           }
 
