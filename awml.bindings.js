@@ -147,6 +147,12 @@
     update: function(id, value) {
       var cb, a;
 
+      if (value === AWML.DELETED) {
+        this.value = null;
+        this.has_value = false;
+        return;
+      }
+
       /* we were unsubscribed by the backend */
       if (id === false) {
         this.id = false;

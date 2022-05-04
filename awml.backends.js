@@ -214,6 +214,8 @@ var f = (function(w, AWML) {
     });
   }
 
+  const DELETED = Symbol('DELETED');
+
   function Base(options) {
     this.values = new Map();
     this.uri2id = new Map();
@@ -238,6 +240,16 @@ var f = (function(w, AWML) {
     open: to_open,
     is_open: function() { return this.state === "open"; },
     receive: receive,
+    clearValue: function (id) {
+      const values = this.values;
+      if (!values.has(id))
+        return;
+      values.delete(id);
+
+      var cbs = this.subscriptions.get(id);
+
+      if (cbs) call_subscribers(cbs, id, DELETED);
+    },
     low_subscribe_batch: function(uris) {
       return Promise.all(uris.map(this.low_subscribe, this));
     },
@@ -860,6 +872,7 @@ var f = (function(w, AWML) {
   AWML.ClientBackend = ClientBackend;
   AWML.BaseBackend = Base;
   AWML.dispatch = dispatch;
+  AWML.DELETED = DELETED;
 
   Object.assign(AWML.Backends, {
     local: Local,
