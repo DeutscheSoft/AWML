@@ -56,7 +56,7 @@ class SwitchMapValue extends DynamicValue {
     const inner = this._inner;
 
     if (inner) {
-      inner.set(x);
+      return inner.set(x);
     } else {
       this._hasRequestedValue = true;
       this._requestedValue = x;

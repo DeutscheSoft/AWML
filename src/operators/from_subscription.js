@@ -22,7 +22,7 @@ class SubscriptionDynamicValue extends DynamicValue {
   }
 
   set(value) {
-    this._setFun(value);
+    return this._setFun(value);
   }
 }
 

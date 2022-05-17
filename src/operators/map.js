@@ -23,7 +23,7 @@ class MappedValue extends DynamicValue {
 
     const other = this._other;
 
-    other.set(inverse(x));
+    return other.set(inverse(x));
   }
 }
 

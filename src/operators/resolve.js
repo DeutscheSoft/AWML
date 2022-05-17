@@ -77,7 +77,7 @@ class ResolveValue extends DynamicValue {
   }
 
   set(x) {
-    this._other.set(x);
+    return this._other.set(x);
   }
 }
 
