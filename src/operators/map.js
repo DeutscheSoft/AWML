@@ -28,8 +28,8 @@ class MappedValue extends DynamicValue {
 }
 
 /**
- * Transform the input dynamic value and emits a new DynamicValue which emits
- * each value of the input transformed with `f`. If an inverse transform is also
+ * Transform the input dynamic value and returns a new DynamicValue which emits
+ * each value of the input transformed with `transform`. If an inverse transform is also
  * given, calling `set(X)` on the resulting DynamicValue will use the inverse
  * transform and call `dv.set(inverse(X))`.
  *
