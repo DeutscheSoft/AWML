@@ -8,3 +8,4 @@ export * from './operators/from_subscription';
 export * from './operators/from_dom_event';
 export * from './operators/map_items_cached';
 export * from './operators/resolve_items';
+export * from './operators/unique';
