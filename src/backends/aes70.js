@@ -227,15 +227,19 @@ class PropertyContext extends ContextWithValue {
 
     if (event) {
       eventHandler = (value, changeType) => {
+        const changeTypeCode = changeType.value;
         switch (this.index) {
           case 0: // current
-            if (changeType.value !== 1) return;
+            // Note: All change types except for min and max
+            // will result in the current value being updated. This also
+            // includes e.g. items added to a list.
+            if (changeTypeCode === 2 || changeTypeCode === 3) return;
             break;
           case 1: // min
-            if (changeType.value !== 2) return;
+            if (changeTypeCode !== 2) return;
             break;
           case 2: // max
-            if (changeType.value !== 3) return;
+            if (changeTypeCode !== 3) return;
             break;
           default:
             return;
