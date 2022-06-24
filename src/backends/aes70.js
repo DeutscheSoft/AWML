@@ -3,11 +3,13 @@ import { warn } from '../utils/log.js';
 import { subscribeDOMEvent } from '../utils/subscribe_dom_event.js';
 import { getCurrentWebSocketUrl } from '../utils/fetch.js';
 import { connectWebSocket } from '../utils/connect_websocket.js';
+import { combineUnsubscribe } from '../utils/combine_unsubscribe.js';
 
 import { runCleanupHandler } from '../utils/run_cleanup_handler.js';
 import { ReplayObservable } from './replay_observable.js';
 import { ReplayObservableMap } from './replay_observable_map.js';
 import { forEachAsync } from './for_each_async.js';
+import { dispatch } from '../utils/dispatch.js';
 
 /* global OCA */
 
@@ -214,54 +216,22 @@ class PropertyContext extends ContextWithValue {
     }
   }
 
-  _subscribe(callback) {
-    if (this.property.static) {
-      callback(1, 0, this.object[this.property.name]);
-      return () => {};
-    }
-
-    let eventHandler = null;
+  _observeGetter(callback ) {
     let active = true;
 
-    const { getter, event, index } = this;
-
-    if (event) {
-      eventHandler = (value, changeType) => {
-        const changeTypeCode = changeType.value;
-        switch (this.index) {
-          case 0: // current
-            // Note: All change types except for min and max
-            // will result in the current value being updated. This also
-            // includes e.g. items added to a list.
-            if (changeTypeCode === 2 || changeTypeCode === 3) return;
-            break;
-          case 1: // min
-            if (changeTypeCode !== 2) return;
-            break;
-          case 2: // max
-            if (changeTypeCode !== 3) return;
-            break;
-          default:
-            return;
-        }
-        callback(1, 0, value);
-      };
-      event.subscribe(eventHandler).catch((err) => {
-        callback(0, 0, err);
-      });
-    }
-
-    getter().then(
-      (x) => {
+    this.getter().then(
+      (returnValues) => {
         if (!active) return;
+        const index = this.index;
+        let value;
         if (
-          typeof x === 'object' &&
-          typeof x.item === 'function' &&
-          index < x.length
+          typeof returnValues === 'object' &&
+          typeof returnValues.item === 'function' &&
+          index < returnValues.length
         ) {
-          callback(1, 0, x.item(index));
+          value = returnValues.item(index);
         } else if (!index) {
-          callback(1, 0, x);
+          value = returnValues;
         } else {
           callback(
             0,
@@ -270,19 +240,99 @@ class PropertyContext extends ContextWithValue {
               `${this.object.ClassName}.${this.property.name} has neither Min nor Max.`
             )
           );
+          return;
         }
+
+        callback(1, 0, value);
       },
       (error) => {
         if (!active) return;
-        callback(0, 0, error);
+        callback(0, 0, error)
       }
     );
 
     return () => {
-      if (!active) return;
-      if (event) event.unsubscribe(eventHandler);
       active = false;
     };
+  }
+
+  _observe(callback) {
+    let getterPending = true;
+    let needsDispatch = false;
+    let unsubscribe = null;
+
+    const eventHandler = (value, changeType) => {
+      const changeTypeCode = changeType.value;
+      switch (this.index) {
+        case 0: // current
+          // Note: All change types except for min and max
+          // will result in the current value being updated. This also
+          // includes e.g. items added to a list.
+          if (changeTypeCode === 2 || changeTypeCode === 3) return;
+          break;
+        case 1: // min
+          if (changeTypeCode !== 2) return;
+          break;
+        case 2: // max
+          if (changeTypeCode !== 3) return;
+          break;
+        default:
+          return;
+      }
+
+      // The reason for using this dispatch logic here is that the getter
+      // resolve callback will fire one event loop after the one in which the
+      // response was received over the network.
+      // If we arrive here and have not received a result from the getter, yet,
+      // which means that the response will be interleaved with notifications
+      // and in order to preserve the order of events from the network we must
+      // dispatch all events by one event loop.
+      if (getterPending && !needsDispatch)
+        needsDispatch = true;
+
+      if (needsDispatch) {
+        console.log('needing dispatch.');
+        dispatch(() => {
+          if (unsubscribe === null) return;
+          callback(1, 0, value);
+        });
+      } else {
+        callback(1, 0, value);
+      }
+    };
+
+    this.event.subscribe(eventHandler).catch((error) => {
+      if (unsubscribe === null) return;
+      callback(0, 0, error);
+    });
+
+    unsubscribe = combineUnsubscribe(
+      () => this.event.unsubscribe(eventHandler),
+      this._observeGetter((ok, last, value) => {
+        getterPending = false;
+        callback(ok, last, value);
+      })
+    );
+
+    return () => {
+      const _unsubscribe = unsubscribe;
+      if (_unsubscribe === null) return;
+      unsubscribe = null;
+      _unsubscribe();
+    };
+  }
+
+
+  _subscribe(callback) {
+    if (this.property.static) {
+      callback(1, 0, this.object[this.property.name]);
+      return () => {};
+    }
+
+    if (this.event)
+      return this._observe(callback);
+
+    return this._observeGetter(callback);
   }
 
   set(value) {
