@@ -42,6 +42,8 @@
       }
 
       function assertNoSubscribers(backend) {
+        if (!backend)
+          throw new Error('Connection lost.');
         backend._contexts.forEach((ctx) => {
           if (ctx.info.type !== 'directory') {
             assertEqual(ctx.hasSubscribers(), false);
