@@ -19,11 +19,16 @@ interface IBindingDescriptionBackendValue extends IBindingDescriptionShared {
   backendValue: DynamicValue<any>;
 }
 
+interface IWidget {
+  subscribe(eventName: string, eventHandler: (...args) => void): () => void,
+  set(optionName: string, value: any): any;
+}
+
 export type IBindingDescription = IBindingDescriptionSrc |
   IBindingDescriptionBackendValue;
 
 export function createBinding(
-  target: Node | Widget,
+  target: Node | IWidget,
   sourceNode: Node,
   ctx: any,
   options: IBindingDescription,
@@ -31,7 +36,7 @@ export function createBinding(
 
 export class Bindings {
   constructor(
-    target: Node | Widget,
+    target: Node | IWidget,
     sourceNode: Node,
     ctx: any,
     log?: (...args) => void);
