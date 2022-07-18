@@ -1,0 +1,10 @@
+/doc
+/eslint
+/prettier
+/tests
+/ts_tests
+/ts_tests.sh
+/Makefile
+/.eslintignore
+/.eslintrc.cjs
+/AWML.svg
