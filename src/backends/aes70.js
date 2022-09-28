@@ -544,23 +544,28 @@ export class AES70Backend extends BackendBase {
     return connectWebSocket(this.options.url);
   }
 
+  async _connectDevice(options) {
+    const websocket = await this._connectWebSocket();
+
+    return new OCA.RemoteDevice(
+      new OCA.WebSocketConnection(websocket, options)
+    );
+  }
+
   async _connect() {
     // discover the device
     const options = {
       batch: this.options.batch,
     };
 
-    const websocket = await this._connectWebSocket();
-
-    this._device = new OCA.RemoteDevice(
-      new OCA.WebSocketConnection(websocket, options)
-    );
-    this._device.set_keepalive_interval(1);
+    const device = await this._connectDevice(options);
+    this._device = device;
+    device.set_keepalive_interval(1);
     this.addSubscription(
-      subscribeDOMEvent(websocket, 'close', () => {
+      subscribeDOMEvent(device, 'close', () => {
         this.close();
       }),
-      subscribeDOMEvent(websocket, 'error', (err) => {
+      subscribeDOMEvent(device, 'error', (err) => {
         this.error(err);
       })
     );
