@@ -9,6 +9,14 @@ export function assertEqual(a, b) {
   tests++;
 }
 
+export function assert(a) {
+  if (!a) {
+    throw new Error('Assertion failed.');
+  }
+
+  tests++;
+}
+
 export function assertEq(a, b) {
   const ja = JSON.stringify(a);
   const jb = JSON.stringify(b);

@@ -559,6 +559,15 @@ export class AES70Backend extends BackendBase {
     };
 
     const device = await this._connectDevice(options);
+
+    // The backend has been destroyed while the connect
+    // was still pending.
+    if (!this.isInit) {
+      this.log('Backend was closed during setup.');
+      device.close();
+      return;
+    }
+
     this._device = device;
     device.set_keepalive_interval(1);
     this.addSubscription(
@@ -567,6 +576,9 @@ export class AES70Backend extends BackendBase {
       }),
       subscribeDOMEvent(device, 'error', (err) => {
         this.error(err);
+      }),
+      this.subscribeEvent('destroy', () => {
+        device.close();
       })
     );
     this.open();
@@ -582,12 +594,10 @@ export class AES70Backend extends BackendBase {
     this._contextObservables = new ReplayObservableMap((path) =>
       this._createContextObservable(path)
     );
-    this._connect().then(
-      () => {
-        this.open();
-      },
+    this._connect().catch(
       (err) => {
-        this.error(err);
+        if (this.isInit)
+          this.error(err);
       }
     );
   }

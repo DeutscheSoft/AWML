@@ -12,6 +12,7 @@
         define,
         assertEqual,
         assertFailure,
+        assert,
         skip,
       } from './testing.js';
       import {
@@ -135,10 +136,39 @@
 
         assertNoSubscribers(getBackend('test1'));
         assertNoSubscribers(getBackend('test2'));
+
+        {
+          // create a backend an destroy it immediately. This should not trigger any errors.
+          const backends = Array.from(document.querySelectorAll('awml-backend'));
+          const backend = backends.pop();
+
+          backend.name = 'test3';
+          await delay(1);
+          backend.name = null;
+        }
+
+        for (let i = 0; i < 10; i++)
+        {
+          // create a backend an close the connection when it has been opened.
+          const backends = Array.from(document.querySelectorAll('awml-backend'));
+          const backendElement = backends.pop();
+
+          backendElement.name = 'test3';
+          await backendElement.whenOpen();
+          const backend = backendElement.backend;
+          const connection = backend.device.connection;
+          assert(backend.isOpen);
+          assert(!connection.is_closed());
+          await delay(100);
+          backendElement.name = null;
+          assert(!backend.isOpen);
+          assert(connection.is_closed());
+        }
       });
     </script>
     <awml-backend name="test1" src="/_control/aes70"></awml-backend>
     <awml-backend name="test2" src="/_control/aes70"></awml-backend>
+    <awml-backend src="/_control/aes70"></awml-backend>
   </head>
   <body></body>
 </html>
