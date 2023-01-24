@@ -24,8 +24,11 @@ export class SingleExpressionTemplate {
       this._output = result;
       return true;
     } catch (err) {
-      error('Exception when evaluating template expression \'%s\': %o',
-            compiledExpression, err);
+      error(
+        "Exception when evaluating template expression '%s': %o",
+        compiledExpression,
+        err
+      );
       throw err;
     }
   }
@@ -39,7 +42,7 @@ export class SingleExpressionTemplate {
   }
 
   toString() {
-    return `{{ ${ this._compiledExpression } }}`;
+    return `{{ ${this._compiledExpression} }}`;
   }
 }
 
@@ -70,14 +73,21 @@ export class StringTemplate {
         const result = expression.call(ctx);
         const previousResult = results[i];
 
-        if (result === previousResult && !isNaN(result) && !isNaN(previousResult))
+        if (
+          result === previousResult &&
+          !isNaN(result) &&
+          !isNaN(previousResult)
+        )
           continue;
 
         results[i] = result;
         changed = true;
       } catch (err) {
-        error('Exception when evaluating template expression \'%s\': %o',
-              expression, err);
+        error(
+          "Exception when evaluating template expression '%s': %o",
+          expression,
+          err
+        );
         throw err;
       }
     }
@@ -140,9 +150,10 @@ export class StringTemplate {
   }
 
   toString() {
-    return this._compiledExpressions.map((expr) => {
-      return (typeof expr === 'string')
-        ? expr : `{{ ${ expr } }}`;
-    }).join('');
+    return this._compiledExpressions
+      .map((expr) => {
+        return typeof expr === 'string' ? expr : `{{ ${expr} }}`;
+      })
+      .join('');
   }
 }

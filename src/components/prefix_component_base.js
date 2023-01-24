@@ -76,8 +76,7 @@ export class PrefixComponentBase extends BaseComponent {
   set debounce(v) {
     if (typeof v !== 'number' || !(v >= 0))
       throw new TypeError('Expected non-negative number.');
-    if (this._debounce === v)
-      return;
+    if (this._debounce === v) return;
     this._debounce = v;
     this._resubscribe();
   }
@@ -93,8 +92,7 @@ export class PrefixComponentBase extends BaseComponent {
   }
   set partial(v) {
     if (typeof v !== 'boolean') throw new TypeError('Expected boolean.');
-    if (this._partial === v)
-      return;
+    if (this._partial === v) return;
     this._partial = v;
     this._resubscribe();
   }
@@ -230,8 +228,7 @@ export class PrefixComponentBase extends BaseComponent {
    * Directly sets the dynamic value.
    */
   set backendValue(bv) {
-    if (this._backendValue === bv)
-      return;
+    if (this._backendValue === bv) return;
     this._backendValue = bv;
     this._resubscribe();
   }

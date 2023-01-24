@@ -3,14 +3,14 @@ import { AES70Backend } from '../src/backends/aes70';
 import { EmberPlusBackend } from '../src/backends/ember-plus';
 
 {
-  new LocalBackend({ });
+  new LocalBackend({});
   new LocalBackend({
     name: 'local',
     data: { foo: 23 },
     delay: 100,
   });
 
-  new LocalStorageBackend({ });
+  new LocalStorageBackend({});
   new LocalStorageBackend({
     name: 'local',
     data: { foo: 23 },

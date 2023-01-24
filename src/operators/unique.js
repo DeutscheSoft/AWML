@@ -10,7 +10,7 @@ function defaultCompare(a, b) {
  * Transform the input dynamic value and returns a new DynamicValue which skips
  * identical values from being emitted. If no comparison function is given, the
  * `===` is used to compare values.
- * 
+ *
  * @param {DynamicValue} dv
  * @param {function(*, *): boolean} compare
  *      Comparison function for values.
@@ -20,8 +20,7 @@ export function unique(dv, compare) {
   if (!(dv instanceof DynamicValue))
     throw new TypeError('Expected DynamicValue.');
 
-  if (compare === void 0)
-    compare = defaultCompare;
+  if (compare === void 0) compare = defaultCompare;
   else if (typeof compare !== 'function')
     throw new TypeError('Expected function.');
 

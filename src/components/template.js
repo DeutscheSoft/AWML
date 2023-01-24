@@ -348,8 +348,7 @@ export class TemplateComponent extends HTMLElement {
       const name$ = name + '$';
       const tmp = this[name$];
 
-      if (tmp && tmp instanceof DynamicValue)
-        return tmp;
+      if (tmp && tmp instanceof DynamicValue) return tmp;
     }
 
     throw new Error('No such option in component: ' + name);
@@ -401,8 +400,9 @@ export class TemplateComponent extends HTMLElement {
     // Remove trailing $
     let dependencies = template.dependencies;
 
-    dependencies = dependencies
-      .filter((name, index, a) => name.length && a.indexOf(name) === index);
+    dependencies = dependencies.filter(
+      (name, index, a) => name.length && a.indexOf(name) === index
+    );
 
     if (Array.isArray(options.ignoreProperties)) {
       dependencies = dependencies.filter((name) => {

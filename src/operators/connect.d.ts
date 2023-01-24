@@ -13,4 +13,5 @@ export function connectTo<Type1, Type2>(
   to: DynamicValue<Type2>,
   from: DynamicValue<Type1>,
   replay: boolean,
-  transform?: ((value: Type1) => Type2)): () => void;
+  transform?: (value: Type1) => Type2
+): () => void;

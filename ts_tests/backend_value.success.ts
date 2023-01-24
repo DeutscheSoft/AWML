@@ -4,7 +4,7 @@ import { getBackendValue } from '../src/index';
   getBackendValue('foo:bar').set(234);
   getBackendValue<number>('foo:bar').set(234);
   getBackendValue<number>('foo:bar').subscribe((value: number) => {
-    console.log('value:', value*2);
+    console.log('value:', value * 2);
   });
   getBackendValue<string>('foo:bar').subscribe((value: string) => {
     console.log('value:', value);

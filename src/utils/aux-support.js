@@ -180,8 +180,7 @@ function waitForUserInteractionEnd(widget, delay, debug) {
       reject(new Error('Widget was destroyed.'));
     });
 
-    if (!widget.get('interacting'))
-      interactionEnded();
+    if (!widget.get('interacting')) interactionEnded();
   });
 }
 
@@ -311,8 +310,10 @@ export function bindingFromWidget(widget, name, options) {
     };
   }
 
-  const ignoreInteraction = setFun === null || options.ignoreInteraction
-    || (options.ignoreInteraction === void 0 && options.writeonly);
+  const ignoreInteraction =
+    setFun === null ||
+    options.ignoreInteraction ||
+    (options.ignoreInteraction === void 0 && options.writeonly);
 
   if (!ignoreInteraction) {
     setFun = blockWhileInteracting(widget, setFun, options.receiveDelay || 500);

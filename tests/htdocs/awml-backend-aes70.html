@@ -4,7 +4,10 @@
     <script src="./AES70.es5.js"></script>
     <script type="module" src="../../src/index.js"></script>
     <script type="module" src="../../src/backends/aes70.js"></script>
-    <script type="module" src="../../src/backends/aes70.registration.js"></script>
+    <script
+      type="module"
+      src="../../src/backends/aes70.registration.js"
+    ></script>
     <script type="module" src="test-component.js"></script>
     <script type="module">
       import {
@@ -43,8 +46,7 @@
       }
 
       function assertNoSubscribers(backend) {
-        if (!backend)
-          throw new Error('Connection lost.');
+        if (!backend) throw new Error('Connection lost.');
         backend._contexts.forEach((ctx) => {
           if (ctx.info.type !== 'directory') {
             assertEqual(ctx.hasSubscribers(), false);
@@ -139,7 +141,9 @@
 
         {
           // create a backend an destroy it immediately. This should not trigger any errors.
-          const backends = Array.from(document.querySelectorAll('awml-backend'));
+          const backends = Array.from(
+            document.querySelectorAll('awml-backend')
+          );
           const backend = backends.pop();
 
           backend.name = 'test3';
@@ -147,10 +151,11 @@
           backend.name = null;
         }
 
-        for (let i = 0; i < 10; i++)
-        {
+        for (let i = 0; i < 10; i++) {
           // create a backend an close the connection when it has been opened.
-          const backends = Array.from(document.querySelectorAll('awml-backend'));
+          const backends = Array.from(
+            document.querySelectorAll('awml-backend')
+          );
           const backendElement = backends.pop();
 
           backendElement.name = 'test3';

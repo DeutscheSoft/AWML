@@ -165,25 +165,23 @@
         }
 
         {
-          const template = DOMTemplate.fromString(
-            `{{ this.data | async }}`
-          );
+          const template = DOMTemplate.fromString(`{{ this.data | async }}`);
           const container = document.createElement('div');
 
           container.appendChild(template._fragment);
           document.body.appendChild(container);
 
-          assertEq(container.innerText, "");
+          assertEq(container.innerText, '');
 
           template.update({ data: Promise.resolve(42) });
           await Promise.resolve();
-          assertEq(container.innerText, "42");
+          assertEq(container.innerText, '42');
 
           const bv = DynamicValue.fromConstant(23);
           template.update({ data: bv });
-          assertEq(container.innerText, "23");
+          assertEq(container.innerText, '23');
           bv.set(24);
-          assertEq(container.innerText, "24");
+          assertEq(container.innerText, '24');
 
           container.remove();
         }

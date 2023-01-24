@@ -476,46 +476,46 @@
               const v1 = DynamicValue.fromConstant(42);
               const v2 = unique(v1);
 
-              const values = [ ];
+              const values = [];
 
               let sub = v2.subscribe((v) => values.push(v));
 
-              assertEq(values, [ 42 ]);
+              assertEq(values, [42]);
               v1.set(23);
-              assertEq(values, [ 42, 23 ]);
+              assertEq(values, [42, 23]);
               v1.set(23);
-              assertEq(values, [ 42, 23 ]);
+              assertEq(values, [42, 23]);
 
               sub();
               v1.set(23);
-              assertEq(values, [ 42, 23 ]);
+              assertEq(values, [42, 23]);
 
               sub = v2.subscribe((v) => values.push(v));
-              assertEq(values, [ 42, 23, 23 ]);
+              assertEq(values, [42, 23, 23]);
               sub();
             }
 
             // Test with comparison function
             {
               const v1 = DynamicValue.fromConstant(42);
-              const v2 = unique(v1, (a, b) => Math.abs(a-b) < 1);
+              const v2 = unique(v1, (a, b) => Math.abs(a - b) < 1);
 
-              const values = [ ];
+              const values = [];
 
               let sub = v2.subscribe((v) => values.push(v));
 
-              assertEq(values, [ 42 ]);
+              assertEq(values, [42]);
               v1.set(23);
-              assertEq(values, [ 42, 23 ]);
+              assertEq(values, [42, 23]);
               v1.set(23.5);
-              assertEq(values, [ 42, 23 ]);
+              assertEq(values, [42, 23]);
 
               sub();
               v1.set(23.3);
-              assertEq(values, [ 42, 23 ]);
+              assertEq(values, [42, 23]);
 
               sub = v2.subscribe((v) => values.push(v));
-              assertEq(values, [ 42, 23, 23.3 ]);
+              assertEq(values, [42, 23, 23.3]);
               sub();
             }
           }

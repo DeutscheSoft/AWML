@@ -216,7 +216,7 @@ class PropertyContext extends ContextWithValue {
     }
   }
 
-  _observeGetter(callback ) {
+  _observeGetter(callback) {
     let active = true;
 
     this.getter().then(
@@ -247,7 +247,7 @@ class PropertyContext extends ContextWithValue {
       },
       (error) => {
         if (!active) return;
-        callback(0, 0, error)
+        callback(0, 0, error);
       }
     );
 
@@ -287,8 +287,7 @@ class PropertyContext extends ContextWithValue {
       // which means that the response will be interleaved with notifications
       // and in order to preserve the order of events from the network we must
       // dispatch all events by one event loop.
-      if (getterPending && !needsDispatch)
-        needsDispatch = true;
+      if (getterPending && !needsDispatch) needsDispatch = true;
 
       if (needsDispatch) {
         console.log('needing dispatch.');
@@ -322,15 +321,13 @@ class PropertyContext extends ContextWithValue {
     };
   }
 
-
   _subscribe(callback) {
     if (this.property.static) {
       callback(1, 0, this.object[this.property.name]);
       return () => {};
     }
 
-    if (this.event)
-      return this._observe(callback);
+    if (this.event) return this._observe(callback);
 
     return this._observeGetter(callback);
   }
@@ -594,12 +591,9 @@ export class AES70Backend extends BackendBase {
     this._contextObservables = new ReplayObservableMap((path) =>
       this._createContextObservable(path)
     );
-    this._connect().catch(
-      (err) => {
-        if (this.isInit)
-          this.error(err);
-      }
-    );
+    this._connect().catch((err) => {
+      if (this.isInit) this.error(err);
+    });
   }
 
   registerContext(ctx) {

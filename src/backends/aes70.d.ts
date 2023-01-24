@@ -8,5 +8,5 @@ export interface IAES70BackendOptions extends IBackendBaseOptions {
 export class AES70Backend extends BackendBase {
   constructor(options: IAES70BackendOptions);
 
-  get device(); 
+  get device();
 }

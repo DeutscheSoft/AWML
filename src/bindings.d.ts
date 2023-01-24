@@ -20,26 +20,29 @@ interface IBindingDescriptionBackendValue extends IBindingDescriptionShared {
 }
 
 interface IWidget {
-  subscribe(eventName: string, eventHandler: (...args) => void): () => void,
+  subscribe(eventName: string, eventHandler: (...args) => void): () => void;
   set(optionName: string, value: any): any;
 }
 
-export type IBindingDescription = IBindingDescriptionSrc |
-  IBindingDescriptionBackendValue;
+export type IBindingDescription =
+  | IBindingDescriptionSrc
+  | IBindingDescriptionBackendValue;
 
 export function createBinding(
   target: Node | IWidget,
   sourceNode: Node,
   ctx: any,
   options: IBindingDescription,
-  log?: (...args) => void): () => void;
+  log?: (...args) => void
+): () => void;
 
 export class Bindings {
   constructor(
     target: Node | IWidget,
     sourceNode: Node,
     ctx: any,
-    log?: (...args) => void);
+    log?: (...args) => void
+  );
 
   update(bindings: IBindingDescription | IBindingDescription[] | null): void;
   updatePrefix(handle: string): void;

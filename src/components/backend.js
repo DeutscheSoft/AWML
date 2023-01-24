@@ -121,7 +121,7 @@ export class BackendComponent extends BaseComponent {
    * 30 seconds.
    */
   get maxRetryInterval() {
-    return this._maxRetryInterval || 30*1000;
+    return this._maxRetryInterval || 30 * 1000;
   }
 
   set maxRetryInterval(value) {
@@ -133,8 +133,7 @@ export class BackendComponent extends BaseComponent {
    * connected, this method will do nothing.
    */
   triggerReconnect() {
-    if (!this.isOpen)
-      this._resubscribe();
+    if (!this.isOpen) this._resubscribe();
   }
 
   /**
@@ -171,7 +170,7 @@ export class BackendComponent extends BaseComponent {
   calculateRetryInterval() {
     let interval = this.retryInterval;
 
-    interval *= (1 + Math.log(Math.pow(1 + this._retries, 2)));
+    interval *= 1 + Math.log(Math.pow(1 + this._retries, 2));
 
     return Math.min(interval, this.maxRetryInterval);
   }

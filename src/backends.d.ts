@@ -7,5 +7,7 @@ export function getBackend(name: string): BackendBase;
 export function waitForBackend(name: string): Promise<BackendBase>;
 export function registerBackend(name: string, backend: BackendBase): void;
 export function unregisterBackend(name: string, backend: BackendBase): void;
-export function getBackendValues(backendName: string): Map<string,BackendValue<any>>;
-export function getBackends(): Map<string,BackendBase>;
+export function getBackendValues(
+  backendName: string
+): Map<string, BackendValue<any>>;
+export function getBackends(): Map<string, BackendBase>;
