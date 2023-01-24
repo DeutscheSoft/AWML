@@ -54,6 +54,7 @@ export function setupWSTunnel(server, path, destination) {
           console.log('Created tunnel to %o', destination);
         });
       } catch (err) {
+        console.error('Failed to create tunnel to %o: %o', destination, err);
         socket.end();
       }
     });
