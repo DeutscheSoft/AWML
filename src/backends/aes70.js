@@ -11,12 +11,6 @@ import { ReplayObservableMap } from './replay_observable_map.js';
 import { forEachAsync } from './for_each_async.js';
 import { dispatch } from '../utils/dispatch.js';
 
-/* global OCA */
-
-if (typeof OCA === 'undefined') {
-  warn('Cannot find AES70.js library. Missing a script include?');
-}
-
 function splitAtLast(path, seperator) {
   const pos = path.lastIndexOf(seperator);
 
@@ -542,6 +536,12 @@ export class AES70Backend extends BackendBase {
   }
 
   async _connectDevice(options) {
+    /* global OCA */
+
+    if (typeof OCA === 'undefined') {
+      warn('Cannot find AES70.js library. Missing a script include?');
+    }
+
     const websocket = await this._connectWebSocket();
 
     return new OCA.RemoteDevice(
