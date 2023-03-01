@@ -1,5 +1,5 @@
 import { LocalBackend, LocalStorageBackend } from '../src/index';
-import { AES70Backend } from '../src/backends/aes70';
+import { AES70Backend, IAES70BackendOptions } from '../src/backends/aes70';
 import { EmberPlusBackend } from '../src/backends/ember-plus';
 
 {
@@ -47,4 +47,22 @@ import { EmberPlusBackend } from '../src/backends/ember-plus';
   b.open();
   b.close();
   b.error(new Error('foo'));
+}
+
+async function fun() {
+  const b = new AES70Backend({
+    url: '/_control',
+  });
+
+  const ws: WebSocket = await b._connectWebSocket();
+}
+
+interface DerivedOptions extends IAES70BackendOptions {
+  foo: number;
+}
+
+class DerivedBackend extends AES70Backend {
+  async _connectDevice(options: DerivedOptions) {
+    return {};
+  }
 }
