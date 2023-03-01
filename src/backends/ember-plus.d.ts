@@ -11,6 +11,7 @@ export class EmberPlusBackend extends BackendBase {
   get url(): string;
   get protocol(): string;
   get batch(): number;
+  get options(): IEmberPlusBackendOptions;
 
   constructor(options: IEmberPlusBackendOptions);
 }

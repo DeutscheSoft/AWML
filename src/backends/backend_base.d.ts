@@ -20,9 +20,12 @@ export abstract class BackendBase extends EventTarget {
   get isOpen(): boolean;
   get isError(): boolean;
   get isClosed(): boolean;
+  get options(): IBackendBaseOptions;
 
   constructor(options: IBackendBaseOptions);
   close(): void;
+  open(): void;
+  error(err: Error): void;
 
   resolvePath(path: string): Promise<string | number>;
   resolveId(id: number | string): Promise<string>;

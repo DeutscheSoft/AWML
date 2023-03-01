@@ -33,3 +33,18 @@ import { EmberPlusBackend } from '../src/backends/ember-plus';
     url: '/_control',
   });
 }
+
+// Check that options is there
+{
+  const b = new LocalBackend({
+    name: 'local',
+    data: { foo: 23 },
+    delay: 100,
+  });
+
+  const name: string = b.options.name;
+
+  b.open();
+  b.close();
+  b.error(new Error('foo'));
+}

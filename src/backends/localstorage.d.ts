@@ -7,6 +7,8 @@ export interface ILocalStorageBackendOptions extends ILocalBackendOptions {
 }
 
 export class LocalStorageBackend extends LocalBackend {
+  get options(): ILocalStorageBackendOptions;
+
   constructor(options: ILocalStorageBackendOptions);
 
   get storage(): Storage;

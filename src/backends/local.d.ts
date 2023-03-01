@@ -10,6 +10,8 @@ export interface ILocalBackendOptions extends IBackendBaseOptions {
 }
 
 export class LocalBackend extends BackendBase {
+  get options(): ILocalBackendOptions;
+
   constructor(options: ILocalBackendOptions);
 
   delay: number;
