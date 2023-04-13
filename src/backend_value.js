@@ -6,6 +6,14 @@ import { DynamicValue } from './dynamic_value.js';
  * backend. Internally it interfaces with the API of a backend implementation.
  */
 export class BackendValue extends DynamicValue {
+  _activated(backendId) {
+    this._backendId = backendId;
+
+    if (this._hasRequestedValue) {
+      this._backend.set(backendId, this._requestedValue);
+    }
+  }
+
   _activate() {
     const backend = this._backend;
     if (!backend) return;
@@ -23,11 +31,8 @@ export class BackendValue extends DynamicValue {
           return;
         }
 
-        this._backendId = id;
-
-        if (this._hasRequestedValue) {
-          this._backend.set(id, this._requestedValue);
-        }
+        if (this._backendId === null)
+          this._activated(id);
 
         if (result.length === 3) {
           if (!this._hasValue) this._callback(id, result[2]);
@@ -122,6 +127,10 @@ export class BackendValue extends DynamicValue {
       if (id === false) {
         this.disconnectBackend();
         return;
+      }
+
+      if (this._backendId === null) {
+        this._activated(id);
       }
 
       if (this._hasRequestedValue) {
