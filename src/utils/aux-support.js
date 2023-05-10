@@ -168,7 +168,8 @@ function waitForUserInteractionEnd(widget, delay, debug) {
     };
 
     sub1 = widget.subscribe('set_interacting', (value) => {
-      if (timeout_id) clearTimeout(timeout_id);
+      if (timeout_id !== void 0)
+        clearTimeout(timeout_id);
 
       timeout_id = void 0;
 
@@ -177,6 +178,8 @@ function waitForUserInteractionEnd(widget, delay, debug) {
       interactionEnded();
     });
     sub2 = widget.subscribe('destroy', () => {
+      if (timeout_id !== void 0)
+        clearTimeout(timeout_id);
       reject(new Error('Widget was destroyed.'));
     });
 
