@@ -916,7 +916,11 @@
     if (!bindings.has(proto)) return;
 
     bindings.get(proto).forEach(function (bind, uri, m) {
-      bind.delete_backend(backend);
+      try {
+        bind.delete_backend(backend);
+      } catch (err) {
+        AWML.error(err);
+      }
     });
   }
   function backend_activate(proto, backend) {

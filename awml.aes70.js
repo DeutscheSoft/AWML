@@ -147,7 +147,7 @@ var f = (function(w, AWML) {
         m.delete(id);
         runCleanupHandler(sub);
       }
-      this._values.delete(id);
+      this.values.delete(id);
     },
     low_subscribe: function(path) {
       try {
