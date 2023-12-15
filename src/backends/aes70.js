@@ -284,7 +284,6 @@ class PropertyContext extends ContextWithValue {
       if (getterPending && !needsDispatch) needsDispatch = true;
 
       if (needsDispatch) {
-        console.log('needing dispatch.');
         dispatch(() => {
           if (unsubscribe === null) return;
           callback(1, 0, value);
