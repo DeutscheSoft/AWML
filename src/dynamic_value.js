@@ -1,4 +1,5 @@
 import { warn } from './utils/log.js';
+import { runCleanupHandler } from './utils/run_cleanup_handler.js';
 
 function callSubscriber(cb, value) {
   try {
@@ -65,7 +66,7 @@ export class DynamicValue {
    * @protected
    */
   _activate() {
-    this._subscription = this._subscribe();
+    this._subscription = this._subscribe() || null;
   }
 
   /**
@@ -75,7 +76,7 @@ export class DynamicValue {
     const sub = this._subscription;
     if (sub !== null) {
       this._subscription = null;
-      sub();
+      runCleanupHandler(sub);
       this.clear();
     }
   }
