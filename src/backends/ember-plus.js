@@ -61,6 +61,10 @@ const allParameterProperties = ParameterProperties.concat([
 ]);
 
 class ObjectContext {
+  static makeId(node) {
+    return node.key;
+  }
+
   hasSubscribers() {
     return false;
   }
@@ -68,13 +72,13 @@ class ObjectContext {
   /**
    * @param {EmberPlus.Parameter|EmberPlus.Node} node
    */
-  constructor(node) {
+  constructor(id, node) {
     this.node = node;
     this.info = {
       type: 'parameter',
       access: 'r',
       description: node.identifier,
-      id: node.key,
+      id,
     };
   }
 
@@ -106,7 +110,11 @@ class ContextWithValue extends ReplayObservable {
 }
 
 class NodeDirectoryContext extends ContextWithValue {
-  constructor(device, node) {
+  static makeId(device, node) {
+    return 'd' + node.key;
+  }
+
+  constructor(id, device, node) {
     super();
     this.device = device;
     this.node = node;
@@ -114,7 +122,7 @@ class NodeDirectoryContext extends ContextWithValue {
       type: 'directory',
       access: 'r',
       description: node.identifier,
-      id: 'd' + node.key,
+      id,
     };
   }
 
@@ -126,7 +134,11 @@ class NodeDirectoryContext extends ContextWithValue {
 }
 
 class ParameterPropertyContext extends ContextWithValue {
-  constructor(device, node, propertyName) {
+  static makeId(device, node, propertyName) {
+    return node.key + 'p' + propertyName;
+  }
+
+  constructor(id, device, node, propertyName) {
     super();
     if (!allParameterProperties.includes(propertyName))
       throw new Error('No such parameter property.');
@@ -140,7 +152,7 @@ class ParameterPropertyContext extends ContextWithValue {
         propertyName === 'value' || propertyName === 'effectiveValue'
           ? 'rw'
           : 'r',
-      id: node.key + 'p' + propertyName,
+      id,
     };
   }
 
@@ -176,7 +188,11 @@ class ParameterPropertyContext extends ContextWithValue {
 }
 
 class NodePropertyContext extends ContextWithValue {
-  constructor(device, node, propertyName) {
+  static makeId(device, node, propertyName) {
+    return node.key + 'p' + propertyName;
+  }
+
+  constructor(id, device, node, propertyName) {
     super();
     if (!NodeProperties.includes(propertyName))
       throw new Error('No such node property.');
@@ -187,7 +203,7 @@ class NodePropertyContext extends ContextWithValue {
     this.info = {
       type: 'parameter',
       access: 'r',
-      id: node.key + 'p' + propertyName,
+      id,
     };
   }
 
@@ -210,6 +226,7 @@ class ContextObservable extends ReplayObservable {
         return subscribe(callback);
       } catch (err) {
         callback(0, 0, err);
+        return null;
       }
     };
   }
@@ -293,19 +310,48 @@ export class EmberPlusBackend extends BackendBase {
       });
   }
 
-  registerContext(ctx) {
-    const contexts = this._contexts;
-    const id = ctx.info.id;
+  findContext(id) {
+    const a = this._contexts.get(id);
 
-    if (contexts.has(id)) {
-      console.error(ctx);
-      throw new Error('Context already registered.');
+    return a ? a[0] : undefined;
+  }
+
+  getContext(id) {
+    const ctx = this.findContext(id);
+
+    if (!ctx) throw new Error(`Cannot find ctx for id ${id}`);
+
+    return ctx;
+  }
+
+  makeContext(callback, contextClass, ...args) {
+    if (!callback) throw new TypeError('Expected callback function.');
+
+    const id = contextClass.makeId(...args);
+    const _contexts = this._contexts;
+    let entry = _contexts.get(id);
+
+    if (!entry) {
+      entry = [new contextClass(id, ...args), 0];
+      _contexts.set(id, entry);
+    } else {
+      if (!(entry[0] instanceof contextClass))
+        throw new Error(`Context class mismatch.`);
     }
 
-    contexts.set(id, ctx);
+    entry[1]++;
+
+    callback(1, 0, entry[0]);
 
     return () => {
-      this._contexts.delete(id);
+      if (!callback) return;
+      callback = null;
+      entry[1]--;
+
+      if (entry[1] > 0) return;
+
+      entry[0].dispose();
+      _contexts.delete(id);
     };
   }
 
@@ -326,12 +372,14 @@ export class EmberPlusBackend extends BackendBase {
       const device = this._device;
 
       if (parentPath === '/' && propertyName === '') {
-        const ctx = dir
-          ? new NodeDirectoryContext(device, device.root)
-          : new ObjectContext(device.root);
-        const sub = this.registerContext(ctx);
-        callback(1, 0, ctx);
-        return sub;
+        return dir
+          ? this.makeContext(
+              callback,
+              NodeDirectoryContext,
+              device,
+              device.root
+            )
+          : this.makeContext(callback, ObjectContext, device.root);
       }
 
       const cb = (ok, last, node) => {
@@ -355,14 +403,13 @@ export class EmberPlusBackend extends BackendBase {
             );
           } else {
             try {
-              const ctx = new ParameterPropertyContext(
+              return this.makeContext(
+                callback,
+                ParameterPropertyContext,
                 device,
                 node,
                 propertyName
               );
-              const sub = this.registerContext(ctx);
-              callback(1, 0, ctx);
-              return sub;
             } catch (err) {
               callback(0, 0, err);
               return null;
@@ -372,14 +419,13 @@ export class EmberPlusBackend extends BackendBase {
           // Special meaning, this is not a child
           if (propertyName.startsWith('$') && !dir) {
             try {
-              const ctx = new NodePropertyContext(
+              return this.makeContext(
+                callback,
+                NodePropertyContext,
                 device,
                 node,
                 propertyName.substr(1)
               );
-              const sub = this.registerContext(ctx);
-              callback(1, 0, ctx);
-              return sub;
             } catch (err) {
               callback(0, 0, err);
               return null;
@@ -400,15 +446,14 @@ export class EmberPlusBackend extends BackendBase {
             const child = node.children[pos];
 
             if (dir && child instanceof EmberPlus.InternalNode) {
-              const ctx = new NodeDirectoryContext(device, child);
-              const sub = this.registerContext(ctx);
-              callback(1, 0, ctx);
-              return sub;
+              return this.makeContext(
+                callback,
+                NodeDirectoryContext,
+                device,
+                child
+              );
             } else {
-              const ctx = new ObjectContext(child);
-              const sub = this.registerContext(ctx);
-              callback(1, 0, ctx);
-              return sub;
+              return this.makeContext(callback, ObjectContext, child);
             }
           }
         } else {
@@ -438,16 +483,11 @@ export class EmberPlusBackend extends BackendBase {
   }
 
   observeById(id, callback) {
-    //console.log('observe(%o): ctx %o', id, this._contexts.get(id));
-    return this._contexts.get(id).subscribe(callback);
+    return this.getContext(id).subscribe(callback);
   }
 
   setById(id, value) {
-    const ctx = this._contexts.get(id);
-
-    if (!ctx) throw new Error('Unknown property.');
-
-    return ctx.set(value);
+    return this.getContext(id).set(value);
   }
 
   connect(src) {
