@@ -192,7 +192,7 @@ export class RPCClientBase {
   }
 
   failAllCalls(err) {
-    const requests = this._requests;
+    const requests = Array.from(this._requests.values());
     this._requests.clear();
 
     requests.forEach((context) => {

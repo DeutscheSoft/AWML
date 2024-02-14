@@ -178,9 +178,24 @@
             assertEqual(server.pendingCalls(), 0);
           }
         }
+
+        {
+          const [client, server] = getClient(-1, -1);
+          let failed = false;
+
+          const p = client.callWait('ping_async', 42).catch((err) => {
+            failed = true;
+          });
+
+          client.failAllCalls(new Error('test'));
+          server.dispose();
+          await delay(10);
+          assertEq(failed, true);
+        }
       });
     </script>
     <script type="module" src="../../src/index.js"></script>
   </head>
+
   <body></body>
 </html>
