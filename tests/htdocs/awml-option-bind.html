@@ -32,6 +32,7 @@
           backendValue.set('flu');
           assertEqual(widget.get('foo'), 'bar');
           widget.stopInteracting();
+          await delay(10);
           assertEqual(widget.get('foo'), 'flu');
 
           // with delay
@@ -123,11 +124,14 @@
           widget.userset('foo', 1);
           await delay(50);
           widget.userset('foo', 2);
+          await delay(75);
           widget.stopInteracting();
           // receive delay timer should start running here.
           await delay(60);
+          // Now the value should still be 2.
           assertEqual(widget.get('foo'), 2);
           await delay(60);
+          // Now it will be 2 again.
           assertEqual(widget.get('foo'), 2);
         }
         {
@@ -223,6 +227,7 @@
     </awml-backend>
     <awml-backend type="local" delay="100" name="remote"></awml-backend>
   </head>
+
   <body>
     <test-component>
       <awml-option
