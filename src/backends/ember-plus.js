@@ -141,7 +141,11 @@ class ParameterPropertyContext extends ContextWithValue {
   constructor(id, device, node, propertyName) {
     super();
     if (!allParameterProperties.includes(propertyName))
-      throw new Error('No such parameter property.');
+      throw new Error(
+        `Parameter property ${propertyName} does not exist. (options: ${allParameterProperties.join(
+          ', '
+        )})`
+      );
 
     this.device = device;
     this.node = node;
@@ -195,7 +199,11 @@ class NodePropertyContext extends ContextWithValue {
   constructor(id, device, node, propertyName) {
     super();
     if (!NodeProperties.includes(propertyName))
-      throw new Error('No such node property.');
+      throw new Error(
+        `Node property ${propertyName} does not exist. (options: ${NodeProperties.join(
+          ', '
+        )})`
+      );
 
     this.device = device;
     this.node = node;
@@ -399,7 +407,7 @@ export class EmberPlusBackend extends BackendBase {
             callback(
               0,
               0,
-              new Error('Could not list directory for parameter Node.')
+              new Error(`Could not list directory for parameter Node ${path}.`)
             );
           } else {
             try {
@@ -439,7 +447,9 @@ export class EmberPlusBackend extends BackendBase {
             callback(
               0,
               0,
-              new Error(`Could not find child ${propertyName} in node.`)
+              new Error(
+                `Could not find child ${propertyName} in node ${parentPath}.`
+              )
             );
             return null;
           } else {
