@@ -93,14 +93,14 @@
 
           assertEqual(val, 23);
 
-          result.set(22);
+          await result.set(22);
 
           assertEqual(v1.value, 42);
           assertEqual(v2.value, 22);
 
           d.set(true);
 
-          result.set(41);
+          await result.set(41);
 
           assertEqual(v2.value, 22);
           assertEqual(v1.value, 41);
