@@ -1,26 +1,18 @@
 import { DynamicValue } from '../dynamic_value.js';
+import { map } from './map.js';
+import { unique } from './unique.js';
 
 class SwitchMapValue extends DynamicValue {
   constructor(dv, projection) {
     super();
-    this._other = dv;
-    this._projection = projection;
+    this._other = unique(map(dv, projection));
     this._inner = null;
-    this._hasRequestedValue = false;
-    this._requestedValue = null;
   }
 
   _subscribe() {
     let inner_sub = null;
 
-    const outer_sub = this._other.subscribe((x) => {
-      const projection = this._projection;
-
-      const inner = projection(x);
-
-      // nothing to do
-      if (inner === this._inner) return;
-
+    const outer_sub = this._other.subscribe((inner) => {
       this._inner = inner;
 
       if (inner_sub !== null) {
@@ -33,12 +25,6 @@ class SwitchMapValue extends DynamicValue {
       inner_sub = inner.subscribe((val) => {
         this._updateValue(val);
       });
-
-      if (this._hasRequestedValue) {
-        this._hasRequestedValue = false;
-        inner.set(this._requestedValue);
-        this._requestedValue = null;
-      }
     });
 
     return () => {
@@ -52,20 +38,16 @@ class SwitchMapValue extends DynamicValue {
     };
   }
 
-  set(x) {
-    const inner = this._inner;
-
-    if (inner) {
-      return inner.set(x);
-    } else {
-      this._hasRequestedValue = true;
-      this._requestedValue = x;
-    }
+  async set(x) {
+    const inner = await this._other.wait();
+    if (inner === null)
+      throw new Error(`switchMap projection returned null. Cannot set().`);
+    return inner.set(x);
   }
 }
 
 /**
- * switchMap can be used to between different DynamicValues based on the value
+ * switchMap can be used to switch between different DynamicValues based on the value
  * emitted from another DynamicValue.
  *
  * @param {DynamicValue} dv
