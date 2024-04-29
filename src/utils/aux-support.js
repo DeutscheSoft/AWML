@@ -317,7 +317,9 @@ export function bindingFromWidget(widget, name, options) {
     (options.ignoreInteraction === void 0 && options.writeonly);
 
   if (!ignoreInteraction) {
-    setFun = blockWhileInteracting(widget, setFun, options.receiveDelay || 500);
+    const receiveDelay =
+      options.receiveDelay === void 0 ? 500 : options.receiveDelay;
+    setFun = blockWhileInteracting(widget, setFun, receiveDelay);
   }
 
   return fromSubscription(subscribeFun, setFun);
