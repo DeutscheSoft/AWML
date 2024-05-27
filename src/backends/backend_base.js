@@ -68,10 +68,24 @@ export class BackendBase extends EventTarget {
     return this._options.node || null;
   }
 
+  get debug() {
+    return this._options.debug || false;
+  }
+
   log(...args) {
     const node = this._node;
 
-    if (node) node.log(...args);
+    if (node) {
+      node.log(...args);
+      return;
+    }
+
+    const options = this._options;
+
+    if (options.debug) {
+      const [fmt, ...rest] = args;
+      console.log('Backend(%s) ' + fmt, this.name, ...rest);
+    }
   }
 
   constructor(options) {

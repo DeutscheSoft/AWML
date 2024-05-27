@@ -10,11 +10,16 @@ interface IPathInfo {
 export interface IBackendBaseOptions {
   name?: string;
   node?: Node;
+  /**
+   * IF true, the backend will print additional warnings and error messages.
+   */
+  debug?: boolean;
 }
 
 export abstract class BackendBase extends EventTarget {
   get name(): string;
   get node(): Node | null;
+  get debug(): boolean;
 
   get isInit(): boolean;
   get isOpen(): boolean;
@@ -30,6 +35,7 @@ export abstract class BackendBase extends EventTarget {
   resolvePath(path: string): Promise<string | number>;
   resolveId(id: number | string): Promise<string>;
   setByPath(path: string, value: any): Promise<void>;
+  log(fmt: string, ...args: unknown[]): void;
 
   observeInfo(
     path: string,
