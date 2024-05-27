@@ -665,7 +665,12 @@ export class AES70Backend extends BackendBase {
 
           if (!property) {
             if (!isBlock(o)) {
-              this.log('Could not find property %o in %o', propertyName, o);
+              this.log(
+                'Could not find property %o in %o (path %o).',
+                propertyName,
+                o,
+                path
+              );
               callback(
                 0,
                 0,
@@ -702,7 +707,15 @@ export class AES70Backend extends BackendBase {
             // try property lookup
             const property = o.get_properties().find_property(propertyName);
 
-            if (!property) return null;
+            if (!property) {
+              this.log(
+                'Could not find property %o in block %o (path %o).',
+                propertyName,
+                o,
+                path
+              );
+              return null;
+            }
 
             const ctx = new PropertyContext(o, property, 0);
             const sub = this.registerContext(ctx);
@@ -713,7 +726,12 @@ export class AES70Backend extends BackendBase {
             const property = o.get_properties().find_property(propertyName);
 
             if (!property) {
-              this.log('Could not find property %o in %o', propertyName, o);
+              this.log(
+                'Could not find property %o in %o (path %o).',
+                propertyName,
+                o,
+                path
+              );
               callback(
                 0,
                 0,
@@ -745,7 +763,12 @@ export class AES70Backend extends BackendBase {
               callback(1, 0, ctx);
               return sub;
             } else {
-              this.log('Could not find property %o in %o', propertyName, o);
+              this.log(
+                'Could not find property %o in %o (path %o)',
+                propertyName,
+                o,
+                path
+              );
               callback(
                 0,
                 0,
