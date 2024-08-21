@@ -1,7 +1,7 @@
 import { warn } from './log.js';
 
 export function runCleanupHandler(cleanup) {
-  if (cleanup === null) return;
+  if (!cleanup) return;
   try {
     cleanup();
   } catch (error) {
