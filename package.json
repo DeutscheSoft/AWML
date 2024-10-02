@@ -7,7 +7,9 @@
   "module": "src/index.js",
   "type": "module",
   "directories": {},
-  "scripts": {},
+  "scripts": {
+    "format": "npx prettier --write ."
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/DeutscheSoft/AWML.git"
