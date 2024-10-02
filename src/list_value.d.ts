@@ -2,14 +2,14 @@ import { DynamicValue } from './dynamic_value';
 
 export type WrapDynamicValues<T extends [...any[]]> = T extends [
   infer T0,
-  ...(infer Rest)
+  ...infer Rest,
 ]
   ? [DynamicValue<T0>, ...WrapDynamicValues<Rest>]
   : [];
 export type UnwrapDynamicValue<T> = T extends DynamicValue<infer U> ? U : never;
 export type UnwrapDynamicValues<T extends [...any[]]> = T extends [
   infer T0,
-  ...(infer Rest)
+  ...infer Rest,
 ]
   ? [UnwrapDynamicValue<T0>, ...UnwrapDynamicValues<Rest>]
   : [];

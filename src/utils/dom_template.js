@@ -465,9 +465,8 @@ class OptionalNodeReference extends DOMTemplateExpression {
     let commentNode = this._commentNode;
 
     if (commentNode === null) {
-      this._commentNode = commentNode = document.createComment(
-        ' %if placeholder '
-      );
+      this._commentNode = commentNode =
+        document.createComment(' %if placeholder ');
     }
 
     return commentNode;
