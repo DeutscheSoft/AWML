@@ -1,5 +1,7 @@
 let tests = 0;
 
+import { delay } from '../../src/utils/delay.js';
+
 export function assertEqual(a, b) {
   if (a !== b) {
     console.error('assertEqual(%o, %o) failed.', a, b);
@@ -85,11 +87,7 @@ export function waitForFrame() {
   });
 }
 
-export function delay(n) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, n);
-  });
-}
+export { delay };
 
 import { subscribeDOMEventOnce } from '../../src/utils/subscribe_dom_event.js';
 

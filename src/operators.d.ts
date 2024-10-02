@@ -9,3 +9,5 @@ export * from './operators/from_dom_event';
 export * from './operators/map_items_cached';
 export * from './operators/resolve_items';
 export * from './operators/unique';
+export * from './operators/throttle_receive';
+export * from './operators/throttle_send';
