@@ -8,6 +8,6 @@
 *.in
 *.png
 *.py
-../.git
-../prettier
-../doc
+.git
+prettier
+doc
