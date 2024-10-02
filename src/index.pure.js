@@ -7,6 +7,8 @@ export {
   printBackendValues,
   getBackendValue,
   getBackends,
+  observeBackend,
+  observeBackends,
 } from './backends.js';
 export {
   registerLoading,

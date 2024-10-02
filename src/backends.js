@@ -1,9 +1,13 @@
 import { BackendValue } from './backend_value.js';
+import { DynamicValue } from './dynamic_value.js';
 import { ListValue } from './list_value.js';
 import { waitForDOMEvent } from './utils/subscribe_dom_event.js';
+import { map, unique } from './operators.js';
 
 const backendValues = new Map();
 const backends = new Map();
+const backends$ = DynamicValue.fromConstant(backends);
+const backendsReadonly$ = map(backends$, (backends) => backends);
 
 /**
  * Get the backend currently registered for the given name.
@@ -46,6 +50,7 @@ export function registerBackend(name, backend) {
   }
 
   backends.set(name, backend);
+  backends$.set(backends);
 
   const values = backendValues.get(name);
 
@@ -79,6 +84,7 @@ export function unregisterBackend(name, backend) {
   }
 
   backends.delete(name);
+  backends$.set(backends);
 
   const values = backendValues.get(name);
 
@@ -231,4 +237,31 @@ export function getBackendValue(address) {
  */
 export function getBackends() {
   return backends;
+}
+
+/**
+ * Returns a DynamicValue which emits the map with all backends.
+ *
+ * @return {DynamicValue<Map<string,Backend>>}
+ */
+export function observeBackends() {
+  return backendsReadonly$;
+}
+
+const observeBackendsCache = new Map();
+
+/**
+ * Returns a DynamicValue that emits the current backend with the
+ * given name or undefined.
+ *
+ * @param {string} name
+ * @return {DynamicValue<BackendBase>}
+ */
+export function observeBackend(name) {
+  let value$ = observeBackendsCache.get(name);
+  if (!value$) {
+    value$ = unique(map(backends$, (backends) => backends.get(name)));
+    observeBackendsCache.set(name, value$);
+  }
+  return value$;
 }

@@ -4,7 +4,7 @@
     <script type="module" src="../../src/index.js"></script>
     <script type="module">
       import { define, assertEqual, waitForDOMEvent } from './testing.js';
-      import { waitForBackend } from '../../src/index.js';
+      import { waitForBackend, observeBackend } from '../../src/index.js';
 
       async function testOpenBehavior(b) {
         if (b.isOpen) return;
@@ -20,8 +20,13 @@
 
         assertEqual(a[2].detail.backend, b.backend);
         assertEqual(a[2].detail.name, b.name);
-
         assertEqual(a[3], b.backend);
+
+        assertEqual(await observeBackend(b.name).wait(), b.backend);
+        assertEqual(
+          await observeBackend('this_backend_does_not_exist').wait(),
+          undefined
+        );
       }
 
       define(async () => {

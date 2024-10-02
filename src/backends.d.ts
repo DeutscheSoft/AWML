@@ -1,5 +1,6 @@
 import { BackendValue } from './backend_value';
 import { BackendBase } from './backends/backend_base';
+import { DynamicValue } from './dynamic_value';
 
 export function getBackendValue<T>(address: string): BackendValue<T>;
 
@@ -11,3 +12,5 @@ export function getBackendValues(
   backendName: string
 ): Map<string, BackendValue<any>>;
 export function getBackends(): Map<string, BackendBase>;
+export function observeBackends(): DynamicValue<Map<string, BackendBase>>;
+export function observeBackend(name: string): DynamicValue<BackendBase>;
