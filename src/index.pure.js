@@ -45,6 +45,7 @@ export {
 } from './components.js';
 export {
   RPCClientBase,
+  RPCResponsError,
   RPCServerBase,
   WebSocketRPCClient,
   WebSocketRPCServer,

@@ -15,6 +15,25 @@
  * ]
  */
 
+export class RPCResponsError extends Error {
+  constructor(reason) {
+    super(`rpc returned failure ${reason}`);
+    this.reason = reason;
+  }
+}
+
+function makeError(data) {
+  if (typeof data === 'object' && data instanceof Error) return data;
+
+  try {
+    return new RPCResponsError(data);
+  } catch (err) {
+    console.error('Failed to create error from', data);
+  }
+
+  return new Error('Rpc call failed.');
+}
+
 class RPCRequestContext {
   constructor(id, callback) {
     this._id = id;
@@ -28,7 +47,7 @@ class RPCRequestContext {
     const callback = this._callback;
 
     try {
-      callback(ok, last, data);
+      callback(ok, last, ok ? data : makeError(data));
     } catch (err) {
       console.error(
         'RPC result handler for result (%o, %o, %o) generated an exception: %o',
@@ -52,7 +71,7 @@ class RPCRequestContext {
     const callback = this._callback;
 
     try {
-      callback(0, 1, error);
+      callback(0, 1, makeError(error));
     } catch (err) {
       console.error(
         'Client close triggered an exception in RPC handler: %o',

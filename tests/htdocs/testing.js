@@ -37,6 +37,7 @@ export async function assertFailure(cb) {
     failure(new Error('Expected failure.'));
   } catch (err) {
     tests++;
+    return err;
   }
 }
 
