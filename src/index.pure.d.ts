@@ -5,3 +5,4 @@ export * from './operators';
 export * from './backends/local';
 export * from './backends/localstorage';
 export * from './backends/dynamic_values';
+export * from './rpc';
