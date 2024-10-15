@@ -2,7 +2,7 @@
   <head>
     <meta charset="utf-8" />
     <script type="module">
-      import { define, assertEqual, assertEq } from './testing.js';
+      import { define, assertEqual, assertDeepEqual, assert } from './testing.js';
       import {
         DynamicValue,
         ListValue,
@@ -226,22 +226,22 @@
 
             let p;
 
-            assertEq(await result.wait(), []);
+            assertDeepEqual(await result.wait(), []);
             assertEqual(called, 0);
 
             p = result.wait(false);
             input.set([2, 3, 4]);
-            assertEq(await p, [4, 6, 8]);
+            assertDeepEqual(await p, [4, 6, 8]);
             assertEqual(called, 3);
 
             p = result.wait(false);
             input.set([0, 2, 3, 4]);
-            assertEq(await p, [0, 4, 6, 8]);
+            assertDeepEqual(await p, [0, 4, 6, 8]);
             assertEqual(called, 4);
 
             p = result.wait(false);
             input.set([0]);
-            assertEq(await p, [0]);
+            assertDeepEqual(await p, [0]);
             assertEqual(called, 4);
           }
 
@@ -268,8 +268,8 @@
 
             let p, pKey;
 
-            assertEq(await result.wait(), new Map());
-            assertEq(await resultByKey.wait(), new Map());
+            assertDeepEqual(await result.wait(), new Map());
+            assertDeepEqual(await resultByKey.wait(), new Map());
             assertEqual(called, 0);
 
             p = result.wait(false);
@@ -279,7 +279,7 @@
             m.set('c', 4);
             input.set(m);
 
-            assertEq(
+            assertDeepEqual(
               await p,
               new Map([
                 ['a', 4],
@@ -287,7 +287,7 @@
                 ['c', 8],
               ])
             );
-            assertEq(
+            assertDeepEqual(
               await pKey,
               new Map([
                 ['a', 4],
@@ -303,7 +303,7 @@
             m.set('null', 0);
             m.delete('c');
             input.set(m);
-            assertEq(
+            assertDeepEqual(
               await p,
               new Map([
                 ['a', 10],
@@ -311,7 +311,7 @@
                 ['null', 0],
               ])
             );
-            assertEq(
+            assertDeepEqual(
               await pKey,
               new Map([
                 ['a', 4],
@@ -326,8 +326,8 @@
             m.clear();
             input.set(m);
 
-            assertEq(await p, new Map());
-            assertEq(await pKey, new Map());
+            assertDeepEqual(await p, new Map());
+            assertDeepEqual(await pKey, new Map());
             assertEqual(called, 9);
           }
         }
@@ -352,22 +352,22 @@
 
             let p;
 
-            assertEq(await result.wait(), []);
+            assertDeepEqual(await result.wait(), []);
             assertEqual(called, 0);
 
             p = result.wait(false);
             input.set([2, 3, 4]);
-            assertEq(await p, [4, 6, 8]);
+            assertDeepEqual(await p, [4, 6, 8]);
             assertEqual(called, 3);
 
             p = result.wait(false);
             input.set([0, 2, 3, 4]);
-            assertEq(await p, [0, 4, 6, 8]);
+            assertDeepEqual(await p, [0, 4, 6, 8]);
             assertEqual(called, 4);
 
             p = result.wait(false);
             input.set([0]);
-            assertEq(await p, [0]);
+            assertDeepEqual(await p, [0]);
             assertEqual(called, 4);
           }
 
@@ -388,27 +388,27 @@
 
             let p;
 
-            assertEq(await result.wait(), []);
+            assertDeepEqual(await result.wait(), []);
             assertEqual(called, 0);
 
             p = result.wait(false);
             input.set([2, 3, 4]);
-            assertEq(await p, [4, 6, 8]);
+            assertDeepEqual(await p, [4, 6, 8]);
             assertEqual(called, 3);
 
             p = result.wait(false);
             input.set([0, 2, 3, 4]);
-            assertEq(await p, [0, 4, 6, 8]);
+            assertDeepEqual(await p, [0, 4, 6, 8]);
             assertEqual(called, 4);
 
             p = result.wait(false);
             input.set([0, 4, 5, 6]);
-            assertEq(await p, [0, 8, 10, 12]);
+            assertDeepEqual(await p, [0, 8, 10, 12]);
             assertEqual(called, 6);
 
             p = result.wait(false);
             input.set([0]);
-            assertEq(await p, [0]);
+            assertDeepEqual(await p, [0]);
             assertEqual(called, 6);
           }
 
@@ -429,7 +429,7 @@
             result.subscribe(() => {});
 
             let p = result.wait();
-            assertEq(await p, new Map());
+            assertDeepEqual(await p, new Map());
             assertEqual(called, 0);
 
             p = result.wait(false);
@@ -439,7 +439,7 @@
             m.set('d', 2);
             input.set(m);
 
-            assertEq(
+            assertDeepEqual(
               await p,
               new Map([
                 ['a', 4],
@@ -455,7 +455,7 @@
             m.set('null', 0);
             m.delete('c');
             input.set(m);
-            assertEq(
+            assertDeepEqual(
               await p,
               new Map([
                 ['a', 10],
@@ -469,7 +469,7 @@
             p = result.wait(false);
             m.clear();
             input.set(m);
-            assertEq(await p, new Map());
+            assertDeepEqual(await p, new Map());
             assertEqual(called, 5);
           }
 
@@ -483,18 +483,18 @@
 
               let sub = v2.subscribe((v) => values.push(v));
 
-              assertEq(values, [42]);
+              assertDeepEqual(values, [42]);
               v1.set(23);
-              assertEq(values, [42, 23]);
+              assertDeepEqual(values, [42, 23]);
               v1.set(23);
-              assertEq(values, [42, 23]);
+              assertDeepEqual(values, [42, 23]);
 
               sub();
               v1.set(23);
-              assertEq(values, [42, 23]);
+              assertDeepEqual(values, [42, 23]);
 
               sub = v2.subscribe((v) => values.push(v));
-              assertEq(values, [42, 23, 23]);
+              assertDeepEqual(values, [42, 23, 23]);
               sub();
             }
 
@@ -507,18 +507,18 @@
 
               let sub = v2.subscribe((v) => values.push(v));
 
-              assertEq(values, [42]);
+              assertDeepEqual(values, [42]);
               v1.set(23);
-              assertEq(values, [42, 23]);
+              assertDeepEqual(values, [42, 23]);
               v1.set(23.5);
-              assertEq(values, [42, 23]);
+              assertDeepEqual(values, [42, 23]);
 
               sub();
               v1.set(23.3);
-              assertEq(values, [42, 23]);
+              assertDeepEqual(values, [42, 23]);
 
               sub = v2.subscribe((v) => values.push(v));
-              assertEq(values, [42, 23, 23.3]);
+              assertDeepEqual(values, [42, 23, 23.3]);
               sub();
             }
           }
@@ -529,16 +529,16 @@
             const throttledV1 = throttleReceive(v1, 50);
             const values = record(throttledV1);
 
-            assertEq(values, [1]);
+            assertDeepEqual(values, [1]);
             v1.set(2);
-            assertEq(values, [1]);
+            assertDeepEqual(values, [1]);
             await delay(55);
-            assertEq(values, [1, 2]);
+            assertDeepEqual(values, [1, 2]);
             await delay(55);
             for (let i = 0; i < 100; i++) v1.set(i);
-            assertEq(values, [1, 2, 0]);
+            assertDeepEqual(values, [1, 2, 0]);
             await delay(55);
-            assertEq(values, [1, 2, 0, 99]);
+            assertDeepEqual(values, [1, 2, 0, 99]);
           }
 
           // thottleSend
@@ -548,16 +548,16 @@
             const throttledV1 = throttleSend(v1, 50);
 
             throttledV1.set(1);
-            assertEq(values, [0, 1]);
+            assertDeepEqual(values, [0, 1]);
             throttledV1.set(2);
-            assertEq(values, [0, 1]);
+            assertDeepEqual(values, [0, 1]);
             await delay(55);
-            assertEq(values, [0, 1, 2]);
+            assertDeepEqual(values, [0, 1, 2]);
             await delay(55);
             for (let i = 0; i < 100; i++) throttledV1.set(i);
-            assertEq(values, [0, 1, 2, 0]);
+            assertDeepEqual(values, [0, 1, 2, 0]);
             await delay(55);
-            assertEq(values, [0, 1, 2, 0, 99]);
+            assertDeepEqual(values, [0, 1, 2, 0, 99]);
           }
         }
       });

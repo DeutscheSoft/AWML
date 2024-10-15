@@ -3,7 +3,7 @@
     <meta charset="utf-8" />
     <script type="module" src="./test-component.js"></script>
     <script type="module">
-      import { define, assertEq, assertEqual } from './testing.js';
+      import { define, assertDeepEqual, assertEqual } from './testing.js';
       import { DOMTemplate } from '../../src/utils/dom_template.js';
       import { DynamicValue } from '../../src/dynamic_value.js';
 
@@ -23,7 +23,7 @@
              <a [style.z-index]=${'this.zIndex'}>hello</a>
             </div>  bar `,
         ].forEach((template) => {
-          assertEq(template.dependencies, [
+          assertDeepEqual(template.dependencies, [
             'foobar',
             'bar',
             'hidden',
@@ -46,10 +46,10 @@
           const input = container.querySelector('input');
           const a = container.querySelector('a');
 
-          assertEq(div.getAttribute('foo'), '23');
-          assertEq(span.textContent, '42');
-          assertEq(input.hidden, false);
-          assertEq(a.style['z-index'], '1');
+          assertEqual(div.getAttribute('foo'), '23');
+          assertEqual(span.textContent, '42');
+          assertEqual(input.hidden, false);
+          assertEqual(a.style['z-index'], '1');
 
           template.update({
             bar: 'hello',
@@ -58,10 +58,10 @@
             zIndex: 2,
           });
 
-          assertEq(div.getAttribute('foo'), '23');
-          assertEq(span.textContent, 'hello');
-          assertEq(input.hidden, true);
-          assertEq(a.style['z-index'], '2');
+          assertEqual(div.getAttribute('foo'), '23');
+          assertEqual(span.textContent, 'hello');
+          assertEqual(input.hidden, true);
+          assertEqual(a.style['z-index'], '2');
 
           template.update({
             bar: 'hello',
@@ -70,16 +70,16 @@
             zIndex: 3,
           });
 
-          assertEq(div.getAttribute('foo'), 'bar');
-          assertEq(span.textContent, 'hello');
-          assertEq(input.hidden, false);
-          assertEq(a.style['z-index'], '3');
+          assertEqual(div.getAttribute('foo'), 'bar');
+          assertEqual(span.textContent, 'hello');
+          assertEqual(input.hidden, false);
+          assertEqual(a.style['z-index'], '3');
         });
 
         {
           const template = DOMTemplate.fromString('<div #foo></div>');
 
-          assertEq(template.referencePrototype.foo.tagName, 'DIV');
+          assertEqual(template.referencePrototype.foo.tagName, 'DIV');
         }
 
         {
@@ -93,39 +93,39 @@
 
           const div = container.querySelector('div');
 
-          assertEq(div.className, '');
+          assertEqual(div.className, '');
           template.update({
             classes: 'foo',
           });
-          assertEq(div.className, 'foo');
+          assertEqual(div.className, 'foo');
           template.update({
             classes: null,
           });
-          assertEq(div.className, '');
+          assertEqual(div.className, '');
           template.update({
             classes: ['foo'],
           });
-          assertEq(div.className, 'foo');
+          assertEqual(div.className, 'foo');
           template.update({
             classes: ['foo'],
           });
-          assertEq(div.className, 'foo');
+          assertEqual(div.className, 'foo');
           template.update({
             classes: ['foo', 'bar'],
           });
-          assertEq(div.className, 'foo bar');
+          assertEqual(div.className, 'foo bar');
           template.update({
             classes: ['foo', 'bar', 'flu'],
           });
-          assertEq(div.className, 'foo bar flu');
+          assertEqual(div.className, 'foo bar flu');
           template.update({
             classes: ['foo', 'flu'],
           });
-          assertEq(div.className, 'foo flu');
+          assertEqual(div.className, 'foo flu');
           template.update({
             classes: ['1', '2'],
           });
-          assertEq(div.className, '1 2');
+          assertEqual(div.className, '1 2');
         }
 
         {
@@ -156,10 +156,10 @@
             condition: false,
           };
           template.update(ctx);
-          assertEq(widget.get('option1'), void 0);
+          assertEqual(widget.get('option1'), void 0);
           ctx.condition = true;
           template.update(ctx);
-          assertEq(widget.get('option1'), 'bar');
+          assertEqual(widget.get('option1'), 'bar');
 
           container.remove();
         }
@@ -171,17 +171,17 @@
           container.appendChild(template._fragment);
           document.body.appendChild(container);
 
-          assertEq(container.innerText, '');
+          assertEqual(container.innerText, '');
 
           template.update({ data: Promise.resolve(42) });
           await Promise.resolve();
-          assertEq(container.innerText, '42');
+          assertEqual(container.innerText, '42');
 
           const bv = DynamicValue.fromConstant(23);
           template.update({ data: bv });
-          assertEq(container.innerText, '23');
+          assertEqual(container.innerText, '23');
           bv.set(24);
-          assertEq(container.innerText, '24');
+          assertEqual(container.innerText, '24');
 
           container.remove();
         }
@@ -233,9 +233,9 @@
             condition,
           };
           template.update(ctx);
-          assertEq(widget.get('option1'), void 0);
+          assertEqual(widget.get('option1'), void 0);
           condition.set(true);
-          assertEq(widget.get('option1'), 'bar');
+          assertEqual(widget.get('option1'), 'bar');
 
           container.remove();
         }

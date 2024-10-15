@@ -19,7 +19,7 @@ export function assert(a) {
   tests++;
 }
 
-export function assertEq(a, b) {
+export function assertDeepEqual(a, b) {
   const ja = JSON.stringify(a);
   const jb = JSON.stringify(b);
 

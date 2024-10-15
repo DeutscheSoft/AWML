@@ -2,7 +2,7 @@
   <head>
     <meta charset="utf-8" />
     <script type="module">
-      import { define, assertEqual, assertEq } from './testing.js';
+      import { define, assertEqual, assertDeepEqual } from './testing.js';
       import { getBackendValue } from '../../src/index.js';
 
       define(async () => {
@@ -19,17 +19,17 @@
 
         {
           const widget = components[1].auxWidget;
-          assertEq(widget.get('foo'), [1, 1]);
+          assertDeepEqual(widget.get('foo'), [1, 1]);
         }
 
         {
           const widget = components[2].auxWidget;
-          assertEq(widget.get('foo'), [1, 7]);
+          assertDeepEqual(widget.get('foo'), [1, 7]);
         }
 
         {
           const widget = components[3].auxWidget;
-          assertEq(widget.get('foo'), [1, 4]);
+          assertDeepEqual(widget.get('foo'), [1, 4]);
         }
       });
     </script>

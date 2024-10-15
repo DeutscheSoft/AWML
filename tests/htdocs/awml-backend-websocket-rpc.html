@@ -6,7 +6,7 @@
       import {
         define,
         assertEqual,
-        assertEq,
+        assertDeepEqual,
         assertFailure,
         skip,
       } from './testing.js';
@@ -39,17 +39,17 @@
         await b1.set('flu');
 
         assertEqual(await b2.wait(), 'flu');
-        assertEq(history, [0, 'flu']);
+        assertDeepEqual(history, [0, 'flu']);
 
         await b1.set('bar');
 
         assertEqual(await b2.wait(), 'bar');
-        assertEq(history, [0, 'flu', 'bar']);
+        assertDeepEqual(history, [0, 'flu', 'bar']);
 
         await b2.set('flu');
         assertEqual(await b1.wait(false), 'flu');
         assertEqual(await b2.wait(), 'flu');
-        assertEq(history, [0, 'flu', 'bar', 'flu']);
+        assertDeepEqual(history, [0, 'flu', 'bar', 'flu']);
       });
     </script>
     <awml-backend name="test1" src="/_ws/local_one"></awml-backend>

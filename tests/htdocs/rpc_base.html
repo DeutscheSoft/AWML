@@ -8,7 +8,7 @@
         assert,
         assertEqual,
         assertFailure,
-        assertEq,
+        assertDeepEqual,
       } from './testing.js';
       import {
         RPCClientBase,
@@ -177,7 +177,7 @@
 
             unsubscribe();
 
-            assertEq(items, [0, 1, 2, 3, 4]);
+            assertDeepEqual(items, [0, 1, 2, 3, 4]);
 
             await delay((a[i][0] + a[i][1]) * 2);
 
@@ -197,7 +197,7 @@
           client.failAllCalls(new Error('test'));
           server.dispose();
           await delay(10);
-          assertEq(failed, true);
+          assertEqual(failed, true);
         }
 
         {

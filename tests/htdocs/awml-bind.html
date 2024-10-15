@@ -5,7 +5,7 @@
       window.localData = { foo: 'bar', bar: 'bar', flupp: 'bar' };
     </script>
     <script type="module">
-      import { define, assertEqual, delay, assertEq } from './testing.js';
+      import { define, assertEqual, delay, assertDeepEqual } from './testing.js';
       import { getBackendValue, DynamicValue, map } from '../../src/index.js';
       import * as AWML from '../../src/index.js';
       window.AWML = AWML;
@@ -83,19 +83,19 @@
           bv.set('bar');
           assertEqual(await bv.wait(), widget.get('foo2'));
           assertEqual(await test_foo.wait(), widget.get('foo3'));
-          assertEq(
+          assertDeepEqual(
             new Array(2).fill(await test_foo.wait()),
             widget.get('foo4')
           );
-          assertEq(
+          assertDeepEqual(
             new Array(2).fill(await test_foo.wait()),
             widget.get('foo5')
           );
-          assertEq(
+          assertDeepEqual(
             new Array(2).fill(await test_foo.wait()),
             widget.get('foo6')
           );
-          assertEq(bv.value + bv.value, widget.get('foo7'));
+          assertDeepEqual(bv.value + bv.value, widget.get('foo7'));
 
           // readonly and writeonly
           test_foo.set(23);
@@ -115,7 +115,7 @@
           bv.set('bar');
 
           // check that the binding is gone
-          assertEq(bv.value + bv.value, widget.get('foo7'));
+          assertEqual(bv.value + bv.value, widget.get('foo7'));
         }
 
         {

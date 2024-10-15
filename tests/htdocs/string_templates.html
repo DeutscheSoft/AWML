@@ -2,12 +2,12 @@
   <head>
     <meta charset="utf-8" />
     <script type="module">
-      import { define, assertEq, assertEqual } from './testing.js';
+      import { define, assertDeepEqual, assertEqual } from './testing.js';
       import { tokenizeTemplate } from '../../src/utils/tokenize_template.js';
       import { StringTemplate } from '../../src/utils/string_template.js';
 
       define(async () => {
-        assertEq([], tokenizeTemplate(''));
+        assertDeepEqual([], tokenizeTemplate(''));
 
         {
           const template = 'foo {{ }} bar';
@@ -20,7 +20,7 @@
 
         {
           const template = 'foo {{ bar';
-          assertEq(tokenizeTemplate(template), [template]);
+          assertDeepEqual(tokenizeTemplate(template), [template]);
         }
 
         {
@@ -50,8 +50,8 @@
           assertEqual(template2.update({ bar: 43 }), true);
           assertEqual(template2.get(), template.get());
 
-          assertEq(template.dependencies, ['bar']);
-          assertEq(template.dependencies, template2.dependencies);
+          assertDeepEqual(template.dependencies, ['bar']);
+          assertDeepEqual(template.dependencies, template2.dependencies);
         }
 
         {
