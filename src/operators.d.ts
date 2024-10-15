@@ -11,3 +11,5 @@ export * from './operators/resolve_items';
 export * from './operators/unique';
 export * from './operators/throttle_receive';
 export * from './operators/throttle_send';
+export * from './operators/observeLatest';
+export * from './operators/project';

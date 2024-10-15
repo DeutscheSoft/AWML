@@ -8,6 +8,7 @@
         ListValue,
         map,
         filter,
+        fromSubscription,
         switchMap,
         resolve,
         connect,
@@ -17,6 +18,9 @@
         unique,
         throttleReceive,
         throttleSend,
+        observeLatest,
+        project,
+        createProjectionContext,
       } from '../../src/index.js';
       import { delay } from '../../src/utils/delay.js';
 
@@ -26,6 +30,16 @@
         const values = [];
         dv.subscribe((x) => values.push(x));
         return values;
+      }
+
+      function delaySend(dv, n) {
+        return fromSubscription(
+          (callback) => dv.subscribe(callback),
+          async (value) => {
+            await delay(n);
+            return await dv.set(value);
+          },
+        );
       }
 
       define(async () => {
@@ -558,6 +572,107 @@
             assertDeepEqual(values, [0, 1, 2, 0]);
             await delay(55);
             assertDeepEqual(values, [0, 1, 2, 0, 99]);
+          }
+
+          // observeLatest
+          {
+            let hasValue = false, value;
+            const v1 = DynamicValue.fromConstant(0);
+            const v2 = observeLatest(
+              delaySend(v1, 50),
+              (_hasValue, _value) => {
+              hasValue = _hasValue;
+              value = _value;
+            });
+
+            assert(!hasValue);
+            let unsubscribe = v2.subscribe(() => {});
+            assert(hasValue);
+            assertEqual(value, 0);
+            unsubscribe();
+            assert(!hasValue);
+            assertEqual(value, undefined);
+
+            unsubscribe = v2.subscribe(() => {});
+            assert(hasValue);
+            assertEqual(value, 0);
+            const p = v2.set(1);
+            await delay(0);
+            assert(hasValue);
+            assertEqual(value, 1);
+            v1.set(3);
+            assert(hasValue);
+            assertEqual(value, 1);
+            await delay(30);
+            assertEqual(value, 1);
+            assertEqual(v1.value, 3);
+            assertEqual(v2.value, 3);
+            await delay(30);
+            assertEqual(value, 1);
+            assertEqual(v1.value, 1);
+            assertEqual(v2.value, 1);
+            await p;
+            v1.set(4);
+            assertEqual(value, 4);
+            assertEqual(v1.value, 4);
+            assertEqual(v2.value, 4);
+            unsubscribe();
+          }
+
+          // project without context
+          {
+            const v1 = DynamicValue.fromConstant([ 0, 0 ]);
+            const v2 = delaySend(v1, 50);
+            const v3 = project(
+              v2,
+              ([ a, b ]) => a,
+              ([ a, b ], c) => ([ c, b ]),
+            );
+
+            const unsubscribe = v3.subscribe(() => {});
+            assertEqual(v3.value, 0);
+            v3.set(3);
+            await delay(60);
+            assertEqual(v3.value, 3);
+            assertDeepEqual(v1.value, [3, 0]);
+            unsubscribe();
+          }
+
+          // project with context
+          {
+            const v1 = DynamicValue.fromConstant([ 0, 0 ]);
+            const [ v2, ctx ] = createProjectionContext(delaySend(v1, 50));
+
+            const vx = project(
+              v2,
+              ([ a, b ]) => a,
+              ([ a, b ], c) => ([ c, b ]),
+              ctx
+            );
+
+            const vy = project(
+              v2,
+              ([ a, b ]) => b,
+              ([ a, b ], c) => ([ a, c ]),
+              ctx
+            );
+
+            const unsubscribe = vx.subscribe(() => {});
+
+            assertEqual(vx.value, 0);
+            assertEqual(await vy.wait(), 0);
+            for (let i = 0; i < 10; i++) {
+              vx.set(i);
+              vy.set(i);
+              await delay(10);
+            }
+
+            await delay(60);
+
+            assertDeepEqual(v1.value, [9, 9]);
+            assertEqual(vx.value, 9);
+
+            unsubscribe();
           }
         }
       });

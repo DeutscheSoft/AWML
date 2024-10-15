@@ -11,3 +11,5 @@ export * from './operators/resolve_items.js';
 export * from './operators/unique.js';
 export * from './operators/throttle_receive.js';
 export * from './operators/throttle_send.js';
+export * from './operators/observeLatest.js';
+export * from './operators/project.js';
