@@ -39,8 +39,6 @@ export function observeLatest(dv, callback) {
         lastSent = value;
         notify();
         await dv.set(value);
-      } catch (err) {
-        throw err;
       } finally {
         if (!--pendingSetCount) notify();
       }
