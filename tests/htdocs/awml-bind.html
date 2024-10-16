@@ -5,7 +5,12 @@
       window.localData = { foo: 'bar', bar: 'bar', flupp: 'bar' };
     </script>
     <script type="module">
-      import { define, assertEqual, delay, assertDeepEqual } from './testing.js';
+      import {
+        define,
+        assertEqual,
+        delay,
+        assertDeepEqual,
+      } from './testing.js';
       import { getBackendValue, DynamicValue, map } from '../../src/index.js';
       import * as AWML from '../../src/index.js';
       window.AWML = AWML;

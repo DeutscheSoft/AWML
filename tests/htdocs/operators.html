@@ -2,7 +2,12 @@
   <head>
     <meta charset="utf-8" />
     <script type="module">
-      import { define, assertEqual, assertDeepEqual, assert } from './testing.js';
+      import {
+        define,
+        assertEqual,
+        assertDeepEqual,
+        assert,
+      } from './testing.js';
       import {
         DynamicValue,
         ListValue,
@@ -38,7 +43,7 @@
           async (value) => {
             await delay(n);
             return await dv.set(value);
-          },
+          }
         );
       }
 
@@ -576,11 +581,10 @@
 
           // observeLatest
           {
-            let hasValue = false, value;
+            let hasValue = false,
+              value;
             const v1 = DynamicValue.fromConstant(0);
-            const v2 = observeLatest(
-              delaySend(v1, 50),
-              (_hasValue, _value) => {
+            const v2 = observeLatest(delaySend(v1, 50), (_hasValue, _value) => {
               hasValue = _hasValue;
               value = _value;
             });
@@ -621,12 +625,12 @@
 
           // project without context
           {
-            const v1 = DynamicValue.fromConstant([ 0, 0 ]);
+            const v1 = DynamicValue.fromConstant([0, 0]);
             const v2 = delaySend(v1, 50);
             const v3 = project(
               v2,
-              ([ a, b ]) => a,
-              ([ a, b ], c) => ([ c, b ]),
+              ([a, b]) => a,
+              ([a, b], c) => [c, b]
             );
 
             const unsubscribe = v3.subscribe(() => {});
@@ -640,20 +644,20 @@
 
           // project with context
           {
-            const v1 = DynamicValue.fromConstant([ 0, 0 ]);
-            const [ v2, ctx ] = createProjectionContext(delaySend(v1, 50));
+            const v1 = DynamicValue.fromConstant([0, 0]);
+            const [v2, ctx] = createProjectionContext(delaySend(v1, 50));
 
             const vx = project(
               v2,
-              ([ a, b ]) => a,
-              ([ a, b ], c) => ([ c, b ]),
+              ([a, b]) => a,
+              ([a, b], c) => [c, b],
               ctx
             );
 
             const vy = project(
               v2,
-              ([ a, b ]) => b,
-              ([ a, b ], c) => ([ a, c ]),
+              ([a, b]) => b,
+              ([a, b], c) => [a, c],
               ctx
             );
 

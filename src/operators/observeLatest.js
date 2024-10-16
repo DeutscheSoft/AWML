@@ -1,5 +1,5 @@
-import { fromSubscription } from "./from_subscription.js";
-import { safeCall } from "../utils/safe_call.js";
+import { fromSubscription } from './from_subscription.js';
+import { safeCall } from '../utils/safe_call.js';
 
 export function observeLatest(dv, callback) {
   let subscribed = false;

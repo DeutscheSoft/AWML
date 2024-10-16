@@ -13,7 +13,7 @@ export function createProjectionContext(dv) {
     context.value = value;
   });
 
-  return [ dv, context ];
+  return [dv, context];
 }
 
 export function project(dv, projection, merge, context) {
@@ -27,8 +27,7 @@ export function project(dv, projection, merge, context) {
     return map(dv, projection);
   }
 
-  if (typeof merge !== 'function')
-    throw new TypeError('Expected function.');
+  if (typeof merge !== 'function') throw new TypeError('Expected function.');
 
   if (!context) {
     const tmp = createProjectionContext(dv);
@@ -41,10 +40,9 @@ export function project(dv, projection, merge, context) {
     dv,
     (value) => projection(value),
     (value) => {
-      if (!context.hasValue)
-        throw new Error(`No current value to use.`);
+      if (!context.hasValue) throw new Error(`No current value to use.`);
 
       return merge(context.value, value);
-    },
+    }
   );
 }
