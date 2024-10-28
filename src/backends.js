@@ -1,8 +1,15 @@
 import { BackendValue } from './backend_value.js';
 import { DynamicValue } from './dynamic_value.js';
 import { ListValue } from './list_value.js';
-import { waitForDOMEvent } from './utils/subscribe_dom_event.js';
-import { map, unique } from './operators.js';
+import { map, unique, filter } from './operators.js';
+import {
+  initSubscribers,
+  callSubscribers,
+  addSubscriber,
+} from './utils/subscribers.js';
+
+let backendAdded = initSubscribers();
+let backendRemoved = initSubscribers();
 
 const backendValues = new Map();
 const backends = new Map();
@@ -30,9 +37,7 @@ export function waitForBackend(name) {
   if (backends.has(name)) {
     return Promise.resolve(backends.get(name));
   } else {
-    return waitForDOMEvent(document, 'AWMLBackendRegistered').then((ev) => {
-      return waitForBackend(name);
-    });
+    return filter(observeBackend(name), (backend) => !!backend).wait();
   }
 }
 
@@ -60,14 +65,7 @@ export function registerBackend(name, backend) {
     });
   }
 
-  const ev = new CustomEvent('AWMLBackendRegistered', {
-    detail: {
-      protocol: name,
-      name: name,
-      backend: backend,
-    },
-  });
-  document.dispatchEvent(ev);
+  callSubscribers(backendAdded, name, backend);
 }
 
 /**
@@ -94,14 +92,7 @@ export function unregisterBackend(name, backend) {
     });
   }
 
-  const ev = new CustomEvent('AWMLBackendUnregistered', {
-    detail: {
-      protocol: name,
-      name: name,
-      backend: backend,
-    },
-  });
-  document.dispatchEvent(ev);
+  callSubscribers(backendRemoved, name, backend);
 }
 
 /**
@@ -264,4 +255,27 @@ export function observeBackend(name) {
     observeBackendsCache.set(name, value$);
   }
   return value$;
+}
+
+if (typeof document !== 'undefined') {
+  backendAdded = addSubscriber(backendAdded, (name, backend) => {
+    const ev = new CustomEvent('AWMLBackendRegistered', {
+      detail: {
+        protocol: name,
+        name: name,
+        backend: backend,
+      },
+    });
+    document.dispatchEvent(ev);
+  });
+  backendRemoved = addSubscriber(backendRemoved, (name, backend) => {
+    const ev = new CustomEvent('AWMLBackendUnregistered', {
+      detail: {
+        protocol: name,
+        name: name,
+        backend: backend,
+      },
+    });
+    document.dispatchEvent(ev);
+  });
 }
