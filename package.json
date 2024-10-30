@@ -8,7 +8,8 @@
   "type": "module",
   "directories": {},
   "scripts": {
-    "format": "npx prettier --write ."
+    "format": "npx prettier --write .",
+    "test": "node --test tests/run.tests.js"
   },
   "repository": {
     "type": "git",

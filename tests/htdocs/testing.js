@@ -67,6 +67,22 @@ export function define(callback) {
   });
 }
 
+export function defineWithAssert(callback) {
+  define(async () => {
+    const Assert = {
+      assertEqual,
+      assertDeepEqual,
+      equal: assertEqual,
+      deepEqual: assertDeepEqual,
+      assert,
+      assertFailure,
+      rejects: assertFailure,
+    };
+
+    await callback(Assert);
+  });
+}
+
 export function waitForFrame() {
   return new Promise((resolve) => {
     requestAnimationFrame(resolve);
