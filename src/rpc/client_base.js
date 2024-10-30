@@ -18,6 +18,7 @@
 export class RPCResponsError extends Error {
   constructor(reason) {
     super(`rpc returned failure ${reason}`);
+    this.name = 'RPCResponsError';
     this.reason = reason;
   }
 }
