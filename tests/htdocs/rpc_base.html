@@ -202,12 +202,14 @@
 
         {
           const [client, server] = getClient(-1, -1);
-          const err = await assertFailure(() =>
-            client.callWait('error_noerror', 'foobar')
+          const e = new RPCResponsError('foobar');
+          await assertFailure(
+            () => client.callWait('error_noerror', 'foobar'),
+            {
+              name: 'RPCResponsError',
+              message: e.message,
+            }
           );
-          assert(err instanceof Error);
-          assert(err instanceof RPCResponsError);
-          assertEqual(err.reason, 'foobar');
         }
       });
     </script>

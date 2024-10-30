@@ -2,43 +2,28 @@ let tests = 0;
 
 import { delay } from '../../src/utils/delay.js';
 
-export function assertEqual(a, b) {
-  if (a !== b) {
-    console.error('assertEqual(%o, %o) failed.', a, b);
-    throw new Error('Assertion failed.');
-  }
+import assert, { equal, deepEqual, rejects, throws } from './assert.js';
 
+export function assertEqual(a, b, message) {
+  equal(a, b, message);
   tests++;
 }
 
-export function assert(a) {
-  if (!a) {
-    throw new Error('Assertion failed.');
-  }
-
+function _assert(a, message) {
+  assert(a, message);
   tests++;
 }
 
-export function assertDeepEqual(a, b) {
-  const ja = JSON.stringify(a);
-  const jb = JSON.stringify(b);
+export { _assert as assert };
 
-  if (ja !== jb) {
-    console.error('assertEqual(%o, %o) failed.', a, b);
-    throw new Error('Assertion failed.');
-  }
-
+export function assertDeepEqual(a, b, message) {
+  deepEqual(a, b, message);
   tests++;
 }
 
-export async function assertFailure(cb) {
-  try {
-    await cb();
-    failure(new Error('Expected failure.'));
-  } catch (err) {
-    tests++;
-    return err;
-  }
+export async function assertFailure(cb, error, message) {
+  await rejects(cb, error, message);
+  tests++;
 }
 
 export function done() {
