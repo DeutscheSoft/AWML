@@ -16,6 +16,9 @@ export function fetchJSON(url) {
 
 /** @ignore */
 export function getCurrentWebSocketUrl() {
+  if (typeof window === 'undefined' || !('location' in window))
+    throw new Error('This method is only available in the browser.');
+
   const location = window.location;
 
   let href;
