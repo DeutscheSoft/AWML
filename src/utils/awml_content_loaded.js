@@ -1,35 +1,30 @@
-import { waitForDOMEvent } from './subscribe_dom_event.js';
+import { DynamicValue } from '../dynamic_value.js';
+import { filter } from '../operators.js';
 
-let fired = false;
-const firedPromise = waitForDOMEvent(document, 'AWMLContentLoaded');
-let loading = 1;
+const loading$ = DynamicValue.fromConstant(1);
+const firedPromise = filter(loading$, (count) => count <= 0).wait();
 
-function fire() {
-  fired = true;
-  document.dispatchEvent(new Event('AWMLContentLoaded'));
+function maybeDone() {
+  const count = loading$.value;
+  loading$.set(count - 1);
 }
 
-function maybeFire() {
-  if (loading !== 0) return;
-  fire();
+if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+  window.addEventListener('load', maybeDone);
+  firedPromise.then(() => {
+    document.dispatchEvent(new Event('AWMLContentLoaded'));
+  });
+} else {
+  maybeDone();
 }
-
-window.addEventListener('load', () => {
-  loading--;
-  maybeFire();
-});
 
 /** @ignore */
 export function registerLoading(p) {
-  if (fired) return p;
+  const count = loading$.value;
+  if (!count) return p;
 
-  const when_done = () => {
-    loading--;
-    maybeFire();
-  };
-
-  loading++;
-  p.then(when_done, when_done);
+  loading$.set(count + 1);
+  p.then(maybeDone, maybeDone);
   return p;
 }
 
