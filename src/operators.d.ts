@@ -1,3 +1,4 @@
+export * from './operators/cache';
 export * from './operators/combineLatest';
 export * from './operators/connect';
 export * from './operators/filter';

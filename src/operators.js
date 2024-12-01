@@ -1,3 +1,4 @@
+export * from './operators/cache.js';
 export * from './operators/combineLatest.js';
 export * from './operators/connect.js';
 export * from './operators/filter.js';

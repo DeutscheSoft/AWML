@@ -16,6 +16,7 @@ import {
   observeLatest,
   project,
   createProjectionContext,
+  cache,
 } from '../../src/operators.js';
 import { delay } from '../../src/utils/delay.js';
 
@@ -656,6 +657,21 @@ export default async function run(Assert) {
       assertEqual(vx.value, 9);
 
       unsubscribe();
+    }
+
+    // cache
+    {
+      const v = DynamicValue.fromConstant(0);
+      const cv = cache(v);
+
+      assertEqual(await cv.wait(), 0);
+      assert(!cv.isActive);
+      assert(v.isActive);
+      v.set(3);
+      assert(!v.isActive);
+      assertEqual(await cv.wait(), 3);
+      assert(!cv.isActive);
+      assert(v.isActive);
     }
   }
 }
