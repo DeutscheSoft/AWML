@@ -182,8 +182,16 @@ export class ListValue extends DynamicValue {
     if (!Array.isArray(value) || value.length !== values.length)
       throw new TypeError('Expected an array of the right length.');
 
+    const promises = [];
+
     for (let i = 0; i < values.length; i++) {
-      values[i].set(value[i]);
+      const p = values[i].set(value[i]);
+
+      if (p) promises.push(p);
+    }
+
+    if (promises.length) {
+      return Promise.all(promises);
     }
   }
 }
