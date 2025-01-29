@@ -1,6 +1,7 @@
 import { DynamicValue } from '../dynamic_value.js';
 import { map } from './map.js';
 import { unique } from './unique.js';
+import { safeCall } from '../utils/safe_call.js';
 
 class SwitchMapValue extends DynamicValue {
   constructor(dv, projection) {
@@ -16,7 +17,7 @@ class SwitchMapValue extends DynamicValue {
       this._inner = inner;
 
       if (inner_sub !== null) {
-        inner_sub();
+        safeCall(inner_sub);
         inner_sub = null;
       }
 
@@ -28,10 +29,10 @@ class SwitchMapValue extends DynamicValue {
     });
 
     return () => {
-      outer_sub();
+      safeCall(outer_sub);
 
       if (inner_sub !== null) {
-        inner_sub();
+        safeCall(inner_sub);
         inner_sub = null;
       }
       this._inner = null;
