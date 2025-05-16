@@ -299,6 +299,7 @@ export class Bindings {
     });
     this.log('Creating %d bindings.', n.size);
     n.forEach((options) => {
+      if (subscriptions.has(options)) return;
       const sub = createBinding(
         this._target,
         this._sourceNode,

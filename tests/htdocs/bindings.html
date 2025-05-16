@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script type="module">
+      import { define, assertDeepEqual, assertEqual } from './testing.js';
+      import { DynamicValue } from '../../src/dynamic_value.js';
+      import { Bindings } from '../../src/bindings.js';
+      import { delay } from '../../src/utils/delay.js';
+      import { TestWidget } from './test-widget.js';
+
+      define(async () => {
+        const widget = new TestWidget();
+        const bindings = new Bindings(widget, widget);
+        const value = DynamicValue.fromConstant(1);
+
+        {
+          bindings.update({
+            name: 'foo',
+            backendValue: value,
+          });
+          assertEqual(widget.get('foo'), 1);
+          bindings.dispose();
+          value.set(2);
+          assertEqual(widget.get('foo'), 1);
+        }
+
+        {
+          const descriptions = [
+            {
+              name: 'foo',
+              backendValue: value,
+            },
+          ];
+          bindings.update(descriptions);
+          bindings.update(descriptions);
+          assertEqual(widget.get('foo'), 2);
+          bindings.dispose();
+          value.set(3);
+          assertEqual(widget.get('foo'), 2);
+        }
+      });
+    </script>
+    <script type="module" src="../../src/index.js"></script>
+  </head>
+  <body></body>
+</html>
