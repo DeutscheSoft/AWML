@@ -25,7 +25,7 @@ test('values', async () => {
 });
 
 test('backend_value', async () => {
-  await values(Assert);
+  await backend_value(Assert);
 });
 
 test('rpc_base', async () => {
