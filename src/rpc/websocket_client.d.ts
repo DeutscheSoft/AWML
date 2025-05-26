@@ -1,0 +1,9 @@
+import { RPCClientBase } from './client_base';
+
+export class WebSocketRPCClient extends RPCClientBase {
+  isClosed(): boolean;
+  close(): void;
+  get websocket(): WebSocket;
+  constructor(websocket: WebSocket);
+  static connect(url: string|URL, protocols?: string[]): Promise<WebSocketRPCClient>;
+}

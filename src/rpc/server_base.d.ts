@@ -1,6 +1,6 @@
 import { RPCCallback } from './client_base';
 
-type RPCMethods = Record<string, Function>;
+export type RPCMethods = Record<string, Function>;
 
 export { RPCCallback };
 
