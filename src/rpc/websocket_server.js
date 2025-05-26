@@ -10,7 +10,7 @@ export class WebSocketRPCServer extends RPCServerBase {
     this._websocket.close();
   }
 
-  _onWebSocketMessage(ev) {
+  _onWebSocketMessage(ev, isBinary) {
     let str;
     if (typeof ev === 'string') {
       // Note: this is the node 'ws' module
@@ -22,8 +22,15 @@ export class WebSocketRPCServer extends RPCServerBase {
       } else {
         throw new Error('Expected TEXT frame.');
       }
+    } else if (typeof ev === 'object' && typeof isBinary === 'boolean') {
+      // API for ws version >= 8
+      if (isBinary)
+        throw new Error('Expected TEXT frame.');
+
+      str = ev.toString('utf8');
     } else {
-      throw new Error('Unexpected message.');
+      console.error('Unsupported message event arguments: ', ev, isBinary);
+      return;
     }
 
     try {

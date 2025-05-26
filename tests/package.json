@@ -16,6 +16,6 @@
   "dependencies": {
     "mime-types": "^2.1.29",
     "websocket": "^1.0.33",
-    "ws": "^7.4.4"
+    "ws": "^8.18.2"
   }
 }

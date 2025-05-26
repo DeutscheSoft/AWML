@@ -1,7 +1,5 @@
 import { parse } from 'url';
-
-import ws from 'ws';
-const { Server } = ws;
+import { WebSocketServer } from 'ws';
 
 import {
   RPCServerBackendConnector,
@@ -11,7 +9,7 @@ import {
 import { handleWebSocket } from './handle_websocket.js';
 
 export function setupWSBackendConnections(server, prefix, getBackend) {
-  const wss = new Server({ noServer: true });
+  const wss = new WebSocketServer({ noServer: true });
 
   server.on('upgrade', (request, socket, head) => {
     const pathname = parse(request.url).pathname;
