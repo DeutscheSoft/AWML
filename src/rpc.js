@@ -2,3 +2,8 @@ export { RPCClientBase, RPCResponsError } from './rpc/client_base.js';
 export { RPCServerBase } from './rpc/server_base.js';
 export { WebSocketRPCClient } from './rpc/websocket_client.js';
 export { WebSocketRPCServer } from './rpc/websocket_server.js';
+export * from './rpc/merge_methods.js';
+export * from './rpc/websocket_client.js';
+export * from './rpc/websocket_server.js';
+export * from './rpc/rpc_export_dynamic_values.js';
+export * from './rpc/rpc_import_dynamic_values.js';

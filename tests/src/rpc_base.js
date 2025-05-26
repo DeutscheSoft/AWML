@@ -1,9 +1,8 @@
 import {
-  RPCClientBase,
   RPCResponsError,
-  RPCServerBase,
 } from '../../src/rpc.js';
 import { delay } from '../../src/utils/delay.js';
+import { getClient } from './rpc_test_helpers.js'
 
 const Methods = {
   ping: (value) => value,
@@ -58,49 +57,6 @@ const Methods = {
   },
 };
 
-class DummyRPCServer extends RPCServerBase {
-  constructor() {
-    super(Methods);
-  }
-}
-
-class DummyRPCClient extends RPCClientBase {
-  constructor() {
-    super();
-  }
-}
-
-function connect(delay, a, b) {
-  a._send = (message) => {
-    //console.log(message);
-
-    message = JSON.stringify(message);
-    message = JSON.parse(message);
-
-    if (delay === 0) {
-      Promise.resolve().then(() => {
-        b._onMessage(message);
-      });
-    } else if (delay > 0) {
-      setTimeout(() => {
-        b._onMessage(message);
-      }, delay);
-    } else {
-      b._onMessage(message);
-    }
-  };
-}
-
-function getClient(clientDelay, serverDelay) {
-  const server = new DummyRPCServer();
-  const client = new DummyRPCClient();
-
-  connect(clientDelay, client, server);
-  connect(serverDelay, server, client);
-
-  return [client, server];
-}
-
 export default async function rpc_base(Assert) {
   const { assert, assertEqual, assertFailure, assertDeepEqual } = Assert;
   const delays = [-1, 0, 25];
@@ -114,7 +70,7 @@ export default async function rpc_base(Assert) {
   });
 
   for (let i = 0; i < a.length; i++) {
-    const [client, server] = getClient(...a[i]);
+    const [client, server] = getClient(...a[i], Methods);
 
     assertEqual(await client.callWait('ping', 42), 42);
     assertEqual(client.pendingCalls(), 0);
@@ -172,7 +128,7 @@ export default async function rpc_base(Assert) {
   }
 
   {
-    const [client, server] = getClient(-1, -1);
+    const [client, server] = getClient(-1, -1, Methods);
     let failed = false;
 
     const p = client.callWait('ping_async', 42).catch((err) => {
@@ -186,7 +142,7 @@ export default async function rpc_base(Assert) {
   }
 
   {
-    const [client, server] = getClient(-1, -1);
+    const [client, server] = getClient(-1, -1, Methods);
     const e = new RPCResponsError('foobar');
     await assertFailure(() => client.callWait('error_noerror', 'foobar'), {
       name: 'RPCResponsError',
