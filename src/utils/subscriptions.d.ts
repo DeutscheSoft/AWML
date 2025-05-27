@@ -1,4 +1,3 @@
-
 export class Subscriptions {
   constructor();
   unsubscribe(): void;

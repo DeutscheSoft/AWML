@@ -1,15 +1,11 @@
-
 function bufferToString(buffer) {
   buffer = toUint8Array(buffer);
   const chunks = [];
 
-  for (let i = 0; i < buffer.length; i += 256)
-  {
+  for (let i = 0; i < buffer.length; i += 256) {
     const subarray = buffer.subarray(i, i + 256);
 
-    chunks.push(
-      String.fromCharCode(...subarray)
-    );
+    chunks.push(String.fromCharCode(...subarray));
   }
 
   return chunks.join('');
@@ -18,8 +14,7 @@ function bufferToString(buffer) {
 function stringToBuffer(str) {
   const result = new Uint8Array(str.length);
 
-  for (let i = 0; i < str.length; i++)
-  {
+  for (let i = 0; i < str.length; i++) {
     result[i] = str.charCodeAt(i);
   }
 
@@ -34,7 +29,7 @@ let encodeBase64, decodeBase64;
 
 if ('fromBase64' in Uint8Array) {
   const options = {
-    lastChunkHandling: "strict",
+    lastChunkHandling: 'strict',
   };
 
   decodeBase64 = function (str) {
@@ -45,7 +40,6 @@ if ('fromBase64' in Uint8Array) {
     return stringToBuffer(atob(str));
   };
 }
-
 
 if ('toBase64' in Uint8Array.prototype) {
   encodeBase64 = function (buffer) {

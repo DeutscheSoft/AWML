@@ -41,4 +41,3 @@ test('base64', async () => {
 test('rpc_export_import', async () => {
   await rpc_export_import(Assert);
 });
-

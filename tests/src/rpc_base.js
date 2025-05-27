@@ -1,8 +1,6 @@
-import {
-  RPCResponsError,
-} from '../../src/rpc.js';
+import { RPCResponsError } from '../../src/rpc.js';
 import { delay } from '../../src/utils/delay.js';
-import { getClient } from './rpc_test_helpers.js'
+import { getClient } from './rpc_test_helpers.js';
 
 const Methods = {
   ping: (value) => value,

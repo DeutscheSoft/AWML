@@ -1,3 +1,3 @@
-import { ISubscription } from "../subscription";
+import { ISubscription } from '../subscription';
 
 export function runCleanupHandler(cleanup: ISubscription): void;

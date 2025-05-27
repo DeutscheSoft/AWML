@@ -1,11 +1,8 @@
 export function mergeMethods(...methods) {
-  const result = {
-
-  };
+  const result = {};
 
   methods.forEach((m) => {
-    if (typeof m !== 'object')
-      throw new TypeError('Expected object methods.');
+    if (typeof m !== 'object') throw new TypeError('Expected object methods.');
 
     for (const key in m) {
       if (key in result)

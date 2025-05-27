@@ -1,3 +1,5 @@
-import { ISubscription } from "../subscription";
+import { ISubscription } from '../subscription';
 
-export function combineUnsubscribe(...callbacks: ISubscription[]): ISubscription;
+export function combineUnsubscribe(
+  ...callbacks: ISubscription[]
+): ISubscription;

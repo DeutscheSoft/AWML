@@ -31,14 +31,24 @@ export default async function rpc_export_import(Assert) {
       bar: DynamicValue.fromConstant('foo'),
     };
 
-    const [client, server] = getClient(-1, -1,
+    const [client, server] = getClient(
+      -1,
+      -1,
       mergeMethods(
         rpcExportDynamicValues(values1, '1'),
-        rpcExportDynamicValues(values2, '2', true),
+        rpcExportDynamicValues(values2, '2', true)
       )
     );
-    const remoteValues1 = rpcImportDynamicValues(client, Object.keys(values1), '1');
-    const remoteValues2 = rpcImportDynamicValues(client, Object.keys(values2), '2');
+    const remoteValues1 = rpcImportDynamicValues(
+      client,
+      Object.keys(values1),
+      '1'
+    );
+    const remoteValues2 = rpcImportDynamicValues(
+      client,
+      Object.keys(values2),
+      '2'
+    );
     assertEqual(1, await remoteValues1.foo.wait());
     assertEqual('foo', await remoteValues2.bar.wait());
     await remoteValues1.foo.set(2);

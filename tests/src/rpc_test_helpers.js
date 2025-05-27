@@ -1,6 +1,4 @@
-import {
-  RPCClientBase, RPCServerBase
-} from '../../src/rpc.js';
+import { RPCClientBase, RPCServerBase } from '../../src/rpc.js';
 
 class DummyRPCServer extends RPCServerBase {
   constructor(methods) {
