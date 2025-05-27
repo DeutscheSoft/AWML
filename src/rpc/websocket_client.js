@@ -27,11 +27,8 @@ export class WebSocketRPCClient extends RPCClientBase {
     if (this.isClosed()) throw new Error('WebSocket not open.');
 
     websocket.addEventListener('message', (ev) => {
-      if (typeof ev.data !== 'string') {
-        throw new Error('Unexpected BINARY frame.');
-      }
       try {
-        const messages = JSON.parse(ev.data);
+        const messages = this._decodeMessages(ev.data);
 
         for (let i = 0; i < messages.length; i++) {
           this._onMessage(messages[i]);
@@ -53,9 +50,20 @@ export class WebSocketRPCClient extends RPCClientBase {
     });
   }
 
+  _encodeMessages(messages) {
+    return JSON.stringify(messages);
+  }
+
+  _decodeMessages(data) {
+    if (typeof data !== 'string') {
+      throw new Error('Unexpected BINARY frame.');
+    }
+    return JSON.parse(data);
+  }
+
   _flush() {
     if (this._sendBuffer.length === 0) return;
-    const data = JSON.stringify(this._sendBuffer);
+    const data = this._encodeMessages(this._sendBuffer);
     this._sendBuffer.length = 0;
     this._websocket.send(data);
   }

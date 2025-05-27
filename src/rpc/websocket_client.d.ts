@@ -5,5 +5,10 @@ export class WebSocketRPCClient extends RPCClientBase {
   close(): void;
   get websocket(): WebSocket;
   constructor(websocket: WebSocket);
-  static connect(url: string|URL, protocols?: string[]): Promise<WebSocketRPCClient>;
+  static connect(
+    url: string | URL,
+    protocols?: string[]
+  ): Promise<WebSocketRPCClient>;
+  protected _encodeMessages(messages: unknown[]): string;
+  protected _decodeMessages(data: string): unknown[];
 }

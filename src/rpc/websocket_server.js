@@ -10,6 +10,17 @@ export class WebSocketRPCServer extends RPCServerBase {
     this._websocket.close();
   }
 
+  _encodeMessages(messages) {
+    return JSON.stringify(messages);
+  }
+
+  _decodeMessages(data) {
+    if (typeof data !== 'string') {
+      throw new Error('Unexpected BINARY frame.');
+    }
+    return JSON.parse(data);
+  }
+
   _onWebSocketMessage(ev, isBinary) {
     let str;
     if (typeof ev === 'string') {
@@ -24,8 +35,7 @@ export class WebSocketRPCServer extends RPCServerBase {
       }
     } else if (typeof ev === 'object' && typeof isBinary === 'boolean') {
       // API for ws version >= 8
-      if (isBinary)
-        throw new Error('Expected TEXT frame.');
+      if (isBinary) throw new Error('Expected TEXT frame.');
 
       str = ev.toString('utf8');
     } else {
@@ -34,7 +44,7 @@ export class WebSocketRPCServer extends RPCServerBase {
     }
 
     try {
-      const messages = JSON.parse(str);
+      const messages = this._decodeMessages(str);
 
       for (let i = 0; i < messages.length; i++) {
         this._onMessage(messages[i]);
@@ -75,7 +85,7 @@ export class WebSocketRPCServer extends RPCServerBase {
 
   _flush() {
     if (this._sendBuffer.length === 0) return;
-    const data = JSON.stringify(this._sendBuffer);
+    const data = this._encodeMessages(this._sendBuffer);
     this._sendBuffer.length = 0;
     this._websocket.send(data);
   }
