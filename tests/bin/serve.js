@@ -88,7 +88,13 @@ const server = createServer(async (req, res) => {
     );
   };
 
+  const redirect = (to) => {
+    respond(to, 302, Object.assign(headers, { Location: to }));
+  };
+
   switch (path) {
+    case '/index.html':
+      return redirect('/tests/htdocs/');
     case '/_api/has_backends':
       return txt('ok');
   }
