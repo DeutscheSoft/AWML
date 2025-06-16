@@ -14,3 +14,4 @@ export * from './operators/throttle_receive';
 export * from './operators/throttle_send';
 export * from './operators/observeLatest';
 export * from './operators/project';
+export * from './operators/wait_for';
