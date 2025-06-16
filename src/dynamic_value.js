@@ -1,3 +1,4 @@
+import { waitFor } from './operators/wait_for.js';
 import { warn } from './utils/log.js';
 import { runCleanupHandler } from './utils/run_cleanup_handler.js';
 
@@ -204,26 +205,12 @@ export class DynamicValue {
    *
    * @param {boolean} [replay=true]
    *    If false, the the current value will be ignored.
+   * @param {(value) => boolean} [predicate]
+   * @param {AbortSignal} [signal]
    * @returns Promise<any>
    */
-  wait(replay) {
-    if (replay === void 0) replay = true;
-    return new Promise((resolve) => {
-      if (replay && this._hasValue && this.isActive) {
-        resolve(this._value);
-        return;
-      }
-
-      let sub = null;
-      let resolved = false;
-
-      sub = this.subscribe((value) => {
-        resolve(value);
-        resolved = true;
-        if (sub !== null) sub();
-      }, replay);
-      if (resolved) sub();
-    });
+  wait(replay = true, predicate, signal) {
+    return waitFor(this, predicate, replay, signal);
   }
 
   get inSync() {
