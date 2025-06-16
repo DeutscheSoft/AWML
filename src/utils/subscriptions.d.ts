@@ -1,3 +1,5 @@
+import { ISubscription } from '../subscription';
+
 export class Subscriptions {
   constructor();
   unsubscribe(): void;
