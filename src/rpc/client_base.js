@@ -220,6 +220,10 @@ export class RPCClientBase {
     });
   }
 
+  dispose() {
+    this.failAllCalls(new Error(`Closed.`));
+  }
+
   _onMessage(message) {
     const [id, ok, last, data] = message;
     const requests = this._requests;
