@@ -1,7 +1,8 @@
 import { BackendValue } from './backend_value.js';
 import { DynamicValue } from './dynamic_value.js';
 import { ListValue } from './list_value.js';
-import { map, unique, filter } from './operators.js';
+import { map, unique, filter, switchMap } from './operators.js';
+import { combineSubscriptions } from './utils/combine_subscriptions.js';
 import {
   initSubscribers,
   callSubscribers,
@@ -93,6 +94,43 @@ export function unregisterBackend(name, backend) {
   }
 
   callSubscribers(backendRemoved, name, backend);
+}
+
+export function provideBackend(name, dv) {
+  const backendIfOpen$ = switchMap(dv, (backend) => {
+    if (!backend) return DynamicValue.fromConstant(null);
+
+    return map(backend.state$, (state) => {
+      if (state === 'open') {
+        return backend;
+      } else {
+        return null;
+      }
+    });
+  });
+
+  let lastBackend = null;
+
+  const unregister = () => {
+    if (lastBackend !== null) {
+      unregisterBackend(name, lastBackend);
+      lastBackend = null;
+    }
+  };
+
+  const register = (backend) => {
+    if (!backend) return;
+    registerBackend(name, backend);
+    lastBackend = backend;
+  };
+
+  return combineSubscriptions(
+    unregister,
+    backendIfOpen$.subscribe((backend) => {
+      unregister();
+      register(backend);
+    })
+  );
 }
 
 /**
