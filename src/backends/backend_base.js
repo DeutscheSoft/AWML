@@ -1,5 +1,7 @@
 import { EventTarget } from '../utils/event_target.js';
 import { Subscriptions } from '../utils/subscriptions.js';
+import { fromSubscription } from '../operators.js';
+import { waitFor } from '../operators/wait_for.js';
 
 /**
  * @interface IPathInfo
@@ -68,6 +70,15 @@ export class BackendBase extends EventTarget {
     return this._options.node || null;
   }
 
+  get state$() {
+    return fromSubscription((callback) => {
+      callback(this._state);
+      return this.subscribeEvent('stateChanged', (state, currentState) => {
+        callback(state);
+      });
+    });
+  }
+
   get debug() {
     return this._options.debug || false;
   }
@@ -95,45 +106,49 @@ export class BackendBase extends EventTarget {
     this._eventSubscriptions = new Subscriptions();
   }
 
+  _changeState(state) {
+    const currentState = this._state;
+    this._state = state;
+    this.emit('stateChanged', state, currentState);
+  }
+
+  _invalidStateChange(state) {
+    throw new Error(`Invalid state transition ${this._state} -> ${state}.`);
+  }
+
   addSubscription(...args) {
     this._eventSubscriptions.add(...args);
   }
 
   destroy() {
+    this._changeState(null);
     this.emit('destroy');
     this._eventSubscriptions.unsubscribe();
-    this._state = null;
     super.destroy();
   }
 
   open() {
     if (this.isOpen) return;
-    if (!this.isInit) throw new Error('Invalid transition.');
-
-    this._state = 'open';
-
+    if (!this.isInit) this._invalidStateChange('open');
+    this._changeState('open');
     this.emit('open');
   }
 
   close() {
     if (this.isClosed) return;
-    if (!this.isInit && !this.isOpen) throw new Error('Invalid transition.');
+    if (!this.isInit && !this.isOpen) this._invalidStateChange('closed');
 
-    this._state = 'closed';
-
+    this._changeState('closed');
     this.emit('close');
-
     this.destroy();
   }
 
   error(err) {
     if (this.isError) return;
-    if (!this.isInit && !this.isOpen) throw new Error('Invalid transition.');
+    if (!this.isInit && !this.isOpen) this._invalidStateChange('error');
 
-    this._state = 'error';
-
+    this._changeState('error');
     this.emit('error', err);
-
     this.destroy();
   }
 
@@ -142,32 +157,9 @@ export class BackendBase extends EventTarget {
   }
 
   waitOpen() {
-    return new Promise((resolve, reject) => {
-      if (this.isOpen) {
-        resolve();
-        return;
-      }
-
-      if (!this.isInit) {
-        reject(new Error('Is closed.'));
-        return;
-      }
-
-      const subs = new Subscriptions();
-
-      const onFail = (err) => {
-        reject(err || new Error('Is closed.'));
-        subs.unsubscribe();
-      };
-
-      subs.add(
-        this.once('open', () => {
-          resolve();
-          subs.unsubscribe();
-        }),
-        this.once('close', onFail),
-        this.once('error', onFail)
-      );
+    return waitFor(this.state$, (state) => {
+      if (state === 'open') return true;
+      if (state === null) throw new Error('Closed.');
     });
   }
 
