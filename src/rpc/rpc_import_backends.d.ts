@@ -4,7 +4,7 @@ import { BackendBase } from '../backends/backend_base';
 
 type IObserveBackend = (options: unknown) => DynamicValue<BackendBase>;
 
-export function rpcImportDynamicValues(
+export function rpcImportBackends(
   rpc: RPCClientBase,
   key = ''
 ): IObserveBackend;
