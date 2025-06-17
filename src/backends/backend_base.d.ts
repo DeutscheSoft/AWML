@@ -1,4 +1,5 @@
 import { EventTarget } from '../utils/event_target';
+import { DynamicValue } from '../dynamic_value';
 
 interface IPathInfo {
   id: string | number;
@@ -16,6 +17,8 @@ export interface IBackendBaseOptions {
   debug?: boolean;
 }
 
+export type IBackendState = 'init' | 'open' | 'closed' | 'error' | null;
+
 export abstract class BackendBase extends EventTarget {
   get name(): string;
   get node(): Node | null;
@@ -26,11 +29,13 @@ export abstract class BackendBase extends EventTarget {
   get isError(): boolean;
   get isClosed(): boolean;
   get options(): IBackendBaseOptions;
+  get state$(): DynamicValue<IBackendState>;
 
   constructor(options: IBackendBaseOptions);
   close(): void;
   open(): void;
   error(err: Error): void;
+  waitOpen(): Promise<void>;
 
   resolvePath(path: string): Promise<string | number>;
   resolveId(id: number | string): Promise<string>;
