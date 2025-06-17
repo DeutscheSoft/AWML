@@ -8,6 +8,7 @@ export function getBackend(name: string): BackendBase;
 export function waitForBackend(name: string): Promise<BackendBase>;
 export function registerBackend(name: string, backend: BackendBase): void;
 export function unregisterBackend(name: string, backend: BackendBase): void;
+export function provideBackend(name: string, dv: DynamicValue<BackendBase|null|undefined>): ISubscription;
 export function getBackendValues(
   backendName: string
 ): Map<string, BackendValue<any>>;

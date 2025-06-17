@@ -3,6 +3,7 @@ export {
   waitForBackend,
   registerBackend,
   unregisterBackend,
+  provideBackend,
   getBackendValues,
   printBackendValues,
   getBackendValue,
