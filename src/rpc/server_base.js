@@ -31,7 +31,9 @@ export class RPCServerBase {
       return this[method](...args);
     }
 
-    if (!this._methodNames.includes(method)) throw new Error('No such method.');
+    if (!this._methodNames.includes(method)) {
+      throw new Error(`No such method: ${method}`);
+    }
 
     return this._rpcMethods[method](...args);
   }
