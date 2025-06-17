@@ -8,6 +8,6 @@ export class DynamicValue<T> {
   get isActive(): boolean;
 
   subscribe(subscriber: (value: T) => void, replay?: boolean): () => void;
-  wait(replay?: boolean, predicate: (value: T) => boolean, signal: AbortSignal): Promise<T>;
+  wait(replay?: boolean, predicate?: (value: T) => boolean, signal?: AbortSignal): Promise<T>;
   set(value: T): void | Promise<void>;
 }
