@@ -2,6 +2,7 @@ import { DynamicValue } from '../dynamic_value.js';
 import { assignCleanup } from '../utils/cleanup.js';
 import { initCleanup } from '../utils/cleanup.js';
 import { combineSubscriptions } from '../utils/combine_subscriptions.js';
+import { subscribeDOMEvent } from '../utils/subscribe_dom_event.js';
 
 function yes() {
   return true;
