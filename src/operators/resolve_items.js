@@ -1,7 +1,8 @@
 import { fromSubscription } from './from_subscription.js';
 import { safeCall } from '../utils/safe_call.js';
-import { warn } from '../utils/log.js';
 import { mapContainer } from '../utils/map_container.js';
+import { runCleanupHandler } from '../utils/run_cleanup_handler.js';
+import { combineUnsubscribe } from '../utils/combine_unsubscribe.js';
 
 function identity(item, key, items) {
   return item;
@@ -27,44 +28,59 @@ export function resolveItems(dv, subscribe, getKey) {
       );
     };
 
-    return dv.subscribe((items) => {
-      const currentItems = new Set();
-      debounce = true;
+    return combineUnsubscribe(
+      dv.subscribe((items) => {
+        const currentItems = new Set();
+        debounce = true;
 
-      items.forEach((item, index, items) => {
-        const key = getKey(item, index, items);
+        items.forEach((item, index, items) => {
+          const key = getKey(item, index, items);
 
-        currentItems.add(key);
-        if (subscriptions.has(key)) return;
+          currentItems.add(key);
+          if (subscriptions.has(key)) return;
 
-        let unsubscribe = null;
-        try {
-          unsubscribe = subscribe(item, key, items, (transformedItem) => {
+          let result = null;
+          const callback = (transformedItem) => {
             transformedItems.set(key, transformedItem);
             update();
+          };
+
+          safeCall(() => {
+            result = subscribe(item, key, items, callback);
           });
-        } catch (err) {
-          warn('A subscribe function threw an exception: %o.', err);
+
+          if (
+            result !== null &&
+            typeof result === 'object' &&
+            typeof result.subscribe === 'function'
+          ) {
+            result = result.subscribe(callback);
+          }
+
+          subscriptions.set(key, result);
+        });
+
+        debounce = false;
+
+        // Nothing to do.
+        if (subscriptions.size !== currentItems.size) {
+          subscriptions.forEach((unsubscribe, key) => {
+            if (currentItems.has(key)) return;
+            subscriptions.delete(key);
+            runCleanupHandler(unsubscribe);
+            transformedItems.delete(key);
+          });
         }
 
-        subscriptions.set(key, unsubscribe);
-      });
-
-      debounce = false;
-
-      // Nothing to do.
-      if (subscriptions.size !== currentItems.size) {
-        subscriptions.forEach((unsubscribe, key) => {
-          if (currentItems.has(key)) return;
-          subscriptions.delete(key);
-          safeCall(unsubscribe);
-          transformedItems.delete(key);
+        lastItems = items;
+        update();
+      }),
+      () => {
+        subscriptions.forEach((unsubscribe) => {
+          runCleanupHandler(unsubscribe);
         });
       }
-
-      lastItems = items;
-      update();
-    });
+    );
   });
 }
 

@@ -416,20 +416,28 @@ export default async function run(Assert) {
 
     // Asynchromous Map case
     {
-      let called = 0;
+      let called = 0,
+        calledInner = 0;
       const m = new Map();
       const input = DynamicValue.fromConstant(m);
       const result = resolveItems(input, (item, index, items, callback) => {
         called++;
-        return timeout(() => callback(item * 2), 10 + item * 5);
+        return timeout(
+          () => {
+            calledInner++;
+            callback(item * 2);
+          },
+          10 + item * 5
+        );
       });
 
       // We want the result dynamic value to be permanently active.
-      result.subscribe(() => {});
+      const cleanup = result.subscribe(() => {});
 
       let p = result.wait();
       assertDeepEqual(await p, new Map());
       assertEqual(called, 0);
+      assertEqual(calledInner, 0);
 
       p = result.wait(false);
       m.set('a', 2);
@@ -448,6 +456,7 @@ export default async function run(Assert) {
         ])
       );
       assertEqual(called, 3);
+      assertEqual(calledInner, 3);
 
       p = result.wait(false);
       m.set('a', 5);
@@ -464,12 +473,26 @@ export default async function run(Assert) {
         ])
       );
       assertEqual(called, 5);
+      assertEqual(calledInner, 5);
 
       p = result.wait(false);
       m.clear();
       input.set(m);
       assertDeepEqual(await p, new Map());
       assertEqual(called, 5);
+      assertEqual(calledInner, 5);
+
+      // This update will take 60ms
+      m.set('a', 5);
+      input.set(m);
+      await delay(5);
+      assertEqual(called, 6);
+      assertEqual(calledInner, 5);
+
+      cleanup();
+
+      await delay(100);
+      assertEqual(calledInner, 5);
     }
 
     // unique
