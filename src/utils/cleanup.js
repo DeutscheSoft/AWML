@@ -1,3 +1,5 @@
+import { runCleanupHandler } from './run_cleanup_handler.js';
+
 const assign = Symbol('assign');
 
 export function initCleanup() {
@@ -8,14 +10,15 @@ export function initCleanup() {
       const cb = args[1];
 
       if (!active) {
-        cb();
+        runCleanupHandler(cb);
       } else {
+        runCleanupHandler(callback);
         callback = cb;
       }
     } else {
       if (!active) return;
       active = false;
-      callback();
+      runCleanupHandler(callback);
     }
   };
 }
