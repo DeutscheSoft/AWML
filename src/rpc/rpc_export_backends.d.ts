@@ -4,5 +4,5 @@ import { RPCMethods } from './server_base';
 
 export function rpcExportBackends(
   observeBackend: (options: unknown) => DynamicValue<BackendBase>,
-  key = ''
+  key?: string
 ): RPCMethods;

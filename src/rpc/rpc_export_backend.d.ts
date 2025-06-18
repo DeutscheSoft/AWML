@@ -3,4 +3,7 @@ import { RPCMethods } from './server_base';
 
 type IExportBackendArg = BackendBase | ((options: unknown) => BackendBase);
 
-export function rpcExportBackend(arg: IExportBackendArg, key = ''): RPCMethods;
+export function rpcExportBackend(
+  arg: IExportBackendArg,
+  key?: string
+): RPCMethods;

@@ -10,4 +10,5 @@ export class WebSocketRPCServer extends RPCServerBase {
   protected _onWebSocketClose(...args: unknown[]): void;
   protected _encodeMessages(messages: unknown[]): string;
   protected _decodeMessages(data: string): unknown[];
+  protected _send(msg: unknown): void;
 }

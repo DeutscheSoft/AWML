@@ -25,5 +25,5 @@ export abstract class RPCServerBase {
   /**
    * Send one outgoing message.
    */
-  abstract _send(msg: unknown): void;
+  protected abstract _send(msg: unknown): void;
 }

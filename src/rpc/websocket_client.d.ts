@@ -11,4 +11,5 @@ export class WebSocketRPCClient extends RPCClientBase {
   ): Promise<WebSocketRPCClient>;
   protected _encodeMessages(messages: unknown[]): string;
   protected _decodeMessages(data: string): unknown[];
+  protected _send(msg: unknown): void;
 }
