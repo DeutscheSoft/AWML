@@ -1,7 +1,7 @@
 import { DynamicValue } from '../dynamic_value.js';
 import { assignCleanup } from '../utils/cleanup.js';
 import { initCleanup } from '../utils/cleanup.js';
-import { combineSubscriptions } from '../utils/combine_subscriptions.js';
+import { combineUnsubscribe } from '../utils/combine_unsubscribe.js';
 import { subscribeDOMEvent } from '../utils/subscribe_dom_event.js';
 
 function yes() {
@@ -32,7 +32,7 @@ export function waitFor(dv, predicate = yes, replay = true, signal) {
 
     assignCleanup(
       cleanup,
-      combineSubscriptions(
+      combineUnsubscribe(
         dv.subscribe((value) => {
           try {
             if (predicate(value)) {
