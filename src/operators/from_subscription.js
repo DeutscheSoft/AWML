@@ -27,7 +27,7 @@ class SubscriptionDynamicValue extends DynamicValue {
 }
 
 /**
- * Creates a read-only DynamicValue from a subscription function.
+ * Creates a DynamicValue from a subscription function.
  */
 export function fromSubscription(subscribeFun, setFun) {
   return new SubscriptionDynamicValue(subscribeFun, setFun);
