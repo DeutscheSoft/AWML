@@ -2,7 +2,7 @@ import { BackendValue } from './backend_value.js';
 import { DynamicValue } from './dynamic_value.js';
 import { ListValue } from './list_value.js';
 import { map, unique, filter, switchMap } from './operators.js';
-import { combineSubscriptions } from './utils/combine_subscriptions.js';
+import { combineUnsubscribe } from './utils/combine_unsubscribe.js';
 import {
   initSubscribers,
   callSubscribers,
@@ -124,7 +124,7 @@ export function provideBackend(name, dv) {
     lastBackend = backend;
   };
 
-  return combineSubscriptions(
+  return combineUnsubscribe(
     unregister,
     backendIfOpen$.subscribe((backend) => {
       unregister();
