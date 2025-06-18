@@ -15,3 +15,4 @@ export * from './operators/throttle_send';
 export * from './operators/observeLatest';
 export * from './operators/project';
 export * from './operators/wait_for';
+export * from './operators/for_each_value';
