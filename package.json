@@ -1,6 +1,6 @@
 {
   "name": "@deutschesoft/awml",
-  "version": "2.4.4",
+  "version": "2.4.5",
   "description": "A templating language for aux-widgets.",
   "browser": "src/index.js",
   "main": "src/index.node.js",
