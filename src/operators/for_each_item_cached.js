@@ -1,6 +1,6 @@
 import { runCleanupHandler } from '../utils/run_cleanup_handler.js';
 import { mapContainer } from '../utils/map_container.js';
-import {combineUnsubscribe } from '../utils/combine_unsubscribe.js';
+import { combineUnsubscribe } from '../utils/combine_unsubscribe.js';
 
 function identity(item, key, items) {
   return item;

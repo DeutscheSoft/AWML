@@ -18,7 +18,7 @@ import {
   createProjectionContext,
   cache,
   forEachItemCached,
-  forEachItemCachedByKey
+  forEachItemCachedByKey,
 } from '../../src/operators.js';
 import { delay } from '../../src/utils/delay.js';
 
@@ -701,7 +701,7 @@ export default async function run(Assert) {
 
     // forEachItemCached
     {
-      const v = DynamicValue.fromConstant([ 1, 2, 3 ]);
+      const v = DynamicValue.fromConstant([1, 2, 3]);
       const tmp = new Set();
 
       const unsubscribe = forEachItemCached(v, (item, key, list) => {
@@ -722,9 +722,9 @@ export default async function run(Assert) {
       };
 
       compare();
-      v.set([1,2]);
+      v.set([1, 2]);
       compare();
-      v.set([3,4,5]);
+      v.set([3, 4, 5]);
       compare();
       v.set([]);
       compare();
@@ -734,7 +734,7 @@ export default async function run(Assert) {
 
     // forEachItemCachedByKey
     {
-      const v = DynamicValue.fromConstant([ 1, 2, 3 ]);
+      const v = DynamicValue.fromConstant([1, 2, 3]);
       const tmp = new Map();
 
       const unsubscribe = forEachItemCachedByKey(v, (item, index, list) => {
@@ -753,9 +753,9 @@ export default async function run(Assert) {
       };
 
       assertDeepEqual(v.value, entries());
-      v.set([1,2]);
+      v.set([1, 2]);
       assertDeepEqual(v.value, entries());
-      v.set([1,2,3,4]);
+      v.set([1, 2, 3, 4]);
       assertDeepEqual(v.value, entries());
 
       unsubscribe();
