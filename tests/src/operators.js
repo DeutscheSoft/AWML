@@ -17,6 +17,8 @@ import {
   project,
   createProjectionContext,
   cache,
+  forEachItemCached,
+  forEachItemCachedByKey
 } from '../../src/operators.js';
 import { delay } from '../../src/utils/delay.js';
 
@@ -695,6 +697,68 @@ export default async function run(Assert) {
       assertEqual(await cv.wait(), 3);
       assert(!cv.isActive);
       assert(v.isActive);
+    }
+
+    // forEachItemCached
+    {
+      const v = DynamicValue.fromConstant([ 1, 2, 3 ]);
+      const tmp = new Set();
+
+      const unsubscribe = forEachItemCached(v, (item, key, list) => {
+        tmp.add(item);
+        return () => {
+          tmp.delete(item);
+        };
+      });
+
+      const compare = () => {
+        const result = [];
+        tmp.forEach((value) => {
+          result.push(value);
+        });
+        result.sort();
+
+        assertDeepEqual(result, v.value.slice(0).sort());
+      };
+
+      compare();
+      v.set([1,2]);
+      compare();
+      v.set([3,4,5]);
+      compare();
+      v.set([]);
+      compare();
+
+      unsubscribe();
+    }
+
+    // forEachItemCachedByKey
+    {
+      const v = DynamicValue.fromConstant([ 1, 2, 3 ]);
+      const tmp = new Map();
+
+      const unsubscribe = forEachItemCachedByKey(v, (item, index, list) => {
+        tmp.set(index, item);
+        return () => {
+          tmp.delete(index);
+        };
+      });
+
+      const entries = () => {
+        const result = [];
+        tmp.forEach((value, index) => {
+          result[index] = value;
+        });
+        return result;
+      };
+
+      assertDeepEqual(v.value, entries());
+      v.set([1,2]);
+      assertDeepEqual(v.value, entries());
+      v.set([1,2,3,4]);
+      assertDeepEqual(v.value, entries());
+
+      unsubscribe();
     }
   }
 }

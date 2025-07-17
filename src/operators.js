@@ -16,3 +16,4 @@ export * from './operators/observeLatest.js';
 export * from './operators/project.js';
 export * from './operators/wait_for.js';
 export * from './operators/for_each_value.js';
+export * from './operators/for_each_item_cached.js';

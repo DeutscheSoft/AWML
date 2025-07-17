@@ -16,3 +16,4 @@ export * from './operators/observeLatest';
 export * from './operators/project';
 export * from './operators/wait_for';
 export * from './operators/for_each_value';
+export * from './operators/for_each_item_cached';
