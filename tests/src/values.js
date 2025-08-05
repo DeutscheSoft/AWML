@@ -1,9 +1,10 @@
-import { DynamicValue } from '../../src/dynamic_value.js';
+import { RemoteValue } from '../../src/remote_value.js';
 import { ListValue } from '../../src/list_value.js';
+import { DynamicValue } from '../../src/dynamic_value.js';
 import { fromDOMEvent, connect, connectTo } from '../../src/operators.js';
 import { delay } from '../../src/utils/delay.js';
 
-export default async function values({ assertEqual }) {
+export default async function values({ assertEqual, rejects }) {
   {
     assertEqual(await DynamicValue.from(42).wait(), 42);
   }
@@ -254,5 +255,21 @@ export default async function values({ assertEqual }) {
 
       sub();
     }
+  }
+
+  {
+    // RemoteValue
+    const dv = DynamicValue.fromConstant(1);
+    const rv = new RemoteValue();
+
+    assertEqual(rv.hasValue, false);
+    rejects(async () => {
+      await rv.set(3);
+    });
+    const sub = rv.connect(dv);
+    assertEqual(await rv.wait(), 1);
+    await rv.set(4);
+    assertEqual(await rv.wait(), 4);
+    sub();
   }
 }

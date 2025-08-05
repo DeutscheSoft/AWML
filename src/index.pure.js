@@ -26,6 +26,7 @@ export {
 } from './utils/prefix.js';
 export { DynamicValue } from './dynamic_value.js';
 export { ListValue } from './list_value.js';
+export { RemoteValue } from './remote_value.js';
 export * from './operators.js';
 export {
   AttributesComponent,
