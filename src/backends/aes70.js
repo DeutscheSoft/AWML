@@ -647,9 +647,10 @@ export class AES70Backend extends BackendBase {
           }
           //console.log('%o / %o -> %o', parentPath, propertyName, a);
           const o = a[0];
+          let rolemap;
 
           if (isBlock(o) && a[1] instanceof Map) {
-            const rolemap = a[1];
+            rolemap = a[1];
             const o = rolemap.get(propertyName);
 
             if (o) {
@@ -664,17 +665,12 @@ export class AES70Backend extends BackendBase {
           const property = o.get_properties().find_property(propertyName);
 
           if (!property) {
+            this.logPropertyNotFound(path, propertyName, o, rolemap);
             if (!isBlock(o)) {
-              this.log(
-                'Could not find property %o in %o (path %o).',
-                propertyName,
-                o,
-                path
-              );
               callback(
                 0,
                 0,
-                new Error(`Could not find property ${propertyName}.`)
+                new Error(`Could not find property ${propertyName} at ${path}.`)
               );
             }
           } else {
@@ -708,12 +704,7 @@ export class AES70Backend extends BackendBase {
             const property = o.get_properties().find_property(propertyName);
 
             if (!property) {
-              this.log(
-                'Could not find property %o in block %o (path %o).',
-                propertyName,
-                o,
-                path
-              );
+              this.logPropertyNotFound(path, propertyName, o, rolemap);
               return null;
             }
 
@@ -726,12 +717,7 @@ export class AES70Backend extends BackendBase {
             const property = o.get_properties().find_property(propertyName);
 
             if (!property) {
-              this.log(
-                'Could not find property %o in %o (path %o).',
-                propertyName,
-                o,
-                path
-              );
+              this.logPropertyNotFound(path, propertyName, o);
               callback(
                 0,
                 0,
@@ -763,12 +749,7 @@ export class AES70Backend extends BackendBase {
               callback(1, 0, ctx);
               return sub;
             } else {
-              this.log(
-                'Could not find property %o in %o (path %o)',
-                propertyName,
-                o,
-                path
-              );
+              this.logPropertyNotFound(path, propertyName, o);
               callback(
                 0,
                 0,
@@ -785,6 +766,42 @@ export class AES70Backend extends BackendBase {
         cb
       );
     });
+  }
+
+  logPropertyNotFound(path, propertyName, o, rolemap) {
+    if (!isBlock(o)) {
+      const propertyNames = [];
+      o.get_properties().forEach((prop) => {
+        propertyNames.push(prop.name);
+      });
+      this.log(
+        'Could not find property %o in %o ( %s(%d) ). Available properties: %o',
+        propertyName,
+        path,
+        o.ClassName,
+        o.ObjectNumber,
+        propertyNames
+      );
+    } else {
+      if (rolemap) {
+        this.log(
+          'Could not currently find child %o in %o ( %s(%d) ). Available children: %o.',
+          propertyName,
+          path,
+          o.ClassName,
+          o.ObjectNumber,
+          Array.from(rolemap.keys())
+        );
+      } else {
+        this.log(
+          'Could not currently find child %o in %o ( %s(%d) ).',
+          propertyName,
+          path,
+          o.ClassName,
+          o.ObjectNumber
+        );
+      }
+    }
   }
 
   _observeContext(path, callback) {
