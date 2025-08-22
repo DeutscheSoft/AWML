@@ -118,7 +118,8 @@ export default async function rpc_base(Assert) {
 
       assertDeepEqual(items, [0, 1, 2, 3, 4]);
 
-      await delay((a[i][0] + a[i][1]) * 2);
+      const delayTime = (a[i][0] + a[i][1]) * 2;
+      await delay(Math.max(delayTime, 1));
 
       assertEqual(client.pendingCalls(), 0);
       assertEqual(server.pendingCalls(), 0);
