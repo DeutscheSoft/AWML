@@ -1,9 +1,15 @@
 export class RPCServerBase {
-  constructor(methods) {
+  constructor(methods, debug) {
     this._pending = new Map();
     this._rpcMethods = methods;
     this._internalCalls = ['_cancel'];
     this._methodNames = Object.getOwnPropertyNames(methods);
+    this._debug = debug;
+  }
+
+  reportError(error, context) {
+    if (!this._debug) return;
+    console.error('RPC error in %s', context, error);
   }
 
   pendingCalls() {
@@ -38,7 +44,7 @@ export class RPCServerBase {
     return this._rpcMethods[method](...args);
   }
 
-  _installSubscription(id, subscribe) {
+  _installSubscription(id, subscribe, errorContext) {
     let active = true;
     let unsubscribe = null;
 
@@ -54,7 +60,10 @@ export class RPCServerBase {
       subscribe((ok, last, data) => {
         if (!active) return;
         if (last) dispose(false);
-        if (!ok) data = data.toString();
+        if (!ok) {
+          this.reportError(data, errorContext);
+          data = data.toString();
+        }
         this._sendResponse(id, ok, last, data);
       }) || null;
 
@@ -81,6 +90,7 @@ export class RPCServerBase {
                 callback(1, 1, result);
               },
               (err) => {
+                this.reportError(err, `method call of '${method}'`);
                 callback(0, 1, err.toString());
               }
             );
@@ -93,11 +103,12 @@ export class RPCServerBase {
         // to install the subscription.
         if (id === 0) return;
 
-        this._installSubscription(id, result);
+        this._installSubscription(id, result, `event from ${method}`);
       } else {
         if (id !== 0) this._sendResponse(id, 1, 1, result);
       }
     } catch (err) {
+      this.reportError(err, `method call of '${method}'`);
       if (id !== 0) this._sendResponse(id, 0, 1, err.toString());
     }
   }
