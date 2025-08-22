@@ -6,10 +6,22 @@ const parameterInfo = {
 };
 
 export class DynamicValuesBackend extends BackendBase {
-  _getDynamicValue(path) {
+  _findDynamicValue(path) {
     const dv = this._dynamicValues.get(path);
 
-    if (!dv) throw new Error('No such parameter.');
+    if (!dv) {
+      this.log('Could not find parameter %o', path);
+    }
+
+    return dv;
+  }
+
+  _getDynamicValue(path) {
+    const dv = this._findDynamicValue(path);
+
+    if (!dv) {
+      throw new Error(`No such parameter "${path}".`);
+    }
 
     return dv;
   }
@@ -31,8 +43,9 @@ export class DynamicValuesBackend extends BackendBase {
   }
 
   observeInfo(path, callback) {
-    if (!this._dynamicValues.has(path)) {
-      callback(0, 1, new Error('No such parameter.'));
+    const dv = this._findDynamicValue(path);
+    if (!dv) {
+      callback(0, 1, new Error(`No such parameter "${path}".`));
     } else {
       callback(1, 1, parameterInfo);
     }
