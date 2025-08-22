@@ -6,5 +6,6 @@ type IObserveBackend = (options: unknown) => DynamicValue<BackendBase>;
 
 export function rpcImportBackends(
   rpc: RPCClientBase,
-  key?: string
+  key?: string,
+  debug?: boolean
 ): IObserveBackend;

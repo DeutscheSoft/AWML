@@ -108,7 +108,7 @@ export default async function rpc_export_import(Assert) {
       () => client.dispose()
     );
 
-    const rpcObserveBackend = rpcImportBackends(client, 'foo');
+    const rpcObserveBackend = rpcImportBackends(client, 'foo', true);
 
     const localBackend$ = rpcObserveBackend('local');
     const valuesBackend$ = rpcObserveBackend('values');

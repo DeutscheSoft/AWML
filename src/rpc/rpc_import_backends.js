@@ -2,7 +2,7 @@ import { fromSubscription } from '../operators/from_subscription.js';
 import { RPCClientBackend } from '../backends/rpc_client.js';
 import { safeCall } from '../utils/safe_call.js';
 
-export function rpcImportBackends(rpc, key = '') {
+export function rpcImportBackends(rpc, key = '', debug = false) {
   const call = (method, args, callback) => {
     return rpc.call(`${key}${method}`, args, callback);
   };
@@ -27,6 +27,7 @@ export function rpcImportBackends(rpc, key = '') {
             prefix: key,
             extraArgs: [result],
             remote: rpc,
+            debug,
           });
         } else {
           lastBackend = null;
