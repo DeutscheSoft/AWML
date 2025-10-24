@@ -293,10 +293,20 @@ class PropertyContext extends ContextWithValue {
       }
     };
 
-    this.event.subscribe(eventHandler).catch((error) => {
-      if (unsubscribe === null) return;
-      callback(0, 0, error);
-    });
+    const result = this.event.subscribe(eventHandler)
+
+    if (typeof result === 'object' && result.catch) {
+      // This API existed before version 2 where subscribe
+      // would return a promise
+      result.catch((error) => {
+        if (unsubscribe === null) return;
+        callback(0, 0, error);
+      });
+    } else if (typeof result === 'boolean') {
+      if (!result) {
+        callback(0, 0, new Error(`Failed to subscribe property ${this.property.name}`));
+      }
+    }
 
     unsubscribe = combineUnsubscribe(
       () => this.event.unsubscribe(eventHandler),
