@@ -553,9 +553,13 @@ export class AES70Backend extends BackendBase {
 
     const websocket = await this._connectWebSocket();
 
-    return new OCA.RemoteDevice(
-      new OCA.WebSocketConnection(websocket, options)
-    );
+    const connection = new OCA.WebSocketConnection(websocket, options);
+
+    if (connection.wait_for_keepalive) {
+      await connection.wait_for_keepalive(1);
+    }
+
+    return new OCA.RemoteDevice(connection);
   }
 
   async _connect() {
