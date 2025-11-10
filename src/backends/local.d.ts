@@ -1,4 +1,4 @@
-import { BackendBase, IBackendBaseOptions } from './backend_base';
+import { BackendBase, IBackendBaseOptions } from './backend_base.js';
 
 type InitialValues = { [path: string]: any };
 

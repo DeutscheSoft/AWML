@@ -1,4 +1,4 @@
-import { ISubscription } from '../subscription';
+import { ISubscription } from '../subscription.js';
 
 export function combineSubscriptions(
   ...callbacks: ISubscription[]

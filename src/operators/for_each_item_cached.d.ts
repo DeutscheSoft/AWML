@@ -1,5 +1,5 @@
-import { DynamicValue } from '../dynamic_value';
-import { ISubscription } from '../subscription';
+import { DynamicValue } from '../dynamic_value.js';
+import { ISubscription } from '../subscription.js';
 
 export function forEachItemCached<T>(
   dv: DynamicValue<T[]>,

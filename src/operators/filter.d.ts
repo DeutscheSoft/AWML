@@ -1,4 +1,4 @@
-import { DynamicValue } from '../dynamic_value';
+import { DynamicValue } from '../dynamic_value.js';
 
 export function filter<T>(
   dv: DynamicValue<T>,

@@ -1,4 +1,4 @@
-import { DynamicValue } from '../dynamic_value';
+import { DynamicValue } from '../dynamic_value.js';
 
 export function connect<Type1, Type2>(
   value1: DynamicValue<Type1>,

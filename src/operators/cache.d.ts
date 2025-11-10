@@ -1,4 +1,4 @@
-import { DynamicValue } from '../dynamic_value';
+import { DynamicValue } from '../dynamic_value.js';
 
 /**
  * Returns a new dynamic value which caches the last value even

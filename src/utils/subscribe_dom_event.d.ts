@@ -1,4 +1,4 @@
-import { ISubscription } from '../subscription';
+import { ISubscription } from '../subscription.js';
 
 /**
  * Subscribes to a DOM event.

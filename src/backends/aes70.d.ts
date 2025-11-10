@@ -1,4 +1,4 @@
-import { BackendBase, IBackendBaseOptions } from './backend_base';
+import { BackendBase, IBackendBaseOptions } from './backend_base.js';
 
 export interface IAES70BackendOptions extends IBackendBaseOptions {
   url: string;

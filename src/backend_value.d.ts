@@ -1,4 +1,4 @@
-import { DynamicValue } from './dynamic_value';
+import { DynamicValue } from './dynamic_value.js';
 
 export class BackendValue<T> extends DynamicValue<T> {
   get uri(): string;

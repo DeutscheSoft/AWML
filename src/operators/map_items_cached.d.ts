@@ -1,4 +1,4 @@
-import { DynamicValue } from '../dynamic_value';
+import { DynamicValue } from '../dynamic_value.js';
 
 export function mapItemsCached<T, R>(
   dv: DynamicValue<T[]>,

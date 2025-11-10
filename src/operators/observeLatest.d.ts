@@ -1,4 +1,4 @@
-import { DynamicValue } from '../dynamic_value';
+import { DynamicValue } from '../dynamic_value.js';
 
 export type ObserveLatestArgs<T> =
   | [hasValue: true, value: T]

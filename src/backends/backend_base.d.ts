@@ -1,5 +1,5 @@
-import { EventTarget } from '../utils/event_target';
-import { DynamicValue } from '../dynamic_value';
+import { EventTarget } from '../utils/event_target.js';
+import { DynamicValue } from '../dynamic_value.js';
 
 interface IPathInfo {
   id: string | number;

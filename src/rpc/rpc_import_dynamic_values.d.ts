@@ -1,5 +1,5 @@
-import { DynamicValue } from '../dynamic_value';
-import { RPCClientBase } from './client_base';
+import { DynamicValue } from '../dynamic_value.js';
+import { RPCClientBase } from './client_base.js';
 
 export function rpcImportDynamicValues<
   T extends Record<string, DynamicValue<unknown>>,

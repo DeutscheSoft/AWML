@@ -1,6 +1,6 @@
-import { DynamicValue } from '../dynamic_value';
-import { BackendBase } from '../backends/backend_base';
-import { RPCMethods } from './server_base';
+import { DynamicValue } from '../dynamic_value.js';
+import { BackendBase } from '../backends/backend_base.js';
+import { RPCMethods } from './server_base.js';
 
 export function rpcExportBackends(
   observeBackend: (options: unknown) => DynamicValue<BackendBase>,

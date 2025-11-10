@@ -1,5 +1,5 @@
-import { DynamicValue } from '../dynamic_value';
-import { BackendBase, IBackendBaseOptions } from './backend_base';
+import { DynamicValue } from '../dynamic_value.js';
+import { BackendBase, IBackendBaseOptions } from './backend_base.js';
 
 export interface IDynamicValuesBackendOptions extends IBackendBaseOptions {
   values:

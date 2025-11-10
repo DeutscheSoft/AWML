@@ -1,4 +1,4 @@
-import { LocalBackend, ILocalBackendOptions } from './local';
+import { LocalBackend, ILocalBackendOptions } from './local.js';
 
 export interface ILocalStorageBackendOptions extends ILocalBackendOptions {
   storage?: Storage;

@@ -1,4 +1,4 @@
-import { DynamicValue } from '../dynamic_value';
+import { DynamicValue } from '../dynamic_value.js';
 
 export function switchMap<Type1, Type2>(
   dv: DynamicValue<Type1>,

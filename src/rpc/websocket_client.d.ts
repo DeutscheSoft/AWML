@@ -1,4 +1,4 @@
-import { RPCClientBase } from './client_base';
+import { RPCClientBase } from './client_base.js';
 
 export class WebSocketRPCClient extends RPCClientBase {
   isClosed(): boolean;

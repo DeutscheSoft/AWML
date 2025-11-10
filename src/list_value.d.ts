@@ -1,4 +1,4 @@
-import { DynamicValue } from './dynamic_value';
+import { DynamicValue } from './dynamic_value.js';
 
 export type WrapDynamicValues<T extends [...any[]]> = T extends [
   infer T0,

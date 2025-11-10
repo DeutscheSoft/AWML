@@ -1,4 +1,4 @@
-import { DynamicValue } from '../dynamic_value';
+import { DynamicValue } from '../dynamic_value.js';
 
 /**
  * Returns a new dynamic value which sends values at most once every {interval} milliseconds.

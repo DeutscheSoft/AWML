@@ -1,7 +1,7 @@
-import { BackendValue } from './backend_value';
-import { BackendBase } from './backends/backend_base';
-import { DynamicValue } from './dynamic_value';
-import { ISubscription } from './subscription';
+import { BackendValue } from './backend_value.js';
+import { BackendBase } from './backends/backend_base.js';
+import { DynamicValue } from './dynamic_value.js';
+import { ISubscription } from './subscription.js';
 
 export function getBackendValue<T>(address: string): BackendValue<T>;
 

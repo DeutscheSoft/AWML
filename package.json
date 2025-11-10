@@ -2,9 +2,17 @@
   "name": "@deutschesoft/awml",
   "version": "2.4.8",
   "description": "A templating language for aux-widgets.",
-  "browser": "src/index.js",
-  "main": "src/index.node.js",
-  "module": "src/index.js",
+  "exports": {
+    ".": {
+      "browser": {
+        "types": "./src/index.browser.d.ts",
+        "import": "./src/index.browser.js"
+      },
+      "import": "./src/index.node.js",
+      "types": "./src/index.node.d.ts"
+    },
+    "./src/*": "./src/*"
+  },
   "type": "module",
   "directories": {},
   "scripts": {
@@ -16,7 +24,6 @@
     "url": "https://github.com/DeutscheSoft/AWML.git"
   },
   "sideEffects": [
-    "./src/index.js",
     "./src/index.sideeffects.js",
     "./src/custom_elements.js",
     "./src/options/*.registration.js",
@@ -25,8 +32,6 @@
     "*.element.js",
     "*.registration.js",
     "index.sideeffects.js",
-    "index.js",
-    "options.js",
     "custom_elements.js"
   ],
   "author": "Arne Goedeke",

@@ -1,4 +1,4 @@
-import { ListValue, UnwrapDynamicValues } from '../list_value';
+import { ListValue, UnwrapDynamicValues } from '../list_value.js';
 
 export function combineLatest<U extends [...any[]]>(
   values: [...U]

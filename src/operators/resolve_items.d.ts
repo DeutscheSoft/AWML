@@ -1,4 +1,4 @@
-import { DynamicValue } from '../dynamic_value.js';
+import { DynamicValue } from '../dynamic_value.js.js';
 
 export function resolveItems<R, T>(
   dv: DynamicValue<T[]>,

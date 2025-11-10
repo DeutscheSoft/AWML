@@ -1,4 +1,4 @@
-import { RPCCallback } from './client_base';
+import { RPCCallback } from './client_base.js';
 
 export type RPCMethods = Record<string, Function>;
 

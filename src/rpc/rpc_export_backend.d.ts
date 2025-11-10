@@ -1,5 +1,5 @@
-import { BackendBase } from '../backends/backend_base';
-import { RPCMethods } from './server_base';
+import { BackendBase } from '../backends/backend_base.js';
+import { RPCMethods } from './server_base.js';
 
 type IExportBackendArg = BackendBase | ((options: unknown) => BackendBase);
 
