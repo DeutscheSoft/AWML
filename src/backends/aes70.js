@@ -868,10 +868,17 @@ export class AES70Backend extends BackendBase {
       url = src;
     }
 
-    const batch = node.hasAttribute('batch') ? parseInt(batch) : 0;
+    if (node.hasAttribute('batch')) {
+      const attrValue = node.getAttribute('batch')
+      const batch = parseInt(attrValue);
+      if (!(batch >= 0)) {
+        console.error('Invalid batch attribute ' + attrValue);
+      } else {
+        options.batch = batch;
+      }
+    }
 
     options.url = url;
-    options.batch = batch;
 
     return options;
   }
