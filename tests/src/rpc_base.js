@@ -86,6 +86,9 @@ export default async function rpc_base(Assert) {
     await assertFailure(() => client.callWait('this_method_does_not_exist'));
     assertEqual(client.pendingCalls(), 0);
     assertEqual(server.pendingCalls(), 0);
+    await assertFailure(() => client.callWait('hasOwnProperty', 'foo'));
+    assertEqual(client.pendingCalls(), 0);
+    assertEqual(server.pendingCalls(), 0);
 
     {
       let n = 0;
