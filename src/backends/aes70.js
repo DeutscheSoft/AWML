@@ -162,11 +162,11 @@ class PropertyImplementedContext extends ContextWithValue {
       if (ok) {
         callback(1, 0, true);
       } else {
-        // NotImplemented
+        // NotImplemented or BadMethod
         if (
           typeof value === 'object' &&
           'status' in value &&
-          value.status.value === 8
+          (value.status.value === 8 || value.status.value === 11)
         ) {
           callback(1, 0, false);
         } else {
