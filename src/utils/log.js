@@ -1,4 +1,4 @@
-/* eslint-disable no-empty */
+
 
 /** @ignore */
 export function log() {

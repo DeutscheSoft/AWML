@@ -17,7 +17,8 @@
   "directories": {},
   "scripts": {
     "format": "npx prettier --write .",
-    "test": "node --test tests/run.tests.js"
+    "test": "node --test tests/run.tests.js",
+    "lint": "npx eslint"
   },
   "repository": {
     "type": "git",

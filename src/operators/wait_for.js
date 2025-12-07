@@ -1,4 +1,3 @@
-import { DynamicValue } from '../dynamic_value.js';
 import { assignCleanup } from '../utils/cleanup.js';
 import { initCleanup } from '../utils/cleanup.js';
 import { combineUnsubscribe } from '../utils/combine_unsubscribe.js';

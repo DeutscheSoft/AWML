@@ -10,8 +10,6 @@ import { Bindings } from '../bindings.js';
 import { setPrefix, removePrefix } from './prefix.js';
 import { safeCall } from './safe_call.js';
 
-/* eslint-disable no-control-regex */
-
 const PLACEHOLDER_START = '\x01';
 const PLACEHOLDER_END = '\x02';
 
@@ -21,8 +19,6 @@ const reSinglePlaceholder = /^[\x01](\d+)[\x02]$/g;
 
 const rePropertyAssignmentSplit = /\s\[[\w$-.\d]+\]=/g;
 const rePropertyAssignment = /\s\[([\w$-.\d]+)\]=/g;
-
-/* eslint-enable no-control-regex */
 
 class AttributeAssignmentExpression {
   constructor(attributeName) {
