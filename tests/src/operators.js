@@ -695,8 +695,12 @@ export default async function run(Assert) {
       v.set(3);
       assert(!v.isActive);
       assertEqual(await cv.wait(), 3);
+      assertEqual(await cv.wait(), 3);
+      assertEqual(await cv.wait(), 3);
       assert(!cv.isActive);
       assert(v.isActive);
+      v.set(2);
+      assert(!v.isActive);
     }
 
     // forEachItemCached

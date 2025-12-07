@@ -26,6 +26,8 @@ export function cache(dv) {
     } else {
       hasValue = false;
       safeCall(unsubscribe);
+      unsubscribe = null;
+      isActive = false;
     }
   }
 
@@ -37,6 +39,7 @@ export function cache(dv) {
         // we are still subscribed
         if (hasValue) safeCall(callback, lastValue);
       } else {
+        isActive = true;
         unsubscribe = dv.subscribe(onValue);
       }
 
