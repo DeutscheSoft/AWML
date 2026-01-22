@@ -1,4 +1,5 @@
-import { LocalBackend, LocalStorageBackend } from '../src/index';
+import { LocalBackend } from '../src/index';
+import { LocalStorageBackend } from '../src/backends/localstorage';
 import { AES70Backend, IAES70BackendOptions } from '../src/backends/aes70';
 import { EmberPlusBackend } from '../src/backends/ember-plus';
 
