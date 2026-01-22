@@ -13,5 +13,5 @@ export class AES70Backend extends BackendBase {
 
   constructor(options: IAES70BackendOptions);
 
-  get device();
+  get device(): object | null;
 }

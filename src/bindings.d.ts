@@ -20,7 +20,7 @@ interface IBindingDescriptionBackendValue extends IBindingDescriptionShared {
 }
 
 interface IWidget {
-  subscribe(eventName: string, eventHandler: (...args) => void): () => void;
+  subscribe(eventName: string, eventHandler: (...args: any[]) => void): () => void;
   set(optionName: string, value: any): any;
 }
 
@@ -33,7 +33,7 @@ export function createBinding(
   sourceNode: Node,
   ctx: any,
   options: IBindingDescription,
-  log?: (...args) => void
+  log?: (...args: any[]) => void
 ): () => void;
 
 export class Bindings {
@@ -41,7 +41,7 @@ export class Bindings {
     target: Node | IWidget,
     sourceNode: Node,
     ctx: any,
-    log?: (...args) => void
+    log?: (...args: any[]) => void
   );
 
   update(bindings: IBindingDescription | IBindingDescription[] | null): void;

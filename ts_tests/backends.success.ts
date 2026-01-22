@@ -43,7 +43,7 @@ import { EmberPlusBackend } from '../src/backends/ember-plus';
     delay: 100,
   });
 
-  const name: string = b.options.name;
+  const name: string | undefined = b.options.name;
 
   b.open();
   b.close();
