@@ -8,8 +8,8 @@
         "types": "./src/index.browser.d.ts",
         "import": "./src/index.browser.js"
       },
-      "import": "./src/index.node.js",
-      "types": "./src/index.node.d.ts"
+      "types": "./src/index.node.d.ts",
+      "import": "./src/index.node.js"
     },
     "./src/*": "./src/*"
   },
