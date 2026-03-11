@@ -1,6 +1,6 @@
 {
   "name": "@deutschesoft/awml",
-  "version": "2.4.10",
+  "version": "2.4.11",
   "description": "A templating language for aux-widgets.",
   "exports": {
     ".": {
